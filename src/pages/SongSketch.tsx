@@ -75,10 +75,12 @@ export default function SongSketch() {
       audioBlob: audioBlob,
     };
     // Use setTimeout to avoid setState during render
-    setTimeout(() => {
+    setTimeout(async () => {
       setBlocks((prev) => [...prev, newBlock]);
+      // Save to cloud
+      await saveRecording(`Idea #${blocks.length + 1} - ${selectedSection}`, { section: selectedSection });
       clearRecording();
-      toast.success("¡Fragmento guardado!");
+      toast.success("¡Fragmento guardado en la nube! ☁️");
     }, 0);
   }
 
