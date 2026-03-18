@@ -18,6 +18,13 @@ import Challenges from "./pages/Challenges";
 import Matching from "./pages/Matching";
 import Duetos from "./pages/Duetos";
 import Portfolio from "./pages/Portfolio";
+import DreamCanvas from "./pages/DreamCanvas";
+import Plan90 from "./pages/Plan90";
+import BreathTrainer from "./pages/BreathTrainer";
+import PitchTraining from "./pages/PitchTraining";
+import WarmUp from "./pages/WarmUp";
+import Comparator from "./pages/Comparator";
+import AutoMix from "./pages/AutoMix";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +51,13 @@ function AnimatedRoutes() {
           <Route path="/matching" element={<PageTransition><Matching /></PageTransition>} />
           <Route path="/duetos" element={<PageTransition><Duetos /></PageTransition>} />
           <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
+          <Route path="/dream-canvas" element={<PageTransition><DreamCanvas /></PageTransition>} />
+          <Route path="/plan-90" element={<PageTransition><Plan90 /></PageTransition>} />
+          <Route path="/breath-trainer" element={<PageTransition><BreathTrainer /></PageTransition>} />
+          <Route path="/pitch-training" element={<PageTransition><PitchTraining /></PageTransition>} />
+          <Route path="/warmup" element={<PageTransition><WarmUp /></PageTransition>} />
+          <Route path="/comparator" element={<PageTransition><Comparator /></PageTransition>} />
+          <Route path="/automix" element={<PageTransition><AutoMix /></PageTransition>} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

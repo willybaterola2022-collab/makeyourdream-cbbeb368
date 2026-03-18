@@ -10,6 +10,13 @@ import {
   AudioWaveform,
   Users,
   UserCircle,
+  Palette,
+  Calendar,
+  Wind,
+  Ear,
+  Thermometer,
+  GitCompareArrows,
+  Wand2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -32,6 +39,13 @@ const modules = [
   { title: "Diagnóstico", url: "/diagnostico", icon: Stethoscope },
   { title: "AI Coach", url: "/coach", icon: BrainCircuit },
   { title: "Ejercicios", url: "/exercises", icon: Dumbbell },
+  { title: "Dream Canvas", url: "/dream-canvas", icon: Palette },
+  { title: "Plan 90 Días", url: "/plan-90", icon: Calendar },
+  { title: "Breath Trainer", url: "/breath-trainer", icon: Wind },
+  { title: "Pitch Training", url: "/pitch-training", icon: Ear },
+  { title: "Warm-Up", url: "/warmup", icon: Thermometer },
+  { title: "Before/After", url: "/comparator", icon: GitCompareArrows },
+  { title: "Auto-Mix IA", url: "/automix", icon: Wand2 },
   { title: "Challenges", url: "/challenges", icon: Trophy },
   { title: "Voice Match", url: "/matching", icon: AudioWaveform },
   { title: "Duetos IA", url: "/duetos", icon: Users },
