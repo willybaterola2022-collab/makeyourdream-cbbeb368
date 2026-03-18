@@ -14,9 +14,17 @@ interface Props {
 interface Song {
   title: string;
   artist: string;
+  genre: string;
+  difficulty: string;
   lyrics: { time: number; text: string; targetNote: string }[];
   duration: number;
 }
+
+const difficultyColor: Record<string, string> = {
+  "Fácil": "text-green-400",
+  "Media": "text-yellow-400",
+  "Difícil": "text-red-400",
+};
 
 const PRESET_SONGS: Song[] = [
   {
