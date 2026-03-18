@@ -301,58 +301,48 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     );
   }
 
+  const handleMicClick = () => {
+    if (finished) {
+      handleReset();
+      return;
+    }
+    if (isPlaying) {
+      setIsPlaying(false);
+      clearInterval(timerRef.current);
+      stopRecording();
+      setFinished(true);
+      return;
+    }
+    handlePlay();
+  };
+
+  const micState = finished ? "finished" : isPlaying ? "recording" : "idle";
+
   return (
-    <div className="p-4 md:p-8 space-y-5">
+    <div className="p-4 md:p-8 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-serif text-xl font-semibold text-foreground">{selectedSong.title}</h2>
           <p className="text-xs text-muted-foreground">{selectedSong.artist}</p>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-serif font-bold gold-text">{globalScore || "—"}</p>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Score</p>
-        </div>
+        <button onClick={() => { handleReset(); setSelectedSong(null); }} className="text-sm text-muted-foreground hover:text-foreground">
+          ← Cambiar
+        </button>
       </div>
 
+      {/* Pitch display */}
       {isPlaying && pitch && (
         <div className="glass-card p-3 flex items-center justify-between">
           <span className="font-mono text-lg font-bold text-primary">
             {pitch.note}{pitch.octave}
-            <span className={`ml-2 text-xs ${Math.abs(pitch.cents) < 20 ? "text-green-400" : "text-destructive"}`}>
+            <span className={`ml-2 text-xs ${Math.abs(pitch.cents) < 20 ? "text-green-400" : Math.abs(pitch.cents) < 40 ? "text-yellow-400" : "text-destructive"}`}>
               {pitch.cents > 0 ? "+" : ""}{pitch.cents}¢
             </span>
           </span>
         </div>
       )}
 
-      <div className="glass-card p-4">
-        <div className="flex items-center gap-0.5 h-16 mb-3">
-          {bars.map((h, i) => (
-            <div key={i} className={`flex-1 rounded-full transition-all duration-75 ${isPlaying && h > 15 ? "gold-gradient" : "bg-muted"}`} style={{ height: `${Math.min(h, 100)}%` }} />
-          ))}
-        </div>
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
-          <div className="h-full gold-gradient rounded-full transition-all duration-200" style={{ width: `${progress}%` }} />
-        </div>
-        <div className="flex justify-between text-[10px] text-muted-foreground">
-          <span>{formatTime(elapsed)}</span>
-          <span>{formatTime(selectedSong.duration)}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { label: "Afinación", value: scores.pitch },
-          { label: "Timing", value: scores.timing },
-          { label: "Expresión", value: scores.expression },
-        ].map((s) => (
-          <div key={s.label} className="glass-card p-2 text-center">
-            <p className="text-[10px] text-muted-foreground uppercase">{s.label}</p>
-            <p className="text-lg font-serif font-bold text-foreground">{s.value || "—"}</p>
-          </div>
-        ))}
-      </div>
-
+      {/* Lyrics */}
       <div className="glass-card p-4 space-y-2 max-h-48 overflow-y-auto">
         {selectedSong.lyrics.map((line, i) => (
           <p key={i} className={`font-serif text-lg transition-all duration-300 ${
@@ -363,8 +353,32 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         ))}
       </div>
 
+      {/* Vintage Microphone */}
+      <VintageMicrophone
+        isActive={isPlaying}
+        volume={volume}
+        onClick={handleMicClick}
+        state={micState}
+      />
+
+      {/* Progress bar */}
+      <div className="glass-card p-3">
+        <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
+          <div className="h-full gold-gradient rounded-full transition-all duration-200" style={{ width: `${progress}%` }} />
+        </div>
+        <div className="flex justify-between text-[10px] text-muted-foreground">
+          <span>{formatTime(elapsed)}</span>
+          <span>{formatTime(selectedSong.duration)}</span>
+        </div>
+      </div>
+
+      {/* Scoring feedback */}
+      <SingingFeedback scores={scores} isActive={isPlaying} finished={finished} />
+
+      {/* Playback after finish */}
       {finished && audioUrl && (
         <div className="glass-card p-4 space-y-3">
+          <p className="text-sm text-muted-foreground text-center">🎧 Escucha tu interpretación</p>
           <audio controls src={audioUrl} className="w-full" />
           <div className="flex gap-2">
             <a href={audioUrl} download={`${selectedSong.title}.webm`} className="flex-1 glass-card p-2.5 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground rounded-lg">
@@ -376,22 +390,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
           </div>
         </div>
       )}
-
-      <div className="flex items-center justify-center gap-5">
-        <button onClick={() => { handleReset(); setSelectedSong(null); }} className="h-11 w-11 rounded-full glass-card flex items-center justify-center text-muted-foreground hover:text-foreground">
-          <RotateCcw className="h-4 w-4" />
-        </button>
-        {!finished && (
-          <button onClick={isPlaying ? () => { setIsPlaying(false); clearInterval(timerRef.current); } : handlePlay} className="h-16 w-16 rounded-full gold-gradient flex items-center justify-center text-primary-foreground hover:opacity-90 glow-gold">
-            {isPlaying ? <Square className="h-6 w-6" /> : <Mic className="h-7 w-7" />}
-          </button>
-        )}
-        {finished && (
-          <button onClick={handleReset} className="h-16 w-16 rounded-full gold-gradient flex items-center justify-center text-primary-foreground hover:opacity-90 glow-gold">
-            <RotateCcw className="h-6 w-6" />
-          </button>
-        )}
-      </div>
 
       <SaveAuthGate open={needsAuth} onOpenChange={dismissAuth} />
     </div>

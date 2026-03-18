@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic, Square, RotateCcw, Download, Cloud } from "lucide-react";
+import { Download, Cloud } from "lucide-react";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
+import VintageMicrophone from "./VintageMicrophone";
 
 interface Props {
   genre: string;
@@ -15,8 +16,9 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
   const [lyrics, setLyrics] = useState("");
   const [lines, setLines] = useState<string[]>([]);
   const [activeLine, setActiveLine] = useState(0);
-  const [speed, setSpeed] = useState(4); // seconds per line
+  const [speed, setSpeed] = useState(4);
   const [started, setStarted] = useState(false);
+  const [finished, setFinished] = useState(false);
 
   const { isListening, volume, waveformData, requestMic, stream, analyserNode } = useMicrophone(2048);
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
@@ -28,13 +30,13 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
     ? waveformData.slice(0, 50).map((v) => Math.max(v, 4))
     : Array.from({ length: 50 }, () => 4);
 
-  // Parse lyrics into lines
   const handleStart = async () => {
     const parsed = lyrics.split("\n").filter((l) => l.trim().length > 0);
     if (parsed.length === 0) return;
     setLines(parsed);
     setActiveLine(0);
     setElapsed(0);
+    setFinished(false);
 
     if (!isListening) {
       const ok = await requestMic();
@@ -60,6 +62,7 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
           clearInterval(timerRef.current);
           stopRecording();
           setStarted(false);
+          setFinished(true);
           return prev;
         }
         return next;
@@ -72,20 +75,36 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
     clearInterval(timerRef.current);
     stopRecording();
     setStarted(false);
+    setFinished(true);
   };
 
   const handleReset = () => {
-    handleStop();
+    clearInterval(timerRef.current);
+    stopRecording();
     clearRecording();
     setActiveLine(0);
     setElapsed(0);
     setStarted(false);
+    setFinished(false);
+  };
+
+  const handleMicClick = () => {
+    if (finished) {
+      handleReset();
+      return;
+    }
+    if (started) {
+      handleStop();
+      return;
+    }
+    handleStart();
   };
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const micState = finished ? "finished" : started ? "recording" : "idle";
 
   // Pre-start: show textarea
-  if (!started && !audioUrl) {
+  if (!started && !finished) {
     return (
       <div className="p-4 md:p-8 space-y-5">
         <div>
@@ -118,19 +137,19 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
           </div>
         </div>
 
-        <button
+        {/* Vintage mic as start button */}
+        <VintageMicrophone
+          isActive={false}
+          volume={0}
           onClick={handleStart}
-          disabled={lyrics.trim().length === 0}
-          className="w-full h-14 rounded-xl gold-gradient flex items-center justify-center gap-2 text-primary-foreground text-lg font-serif font-semibold hover:opacity-90 transition-opacity glow-gold disabled:opacity-40"
-        >
-          <Mic className="h-5 w-5" /> Cantar
-        </button>
+          state="idle"
+        />
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-5">
+    <div className="p-4 md:p-8 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-2xl font-semibold text-foreground">Tu Letra</h2>
         <span className="font-mono text-foreground">{formatTime(elapsed)}</span>
@@ -141,7 +160,7 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
         <div className="glass-card p-3 flex items-center justify-between">
           <span className="font-mono text-lg font-bold text-primary">
             {pitch.note}{pitch.octave}
-            <span className={`ml-2 text-xs ${Math.abs(pitch.cents) < 20 ? "text-green-400" : "text-destructive"}`}>
+            <span className={`ml-2 text-xs ${Math.abs(pitch.cents) < 20 ? "text-green-400" : Math.abs(pitch.cents) < 40 ? "text-yellow-400" : "text-destructive"}`}>
               {pitch.cents > 0 ? "+" : ""}{pitch.cents}¢
             </span>
           </span>
@@ -149,7 +168,7 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
       )}
 
       {/* Lyrics display */}
-      {started && lines.length > 0 && (
+      {lines.length > 0 && (
         <div className="glass-card p-5 space-y-2 max-h-64 overflow-y-auto">
           {lines.map((line, i) => (
             <p
@@ -168,9 +187,17 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
+      {/* Vintage Microphone */}
+      <VintageMicrophone
+        isActive={started}
+        volume={volume}
+        onClick={handleMicClick}
+        state={micState}
+      />
+
       {/* Waveform */}
-      <div className="glass-card p-4">
-        <div className="flex items-center gap-0.5 h-16">
+      <div className="glass-card p-3">
+        <div className="flex items-center gap-0.5 h-12">
           {bars.map((h, i) => (
             <div
               key={i}
@@ -181,20 +208,8 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-center gap-5">
-        <button onClick={handleReset} className="h-11 w-11 rounded-full glass-card flex items-center justify-center text-muted-foreground hover:text-foreground">
-          <RotateCcw className="h-4 w-4" />
-        </button>
-        {started && (
-          <button onClick={handleStop} className="h-16 w-16 rounded-full bg-destructive flex items-center justify-center text-destructive-foreground animate-pulse">
-            <Square className="h-6 w-6" />
-          </button>
-        )}
-      </div>
-
       {/* Playback */}
-      {audioUrl && !started && (
+      {finished && audioUrl && (
         <div className="glass-card p-4 space-y-3">
           <p className="text-sm text-muted-foreground text-center">🎧 Escucha tu interpretación</p>
           <audio controls src={audioUrl} className="w-full" />
