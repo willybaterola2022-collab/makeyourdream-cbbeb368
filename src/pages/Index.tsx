@@ -12,7 +12,7 @@ const recentLessons = [
 
 const Index = () => {
   return (
-    <div className="p-4 md:p-8 space-y-8 animate-fade-in">
+    <StaggerContainer className="p-4 md:p-8 space-y-8">
       {/* Hero greeting */}
       <div>
         <h1 className="font-serif text-3xl md:text-4xl font-semibold text-foreground">
