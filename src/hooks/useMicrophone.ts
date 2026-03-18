@@ -67,5 +67,5 @@ export function useMicrophone(fftSize = 256) {
     };
   }, []);
 
-  return { isListening, volume, waveformData, requestMic, stopMic };
+  return { isListening, volume, waveformData, requestMic, stopMic, stream: streamRef.current, analyserNode: analyserRef.current };
 }
