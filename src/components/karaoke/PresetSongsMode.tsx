@@ -20,7 +20,7 @@ interface Song {
 
 const PRESET_SONGS: Song[] = [
   {
-    title: "Bésame Mucho", artist: "Consuelo Velázquez", duration: 36,
+    title: "Bésame Mucho", artist: "Consuelo Velázquez", genre: "Bolero", difficulty: "Fácil", duration: 36,
     lyrics: [
       { time: 0, text: "Bésame, bésame mucho", targetNote: "G4" },
       { time: 4, text: "Como si fuera esta noche", targetNote: "A4" },
@@ -34,7 +34,7 @@ const PRESET_SONGS: Song[] = [
     ],
   },
   {
-    title: "Cielito Lindo", artist: "Tradicional Mexicana", duration: 32,
+    title: "Cielito Lindo", artist: "Tradicional Mexicana", genre: "Ranchera", difficulty: "Fácil", duration: 32,
     lyrics: [
       { time: 0, text: "De la Sierra Morena", targetNote: "C4" },
       { time: 4, text: "Cielito lindo, vienen bajando", targetNote: "E4" },
@@ -47,7 +47,7 @@ const PRESET_SONGS: Song[] = [
     ],
   },
   {
-    title: "La Bamba", artist: "Tradicional Veracruzana", duration: 28,
+    title: "La Bamba", artist: "Tradicional Veracruzana", genre: "Son", difficulty: "Fácil", duration: 28,
     lyrics: [
       { time: 0, text: "Para bailar la bamba", targetNote: "C4" },
       { time: 4, text: "Se necesita una poca de gracia", targetNote: "E4" },
@@ -56,6 +56,108 @@ const PRESET_SONGS: Song[] = [
       { time: 16, text: "Y arriba y arriba por ti seré", targetNote: "G4" },
       { time: 20, text: "Yo no soy marinero", targetNote: "E4" },
       { time: 24, text: "Soy capitán, soy capitán", targetNote: "C4" },
+    ],
+  },
+  {
+    title: "Bohemian Rhapsody", artist: "Queen", genre: "Rock", difficulty: "Difícil", duration: 40,
+    lyrics: [
+      { time: 0, text: "Is this the real life?", targetNote: "Bb4" },
+      { time: 3, text: "Is this just fantasy?", targetNote: "A4" },
+      { time: 6, text: "Caught in a landslide", targetNote: "G4" },
+      { time: 9, text: "No escape from reality", targetNote: "F4" },
+      { time: 12, text: "Open your eyes", targetNote: "Eb4" },
+      { time: 15, text: "Look up to the skies and see", targetNote: "F4" },
+      { time: 18, text: "I'm just a poor boy", targetNote: "G4" },
+      { time: 21, text: "I need no sympathy", targetNote: "Ab4" },
+      { time: 24, text: "Because I'm easy come, easy go", targetNote: "Bb4" },
+      { time: 28, text: "Little high, little low", targetNote: "G4" },
+      { time: 32, text: "Any way the wind blows", targetNote: "F4" },
+      { time: 36, text: "Doesn't really matter to me", targetNote: "Eb4" },
+    ],
+  },
+  {
+    title: "Imagine", artist: "John Lennon", genre: "Pop", difficulty: "Media", duration: 36,
+    lyrics: [
+      { time: 0, text: "Imagine there's no heaven", targetNote: "C4" },
+      { time: 4, text: "It's easy if you try", targetNote: "E4" },
+      { time: 8, text: "No hell below us", targetNote: "F4" },
+      { time: 12, text: "Above us, only sky", targetNote: "G4" },
+      { time: 16, text: "Imagine all the people", targetNote: "A4" },
+      { time: 20, text: "Living for today", targetNote: "G4" },
+      { time: 24, text: "You may say I'm a dreamer", targetNote: "C5" },
+      { time: 28, text: "But I'm not the only one", targetNote: "A4" },
+      { time: 32, text: "I hope someday you'll join us", targetNote: "G4" },
+    ],
+  },
+  {
+    title: "Despacito", artist: "Luis Fonsi", genre: "Reggaetón", difficulty: "Media", duration: 36,
+    lyrics: [
+      { time: 0, text: "Sí, sabes que ya llevo un rato mirándote", targetNote: "B3" },
+      { time: 4, text: "Tengo que bailar contigo hoy", targetNote: "E4" },
+      { time: 8, text: "Vi que tu mirada ya estaba llamándome", targetNote: "F#4" },
+      { time: 12, text: "Muéstrame el camino que yo voy", targetNote: "B3" },
+      { time: 16, text: "Des-pa-cito", targetNote: "B4" },
+      { time: 19, text: "Quiero respirar tu cuello despacito", targetNote: "A4" },
+      { time: 23, text: "Deja que te diga cosas al oído", targetNote: "G#4" },
+      { time: 27, text: "Para que te acuerdes si no estás conmigo", targetNote: "F#4" },
+      { time: 31, text: "Despacito", targetNote: "E4" },
+    ],
+  },
+  {
+    title: "Someone Like You", artist: "Adele", genre: "Balada", difficulty: "Difícil", duration: 40,
+    lyrics: [
+      { time: 0, text: "I heard that you're settled down", targetNote: "E4" },
+      { time: 4, text: "That you found a girl", targetNote: "F#4" },
+      { time: 7, text: "And you're married now", targetNote: "A4" },
+      { time: 10, text: "I heard that your dreams came true", targetNote: "E4" },
+      { time: 14, text: "Guess she gave you things", targetNote: "F#4" },
+      { time: 17, text: "I didn't give to you", targetNote: "A4" },
+      { time: 20, text: "Never mind, I'll find someone like you", targetNote: "C#5" },
+      { time: 25, text: "I wish nothing but the best for you, too", targetNote: "B4" },
+      { time: 30, text: "Don't forget me, I beg", targetNote: "A4" },
+      { time: 34, text: "I remember you said", targetNote: "F#4" },
+      { time: 37, text: "Sometimes it lasts in love", targetNote: "E4" },
+    ],
+  },
+  {
+    title: "Vivir Mi Vida", artist: "Marc Anthony", genre: "Salsa", difficulty: "Media", duration: 32,
+    lyrics: [
+      { time: 0, text: "Voy a reír, voy a bailar", targetNote: "G4" },
+      { time: 4, text: "Vivir mi vida, la la la la", targetNote: "Bb4" },
+      { time: 8, text: "Voy a reír, voy a gozar", targetNote: "C5" },
+      { time: 12, text: "Vivir mi vida, la la la la", targetNote: "Bb4" },
+      { time: 16, text: "A veces llega la lluvia", targetNote: "G4" },
+      { time: 20, text: "Para limpiar las heridas", targetNote: "A4" },
+      { time: 24, text: "A veces solo una gota", targetNote: "Bb4" },
+      { time: 28, text: "Puede vencer la sequía", targetNote: "G4" },
+    ],
+  },
+  {
+    title: "Losing My Religion", artist: "R.E.M.", genre: "Rock", difficulty: "Media", duration: 36,
+    lyrics: [
+      { time: 0, text: "Oh life, is bigger", targetNote: "A3" },
+      { time: 4, text: "It's bigger than you", targetNote: "C4" },
+      { time: 7, text: "And you are not me", targetNote: "E4" },
+      { time: 10, text: "The lengths that I will go to", targetNote: "G4" },
+      { time: 14, text: "The distance in your eyes", targetNote: "E4" },
+      { time: 18, text: "That's me in the corner", targetNote: "A4" },
+      { time: 22, text: "That's me in the spotlight", targetNote: "G4" },
+      { time: 26, text: "Losing my religion", targetNote: "E4" },
+      { time: 30, text: "Trying to keep up with you", targetNote: "C4" },
+      { time: 34, text: "And I don't know if I can do it", targetNote: "A3" },
+    ],
+  },
+  {
+    title: "No Woman No Cry", artist: "Bob Marley", genre: "Reggae", difficulty: "Fácil", duration: 32,
+    lyrics: [
+      { time: 0, text: "No woman, no cry", targetNote: "C4" },
+      { time: 4, text: "No woman, no cry", targetNote: "E4" },
+      { time: 8, text: "No woman, no cry", targetNote: "G4" },
+      { time: 12, text: "No woman, no cry", targetNote: "E4" },
+      { time: 16, text: "Said I remember when we used to sit", targetNote: "C4" },
+      { time: 20, text: "In the government yard in Trenchtown", targetNote: "E4" },
+      { time: 24, text: "Observing the hypocrites", targetNote: "G4" },
+      { time: 28, text: "As they would mingle with the good people we meet", targetNote: "E4" },
     ],
   },
 ];
