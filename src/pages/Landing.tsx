@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import {
   Mic,
   Play,
@@ -11,39 +12,56 @@ import {
   Star,
   Users,
   Music,
+  Flame,
 } from "lucide-react";
 
+/* ─── Animated Equalizer ─── */
+const EqualizerBar = ({ index, total }: { index: number; total: number }) => {
+  const center = total / 2;
+  const dist = Math.abs(index - center) / center;
+  const maxH = 100 - dist * 60;
+  return (
+    <motion.div
+      className="rounded-full bg-primary"
+      style={{ width: "clamp(3px, 0.8vw, 6px)", opacity: 0.3 + (1 - dist) * 0.7 }}
+      animate={{ height: [`${maxH * 0.3}%`, `${maxH}%`, `${maxH * 0.5}%`, `${maxH * 0.8}%`, `${maxH * 0.2}%`] }}
+      transition={{ duration: 1.5 + Math.random() * 1.5, repeat: Infinity, repeatType: "mirror", ease: "easeInOut", delay: index * 0.05 }}
+    />
+  );
+};
+
+const AnimatedEqualizer = () => (
+  <div className="flex items-end justify-center gap-[2px] md:gap-1 h-40 md:h-64 w-full max-w-xl mx-auto opacity-40">
+    {Array.from({ length: 28 }).map((_, i) => (
+      <EqualizerBar key={i} index={i} total={28} />
+    ))}
+  </div>
+);
+
+/* ─── Counter Hook ─── */
+const useCounter = (target: number, duration = 2000) => {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let start = 0;
+    const step = target / (duration / 16);
+    const interval = setInterval(() => {
+      start += step;
+      if (start >= target) { setCount(target); clearInterval(interval); }
+      else setCount(Math.floor(start));
+    }, 16);
+    return () => clearInterval(interval);
+  }, [target, duration]);
+  return count;
+};
+
+/* ─── Features ─── */
 const features = [
-  {
-    icon: Mic,
-    title: "Karaoke Inteligente",
-    desc: "Score en tiempo real con análisis de afinación, timing y expresión",
-  },
-  {
-    icon: Fingerprint,
-    title: "Vocal Fingerprint 6D",
-    desc: "Tu huella vocal única en 6 dimensiones con radar hexagonal",
-  },
-  {
-    icon: Sparkles,
-    title: "AI Vocal Coach",
-    desc: "Coaching personalizado con IA que analiza cada performance",
-  },
-  {
-    icon: Trophy,
-    title: "Challenges Globales",
-    desc: "Compite con cantantes de todo el mundo en ranking semanal",
-  },
-  {
-    icon: AudioWaveform,
-    title: "Voice Matching",
-    desc: "Descubre a qué artista famoso suena tu voz",
-  },
-  {
-    icon: Users,
-    title: "Duetos con IA",
-    desc: "Canta junto a Freddie Mercury, Adele, Sinatra y más",
-  },
+  { icon: Mic, title: "Karaoke Inteligente", desc: "Score en tiempo real con análisis de afinación, timing y expresión" },
+  { icon: Fingerprint, title: "Vocal Fingerprint 6D", desc: "Tu huella vocal única en 6 dimensiones con radar hexagonal" },
+  { icon: Sparkles, title: "AI Vocal Coach", desc: "Coaching personalizado con IA que analiza cada performance" },
+  { icon: Trophy, title: "Challenges Globales", desc: "Compite con cantantes de todo el mundo en ranking semanal" },
+  { icon: AudioWaveform, title: "Voice Matching", desc: "Descubre a qué artista famoso suena tu voz" },
+  { icon: Users, title: "Duetos con IA", desc: "Canta junto a Freddie Mercury, Adele, Sinatra y más" },
 ];
 
 const testimonials = [
@@ -52,101 +70,110 @@ const testimonials = [
   { name: "Ana P.", text: "Los challenges me motivan a practicar cada día", city: "Buenos Aires" },
 ];
 
+/* ─── Landing Page ─── */
 const Landing = () => {
   const navigate = useNavigate();
+  const artistCount = useCounter(12400);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const eqY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const textY = useTransform(scrollYProgress, [0, 1], [0, -30]);
 
   return (
     <div className="min-h-screen bg-background overflow-hidden">
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated background */}
+      {/* ═══════ HERO ═══════ */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Gradient BG */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background z-10" />
           <motion.div
-            animate={{
-              backgroundPosition: ["0% 0%", "100% 100%"],
-            }}
+            animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
             transition={{ duration: 30, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
             className="absolute inset-0 opacity-20"
             style={{
               backgroundImage:
-                "radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.4) 0%, transparent 50%), radial-gradient(circle at 80% 20%, hsl(var(--violet) / 0.3) 0%, transparent 50%), radial-gradient(circle at 50% 80%, hsl(var(--primary) / 0.2) 0%, transparent 50%)",
+                "radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.5) 0%, transparent 50%), radial-gradient(circle at 80% 20%, hsl(var(--primary) / 0.2) 0%, transparent 50%)",
               backgroundSize: "200% 200%",
             }}
           />
-          {/* Floating music notes */}
-          {["🎵", "🎶", "🎤", "✨", "🎼", "⭐"].map((emoji, i) => (
-            <motion.div
-              key={i}
-              className="absolute text-2xl md:text-3xl opacity-10"
-              style={{
-                left: `${15 + i * 14}%`,
-                top: `${20 + (i % 3) * 25}%`,
-              }}
-              animate={{
-                y: [-20, 20, -20],
-                rotate: [-10, 10, -10],
-                opacity: [0.05, 0.15, 0.05],
-              }}
-              transition={{
-                duration: 5 + i,
-                repeat: Infinity,
-                delay: i * 0.7,
-                ease: "easeInOut",
-              }}
-            >
-              {emoji}
-            </motion.div>
-          ))}
         </div>
 
-        <div className="relative z-20 text-center px-4 max-w-4xl mx-auto">
+        {/* Floating notes with parallax */}
+        {["🎵", "🎶", "🎤", "✨", "🎼", "⭐", "🎹", "🎧"].map((emoji, i) => (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-6"
+            key={i}
+            className="absolute text-xl md:text-3xl"
+            style={{ left: `${8 + i * 12}%`, top: `${15 + (i % 4) * 20}%`, opacity: 0.06 }}
+            animate={{ y: [-15, 15, -15], rotate: [-5, 5, -5] }}
+            transition={{ duration: 4 + i * 0.8, repeat: Infinity, delay: i * 0.5, ease: "easeInOut" }}
           >
-            <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl gold-gradient flex items-center justify-center mx-auto mb-6 glow-gold">
-              <Music className="h-8 w-8 md:h-10 md:w-10 text-primary-foreground" />
-            </div>
+            {emoji}
+          </motion.div>
+        ))}
+
+        <div className="relative z-20 text-center px-4 max-w-4xl mx-auto">
+          {/* Live badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-8"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm"
+            >
+              <Flame className="h-4 w-4 text-primary" />
+              <span className="text-primary font-medium">847 cantando ahora</span>
+            </motion.div>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="font-serif text-5xl md:text-7xl lg:text-8xl font-bold text-foreground leading-[0.95] tracking-tight"
-          >
-            Make Your
-            <br />
-            <span className="gold-text">Dream</span>
-          </motion.h1>
+          {/* Equalizer behind text */}
+          <motion.div style={{ y: eqY }} className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+            <AnimatedEqualizer />
+          </motion.div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-lg md:text-xl text-muted-foreground mt-6 max-w-xl mx-auto leading-relaxed"
-          >
-            La plataforma premium de transformación musical con IA.
-            Descubre tu voz, entrena como profesional, compite con el mundo.
-          </motion.p>
+          {/* Main headline */}
+          <motion.div style={{ y: textY }} className="relative z-10">
+            <motion.h1
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="font-serif text-5xl md:text-7xl lg:text-8xl font-bold text-foreground leading-[0.92] tracking-tight"
+            >
+              Tu voz merece el
+              <br />
+              <span className="gold-text">escenario mundial</span>
+            </motion.h1>
 
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.7 }}
+              className="text-base md:text-xl text-muted-foreground mt-6 max-w-lg mx-auto leading-relaxed"
+            >
+              Graba tu voz, descubre tu potencial y transforma tu talento con inteligencia artificial — en 30 segundos.
+            </motion.p>
+          </motion.div>
+
+          {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+            transition={{ duration: 0.8, delay: 1 }}
+            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10"
           >
             <motion.button
-              whileHover={{ scale: 1.05, boxShadow: "0 0 40px -5px hsl(46 65% 52% / 0.5)" }}
+              animate={{ boxShadow: ["0 0 20px -5px hsl(46 65% 52% / 0.3)", "0 0 40px -5px hsl(46 65% 52% / 0.6)", "0 0 20px -5px hsl(46 65% 52% / 0.3)"] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/onboarding")}
               className="h-14 px-8 rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center gap-3 hover:opacity-90 transition-opacity"
             >
               <Mic className="h-5 w-5" />
-              Descubre tu voz gratis
+              Descubre tu voz — 30s
               <ChevronRight className="h-5 w-5" />
             </motion.button>
             <motion.button
@@ -160,72 +187,45 @@ const Landing = () => {
             </motion.button>
           </motion.div>
 
-          {/* Social proof */}
+          {/* Animated counter */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1 }}
-            className="mt-12 flex items-center justify-center gap-2 text-sm text-muted-foreground"
+            transition={{ delay: 1.5 }}
+            className="mt-12 flex items-center justify-center gap-2 text-sm text-muted-foreground relative z-10"
           >
             <div className="flex -space-x-2">
               {["VR", "CM", "AP", "DL"].map((initials, i) => (
-                <div
-                  key={i}
-                  className="h-8 w-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-bold text-muted-foreground"
-                >
+                <div key={i} className="h-8 w-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-bold text-muted-foreground">
                   {initials}
                 </div>
               ))}
             </div>
-            <span>+12,400 artistas transformando su voz</span>
+            <span>+{artistCount.toLocaleString()} artistas transformando su voz</span>
           </motion.div>
         </div>
 
         {/* Scroll indicator */}
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
-        >
+        <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }} className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
           <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex justify-center pt-2">
-            <motion.div
-              animate={{ opacity: [0.3, 1, 0.3], y: [0, 8, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-1.5 h-1.5 rounded-full bg-primary"
-            />
+            <motion.div animate={{ opacity: [0.3, 1, 0.3], y: [0, 8, 0] }} transition={{ duration: 2, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-primary" />
           </div>
         </motion.div>
       </section>
 
-      {/* Features Section */}
+      {/* ═══════ FEATURES ═══════ */}
       <section className="py-24 px-4">
         <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.7 }}
-            className="text-center mb-16"
-          >
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} className="text-center mb-16">
             <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">10 módulos premium</p>
             <h2 className="font-serif text-4xl md:text-5xl font-bold text-foreground">
-              Todo lo que necesitas para
-              <br />
-              <span className="gold-text">brillar</span>
+              Todo lo que necesitas para <br /><span className="gold-text">brillar</span>
             </h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {features.map((f, i) => (
-              <motion.div
-                key={f.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                whileHover={{ y: -6, transition: { duration: 0.25 } }}
-                className="glass-card p-6 group cursor-pointer hover:border-primary/20 transition-colors"
-              >
+              <motion.div key={f.title} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }} whileHover={{ y: -6, transition: { duration: 0.25 } }} className="glass-card p-6 group cursor-pointer hover:border-primary/20 transition-colors">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                   <f.icon className="h-6 w-6 text-primary" />
                 </div>
@@ -237,36 +237,17 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* ═══════ TESTIMONIALS ═══════ */}
       <section className="py-24 px-4">
         <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
             <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">Testimonios</p>
-            <h2 className="font-serif text-4xl font-bold text-foreground">
-              Voces que ya <span className="gold-text">brillan</span>
-            </h2>
+            <h2 className="font-serif text-4xl font-bold text-foreground">Voces que ya <span className="gold-text">brillan</span></h2>
           </motion.div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {testimonials.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="glass-card p-6"
-              >
-                <div className="flex gap-1 mb-3">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <Star key={j} className="h-4 w-4 fill-primary text-primary" />
-                  ))}
-                </div>
+              <motion.div key={t.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }} className="glass-card p-6">
+                <div className="flex gap-1 mb-3">{Array.from({ length: 5 }).map((_, j) => (<Star key={j} className="h-4 w-4 fill-primary text-primary" />))}</div>
                 <p className="text-sm text-foreground mb-4 italic">"{t.text}"</p>
                 <div>
                   <p className="text-sm font-medium text-foreground">{t.name}</p>
@@ -278,26 +259,12 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* ═══════ FINAL CTA ═══════ */}
       <section className="py-24 px-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          className="max-w-2xl mx-auto text-center glass-card p-10 border-primary/20 glow-gold"
-        >
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Tu voz merece ser <span className="gold-text">escuchada</span>
-          </h2>
-          <p className="text-muted-foreground mb-8">
-            Graba tu voz, recibe tu diagnóstico vocal gratuito y comienza tu transformación hoy.
-          </p>
-          <motion.button
-            whileHover={{ scale: 1.05, boxShadow: "0 0 50px -5px hsl(46 65% 52% / 0.5)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/onboarding")}
-            className="h-14 px-10 rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center gap-3 mx-auto"
-          >
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-2xl mx-auto text-center glass-card p-10 border-primary/20 glow-gold">
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">Tu voz merece ser <span className="gold-text">escuchada</span></h2>
+          <p className="text-muted-foreground mb-8">Graba tu voz, recibe tu diagnóstico vocal gratuito y comienza tu transformación hoy.</p>
+          <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 50px -5px hsl(46 65% 52% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/onboarding")} className="h-14 px-10 rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center gap-3 mx-auto">
             <Mic className="h-5 w-5" />
             Comenzar gratis
           </motion.button>
@@ -307,14 +274,10 @@ const Landing = () => {
       {/* Footer */}
       <footer className="border-t border-border/40 py-8 px-4 text-center">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="h-7 w-7 rounded-lg gold-gradient flex items-center justify-center">
-            <Music className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <div className="h-7 w-7 rounded-lg gold-gradient flex items-center justify-center"><Music className="h-4 w-4 text-primary-foreground" /></div>
           <span className="font-serif text-lg font-semibold text-foreground">MakeYourDream</span>
         </div>
-        <p className="text-xs text-muted-foreground">
-          © 2026 MakeYourDream. Transform your voice with AI.
-        </p>
+        <p className="text-xs text-muted-foreground">© 2026 MakeYourDream. Transform your voice with AI.</p>
       </footer>
     </div>
   );

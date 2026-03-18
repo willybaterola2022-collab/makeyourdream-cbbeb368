@@ -51,6 +51,13 @@ function AnimatedRoutes() {
           <Route path="/matching" element={<PageTransition><Matching /></PageTransition>} />
           <Route path="/duetos" element={<PageTransition><Duetos /></PageTransition>} />
           <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
+          <Route path="/dream-canvas" element={<PageTransition><DreamCanvas /></PageTransition>} />
+          <Route path="/plan-90" element={<PageTransition><Plan90 /></PageTransition>} />
+          <Route path="/breath-trainer" element={<PageTransition><BreathTrainer /></PageTransition>} />
+          <Route path="/pitch-training" element={<PageTransition><PitchTraining /></PageTransition>} />
+          <Route path="/warmup" element={<PageTransition><WarmUp /></PageTransition>} />
+          <Route path="/comparator" element={<PageTransition><Comparator /></PageTransition>} />
+          <Route path="/automix" element={<PageTransition><AutoMix /></PageTransition>} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
