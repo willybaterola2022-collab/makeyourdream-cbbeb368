@@ -26,6 +26,20 @@ import WarmUp from "./pages/WarmUp";
 import Comparator from "./pages/Comparator";
 import AutoMix from "./pages/AutoMix";
 import NotFound from "./pages/NotFound";
+// New modules
+import SongSketch from "./pages/SongSketch";
+import HarmonyLab from "./pages/HarmonyLab";
+import LoopStation from "./pages/LoopStation";
+import LyricsWriter from "./pages/LyricsWriter";
+import VocalFX from "./pages/VocalFX";
+import Duelos from "./pages/Duelos";
+import VocalStories from "./pages/VocalStories";
+import CollabRoom from "./pages/CollabRoom";
+import FanRadar from "./pages/FanRadar";
+import EmotionMap from "./pages/EmotionMap";
+import GenreGym from "./pages/GenreGym";
+import StageSimulator from "./pages/StageSimulator";
+import VoiceJournal from "./pages/VoiceJournal";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +72,20 @@ function AnimatedRoutes() {
           <Route path="/warmup" element={<PageTransition><WarmUp /></PageTransition>} />
           <Route path="/comparator" element={<PageTransition><Comparator /></PageTransition>} />
           <Route path="/automix" element={<PageTransition><AutoMix /></PageTransition>} />
+          {/* New modules */}
+          <Route path="/song-sketch" element={<PageTransition><SongSketch /></PageTransition>} />
+          <Route path="/harmony-lab" element={<PageTransition><HarmonyLab /></PageTransition>} />
+          <Route path="/loop-station" element={<PageTransition><LoopStation /></PageTransition>} />
+          <Route path="/lyrics-writer" element={<PageTransition><LyricsWriter /></PageTransition>} />
+          <Route path="/vocal-fx" element={<PageTransition><VocalFX /></PageTransition>} />
+          <Route path="/duelos" element={<PageTransition><Duelos /></PageTransition>} />
+          <Route path="/vocal-stories" element={<PageTransition><VocalStories /></PageTransition>} />
+          <Route path="/collab-room" element={<PageTransition><CollabRoom /></PageTransition>} />
+          <Route path="/fan-radar" element={<PageTransition><FanRadar /></PageTransition>} />
+          <Route path="/emotion-map" element={<PageTransition><EmotionMap /></PageTransition>} />
+          <Route path="/genre-gym" element={<PageTransition><GenreGym /></PageTransition>} />
+          <Route path="/stage-simulator" element={<PageTransition><StageSimulator /></PageTransition>} />
+          <Route path="/voice-journal" element={<PageTransition><VoiceJournal /></PageTransition>} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
