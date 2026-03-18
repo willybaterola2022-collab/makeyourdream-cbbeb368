@@ -120,7 +120,7 @@ const Index = () => {
           ))}
         </div>
       </div>
-    </div>
+    </StaggerContainer>
   );
 };
 
