@@ -228,17 +228,32 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     if (!isPlaying) return;
     const interval = setInterval(() => {
       const s = scoreSamplesRef.current;
-      s.timingTotal++;
-      if (volume > 15) s.timingHits++;
+      s.totalSamples++;
+      s.prevVolumes.push(volume);
+      if (s.prevVolumes.length > 40) s.prevVolumes.shift();
+
+      // Pitch: must actually match within 25 cents
       if (pitch) {
         s.pitchTotal++;
-        if (Math.abs(pitch.cents) < 30) s.pitchHits++;
+        if (Math.abs(pitch.cents) < 25) s.pitchHits++;
       }
-      setScores({
-        pitch: s.pitchTotal > 0 ? Math.round((s.pitchHits / s.pitchTotal) * 100) : 0,
-        timing: s.timingTotal > 0 ? Math.round((s.timingHits / s.timingTotal) * 100) : 0,
-        expression: Math.min(Math.round(volume * 1.2), 100),
-      });
+
+      // Timing: penalize silence
+      if (volume < 8) s.silentSamples++;
+      s.volumeSum += volume;
+      s.volumeMax = Math.max(s.volumeMax, volume);
+
+      // Expression: dynamic range
+      const avg = s.volumeSum / s.totalSamples;
+      const variance = s.prevVolumes.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / Math.max(s.prevVolumes.length, 1);
+      const dynamicRange = Math.sqrt(variance);
+
+      const pitchScore = s.pitchTotal > 0 ? Math.round((s.pitchHits / s.pitchTotal) * 100) : 0;
+      const singingRatio = 1 - (s.silentSamples / s.totalSamples);
+      const timingScore = Math.round(singingRatio * 100);
+      const expressionScore = Math.min(Math.round(dynamicRange * 3 + (s.volumeMax > 40 ? 15 : 0)), 100);
+
+      setScores({ pitch: pitchScore, timing: timingScore, expression: expressionScore });
     }, 500);
     return () => clearInterval(interval);
   }, [isPlaying, volume, pitch]);
