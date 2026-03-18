@@ -83,6 +83,78 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     ? waveformData.slice(0, 50).map((v) => Math.max(v, 4))
     : Array.from({ length: 50 }, () => 4);
 
+  const activeLine = selectedSong ? selectedSong.lyrics.reduce((best, line, i) => (elapsed >= line.time ? i : best), 0) : 0;
+  const progress = selectedSong ? (elapsed / selectedSong.duration) * 100 : 0;
+  const globalScore = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+  const handlePlay = async () => {
+    if (finished || !selectedSong) return;
+    if (!isListening) {
+      const ok = await requestMic();
+      if (!ok) return;
+    }
+    setTimeout(() => {
+      if (stream && !isRecording) startRecording(stream);
+      setIsPlaying(true);
+    }, 200);
+  };
+
+  // Timer
+  useEffect(() => {
+    if (isPlaying && !finished && selectedSong) {
+      timerRef.current = setInterval(() => {
+        setElapsed((prev) => {
+          const next = prev + 0.25;
+          if (next >= selectedSong.duration) {
+            clearInterval(timerRef.current);
+            setIsPlaying(false);
+            setFinished(true);
+            return selectedSong.duration;
+          }
+          return next;
+        });
+      }, 250);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [isPlaying, finished, selectedSong]);
+
+  // Scoring
+  useEffect(() => {
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      const s = scoreSamplesRef.current;
+      s.timingTotal++;
+      if (volume > 15) s.timingHits++;
+      if (pitch) {
+        s.pitchTotal++;
+        if (Math.abs(pitch.cents) < 30) s.pitchHits++;
+      }
+      setScores({
+        pitch: s.pitchTotal > 0 ? Math.round((s.pitchHits / s.pitchTotal) * 100) : 0,
+        timing: s.timingTotal > 0 ? Math.round((s.timingHits / s.timingTotal) * 100) : 0,
+        expression: Math.min(Math.round(volume * 1.2), 100),
+      });
+    }, 500);
+    return () => clearInterval(interval);
+  }, [isPlaying, volume, pitch]);
+
+  // Finished
+  useEffect(() => {
+    if (finished) stopRecording();
+  }, [finished]);
+
+  const handleReset = () => {
+    clearInterval(timerRef.current);
+    setIsPlaying(false);
+    setElapsed(0);
+    setFinished(false);
+    stopRecording();
+    clearRecording();
+    scoreSamplesRef.current = { pitchHits: 0, pitchTotal: 0, timingHits: 0, timingTotal: 0 };
+    setScores({ pitch: 0, timing: 0, expression: 0 });
+  };
+
   // Song selector
   if (!selectedSong) {
     return (
@@ -108,6 +180,9 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
             </button>
           ))}
         </div>
+      </div>
+    );
+  }
       </div>
     );
   }
