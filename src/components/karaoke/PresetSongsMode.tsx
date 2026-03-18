@@ -183,7 +183,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, isPlaying);
   const timerRef = useRef<ReturnType<typeof setInterval>>(0 as any);
-  const scoreSamplesRef = useRef({ pitchHits: 0, pitchTotal: 0, timingHits: 0, timingTotal: 0 });
+  const scoreSamplesRef = useRef({ pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, prevVolumes: [] as number[] });
 
   const bars = waveformData.length > 0
     ? waveformData.slice(0, 50).map((v) => Math.max(v, 4))
