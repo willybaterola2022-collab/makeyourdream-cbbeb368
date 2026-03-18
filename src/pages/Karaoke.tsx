@@ -1,5 +1,6 @@
-import { Play, Pause, RotateCcw, Volume2, Music } from "lucide-react";
-import { useState } from "react";
+import { Play, Pause, RotateCcw, Volume2, Music, Mic, MicOff } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { useMicrophone } from "@/hooks/useMicrophone";
 
 const lyrics = [
   { time: 0, text: "Bésame, bésame mucho", active: true },
@@ -15,6 +16,36 @@ const lyrics = [
 
 const Karaoke = () => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const { isListening, volume, waveformData, requestMic, stopMic } = useMicrophone(128);
+  const [micEnabled, setMicEnabled] = useState(false);
+
+  // Waveform bars from mic or fallback
+  const bars = waveformData.length > 0
+    ? waveformData.slice(0, 60).map((v) => Math.max(v, 5))
+    : Array.from({ length: 60 }, (_, i) => 20 + Math.sin(i * 0.3) * 40 + (isPlaying ? Math.random() * 20 : 0));
+
+  const toggleMic = useCallback(async () => {
+    if (isListening) {
+      stopMic();
+      setMicEnabled(false);
+    } else {
+      const ok = await requestMic();
+      setMicEnabled(ok);
+    }
+  }, [isListening, requestMic, stopMic]);
+
+  const handlePlay = async () => {
+    if (!isPlaying && !isListening) {
+      await requestMic();
+      setMicEnabled(true);
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  // Cleanup mic on unmount
+  useEffect(() => {
+    return () => { stopMic(); };
+  }, [stopMic]);
 
   return (
     <div className="p-4 md:p-8 space-y-6 animate-fade-in">
@@ -38,25 +69,27 @@ const Karaoke = () => {
         </div>
       </div>
 
-      {/* Waveform Visualization */}
+      {/* Waveform Visualization — live from mic */}
       <div className="glass-card p-5">
         <div className="flex items-center gap-1 h-20 mb-4">
-          {Array.from({ length: 60 }).map((_, i) => {
-            const height = 20 + Math.sin(i * 0.3) * 40 + Math.random() * 20;
-            const isPast = i < 20;
-            return (
-              <div
-                key={i}
-                className={`flex-1 rounded-full transition-all duration-150 ${
-                  isPast ? "gold-gradient" : "bg-muted"
-                }`}
-                style={{ height: `${height}%` }}
-              />
-            );
-          })}
+          {bars.map((h, i) => (
+            <div
+              key={i}
+              className={`flex-1 rounded-full transition-all duration-100 ${
+                isListening && h > 20 ? "gold-gradient" : "bg-muted"
+              }`}
+              style={{ height: `${Math.min(h, 100)}%` }}
+            />
+          ))}
         </div>
-        <div className="flex justify-between text-[10px] text-muted-foreground">
+        <div className="flex justify-between items-center text-[10px] text-muted-foreground">
           <span>0:32</span>
+          {isListening && (
+            <span className="flex items-center gap-1">
+              <span className={`inline-block h-2 w-2 rounded-full ${volume > 30 ? "bg-primary" : "bg-muted-foreground"}`} />
+              Vol: {Math.round(volume)}%
+            </span>
+          )}
           <span>3:28</span>
         </div>
       </div>
@@ -100,13 +133,16 @@ const Karaoke = () => {
           <RotateCcw className="h-4 w-4" />
         </button>
         <button
-          onClick={() => setIsPlaying(!isPlaying)}
+          onClick={handlePlay}
           className="h-14 w-14 rounded-full gold-gradient flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity glow-gold"
         >
           {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
         </button>
-        <button className="h-10 w-10 rounded-full glass-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-          <Volume2 className="h-4 w-4" />
+        <button
+          onClick={toggleMic}
+          className={`h-10 w-10 rounded-full glass-card flex items-center justify-center transition-colors ${isListening ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          {isListening ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
         </button>
       </div>
     </div>

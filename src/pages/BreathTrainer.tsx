@@ -1,10 +1,11 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useCallback } from "react";
-import { Wind, Play, Pause, RotateCcw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Wind, Play, Pause, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StaggerContainer, StaggerItem } from "@/components/layout/StaggerContainer";
+import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 
 const exercises = [
   { id: "basic", name: "Diafragma básico", inhale: 4, hold: 2, exhale: 4, pause: 2, desc: "Respiración profunda con soporte abdominal" },
@@ -17,24 +18,51 @@ const phaseLabels: Record<Phase, string> = { inhale: "Inhala", hold: "Sostén", 
 const phaseColors: Record<Phase, string> = { inhale: "text-emerald-400", hold: "text-primary", exhale: "text-sky-400", pause: "text-muted-foreground" };
 
 const BreathTrainer = () => {
+  const { playSweep, playTone, stopTone } = useAudioEngine();
   const [selected, setSelected] = useState(exercises[0]);
   const [running, setRunning] = useState(false);
   const [phase, setPhase] = useState<Phase>("inhale");
   const [timer, setTimer] = useState(0);
   const [reps, setReps] = useState(0);
+  const [soundOn, setSoundOn] = useState(true);
+  const stopFnRef = useRef<(() => void) | null>(null);
 
   const phaseDuration = phase === "inhale" ? selected.inhale : phase === "hold" ? selected.hold : phase === "exhale" ? selected.exhale : selected.pause;
 
+  // Play phase audio cues
+  const playPhaseSound = useCallback((p: Phase) => {
+    if (!soundOn) return;
+    // Stop any held tone
+    if (stopFnRef.current) { stopFnRef.current(); stopFnRef.current = null; }
+
+    switch (p) {
+      case "inhale":
+        playSweep(noteToFreq("C4"), noteToFreq("G4"), 0.4, 0.12);
+        break;
+      case "hold":
+        stopFnRef.current = playTone(noteToFreq("C3"), "sine", 0.08);
+        break;
+      case "exhale":
+        playSweep(noteToFreq("G4"), noteToFreq("C4"), 0.4, 0.12);
+        break;
+      case "pause":
+        stopTone();
+        break;
+    }
+  }, [soundOn, playSweep, playTone, stopTone]);
+
   const nextPhase = useCallback(() => {
     setPhase((p) => {
-      if (p === "inhale") return "hold";
-      if (p === "hold") return "exhale";
-      if (p === "exhale") { return "pause"; }
-      setReps((r) => r + 1);
-      return "inhale";
+      let next: Phase;
+      if (p === "inhale") next = "hold";
+      else if (p === "hold") next = "exhale";
+      else if (p === "exhale") { next = "pause"; }
+      else { setReps((r) => r + 1); next = "inhale"; }
+      playPhaseSound(next);
+      return next;
     });
     setTimer(0);
-  }, []);
+  }, [playPhaseSound]);
 
   useEffect(() => {
     if (!running) return;
@@ -50,7 +78,25 @@ const BreathTrainer = () => {
     return () => clearInterval(interval);
   }, [running, phaseDuration, nextPhase]);
 
-  const reset = () => { setRunning(false); setPhase("inhale"); setTimer(0); setReps(0); };
+  const handleStart = () => {
+    if (!running) {
+      setRunning(true);
+      playPhaseSound(phase);
+    } else {
+      setRunning(false);
+      if (stopFnRef.current) { stopFnRef.current(); stopFnRef.current = null; }
+      stopTone();
+    }
+  };
+
+  const reset = () => {
+    setRunning(false);
+    setPhase("inhale");
+    setTimer(0);
+    setReps(0);
+    if (stopFnRef.current) { stopFnRef.current(); stopFnRef.current = null; }
+    stopTone();
+  };
 
   const circleScale = phase === "inhale" ? 1 + (timer / phaseDuration) * 0.5 : phase === "exhale" ? 1.5 - (timer / phaseDuration) * 0.5 : phase === "hold" ? 1.5 : 1;
 
@@ -89,7 +135,6 @@ const BreathTrainer = () => {
           <Card className="overflow-hidden">
             <CardContent className="p-8 flex flex-col items-center justify-center min-h-[350px]">
               <div className="relative flex items-center justify-center mb-8">
-                {/* Outer ring */}
                 <motion.div
                   animate={{ scale: circleScale, opacity: 0.15 }}
                   transition={{ duration: 0.8, ease: "easeInOut" }}
@@ -100,7 +145,6 @@ const BreathTrainer = () => {
                   transition={{ duration: 0.6, ease: "easeInOut" }}
                   className="absolute h-36 w-36 rounded-full bg-primary"
                 />
-                {/* Inner circle */}
                 <motion.div
                   animate={{ scale: circleScale }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -116,9 +160,12 @@ const BreathTrainer = () => {
               {/* Controls */}
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="icon" onClick={reset}><RotateCcw className="h-4 w-4" /></Button>
-                <Button size="lg" onClick={() => setRunning(!running)} className="gap-2 px-8">
+                <Button size="lg" onClick={handleStart} className="gap-2 px-8">
                   {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                   {running ? "Pausar" : "Iniciar"}
+                </Button>
+                <Button variant="outline" size="icon" onClick={() => setSoundOn(!soundOn)}>
+                  {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                 </Button>
               </div>
 
