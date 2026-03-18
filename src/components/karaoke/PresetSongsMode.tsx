@@ -20,9 +20,7 @@ interface Song {
 
 const PRESET_SONGS: Song[] = [
   {
-    title: "Bésame Mucho",
-    artist: "Consuelo Velázquez",
-    duration: 36,
+    title: "Bésame Mucho", artist: "Consuelo Velázquez", duration: 36,
     lyrics: [
       { time: 0, text: "Bésame, bésame mucho", targetNote: "G4" },
       { time: 4, text: "Como si fuera esta noche", targetNote: "A4" },
@@ -36,9 +34,7 @@ const PRESET_SONGS: Song[] = [
     ],
   },
   {
-    title: "Cielito Lindo",
-    artist: "Tradicional Mexicana",
-    duration: 32,
+    title: "Cielito Lindo", artist: "Tradicional Mexicana", duration: 32,
     lyrics: [
       { time: 0, text: "De la Sierra Morena", targetNote: "C4" },
       { time: 4, text: "Cielito lindo, vienen bajando", targetNote: "E4" },
@@ -51,9 +47,7 @@ const PRESET_SONGS: Song[] = [
     ],
   },
   {
-    title: "La Bamba",
-    artist: "Tradicional Veracruzana",
-    duration: 28,
+    title: "La Bamba", artist: "Tradicional Veracruzana", duration: 28,
     lyrics: [
       { time: 0, text: "Para bailar la bamba", targetNote: "C4" },
       { time: 4, text: "Se necesita una poca de gracia", targetNote: "E4" },
@@ -100,7 +94,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     }, 200);
   };
 
-  // Timer
   useEffect(() => {
     if (isPlaying && !finished && selectedSong) {
       timerRef.current = setInterval(() => {
@@ -119,7 +112,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     return () => clearInterval(timerRef.current);
   }, [isPlaying, finished, selectedSong]);
 
-  // Scoring
   useEffect(() => {
     if (!isPlaying) return;
     const interval = setInterval(() => {
@@ -139,7 +131,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     return () => clearInterval(interval);
   }, [isPlaying, volume, pitch]);
 
-  // Finished
   useEffect(() => {
     if (finished) stopRecording();
   }, [finished]);
@@ -155,7 +146,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     setScores({ pitch: 0, timing: 0, expression: 0 });
   };
 
-  // Song selector
   if (!selectedSong) {
     return (
       <div className="p-4 md:p-8 space-y-5">
@@ -165,11 +155,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         </div>
         <div className="grid gap-3">
           {PRESET_SONGS.map((song) => (
-            <button
-              key={song.title}
-              onClick={() => setSelectedSong(song)}
-              className="glass-card p-4 flex items-center gap-4 text-left hover:border-primary/30 transition-all"
-            >
+            <button key={song.title} onClick={() => setSelectedSong(song)} className="glass-card p-4 flex items-center gap-4 text-left hover:border-primary/30 transition-all">
               <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                 <Play className="h-4 w-4 text-primary" />
               </div>
@@ -183,81 +169,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
       </div>
     );
   }
-      </div>
-    );
-  }
-
-  const activeLine = selectedSong.lyrics.reduce((best, line, i) => (elapsed >= line.time ? i : best), 0);
-  const progress = (elapsed / selectedSong.duration) * 100;
-  const globalScore = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-
-  const handlePlay = async () => {
-    if (finished) return;
-    if (!isListening) {
-      const ok = await requestMic();
-      if (!ok) return;
-    }
-    setTimeout(() => {
-      if (stream && !isRecording) startRecording(stream);
-      setIsPlaying(true);
-    }, 200);
-  };
-
-  // Timer
-  useEffect(() => {
-    if (isPlaying && !finished) {
-      timerRef.current = setInterval(() => {
-        setElapsed((prev) => {
-          const next = prev + 0.25;
-          if (next >= selectedSong.duration) {
-            clearInterval(timerRef.current);
-            setIsPlaying(false);
-            setFinished(true);
-            return selectedSong.duration;
-          }
-          return next;
-        });
-      }, 250);
-    }
-    return () => clearInterval(timerRef.current);
-  }, [isPlaying, finished, selectedSong]);
-
-  // Scoring
-  useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      const s = scoreSamplesRef.current;
-      s.timingTotal++;
-      if (volume > 15) s.timingHits++;
-      if (pitch) {
-        s.pitchTotal++;
-        if (Math.abs(pitch.cents) < 30) s.pitchHits++;
-      }
-      setScores({
-        pitch: s.pitchTotal > 0 ? Math.round((s.pitchHits / s.pitchTotal) * 100) : 0,
-        timing: s.timingTotal > 0 ? Math.round((s.timingHits / s.timingTotal) * 100) : 0,
-        expression: Math.min(Math.round(volume * 1.2), 100),
-      });
-    }, 500);
-    return () => clearInterval(interval);
-  }, [isPlaying, volume, pitch]);
-
-  // Finished
-  useEffect(() => {
-    if (finished) stopRecording();
-  }, [finished]);
-
-  const handleReset = () => {
-    clearInterval(timerRef.current);
-    setIsPlaying(false);
-    setElapsed(0);
-    setFinished(false);
-    stopRecording();
-    clearRecording();
-    scoreSamplesRef.current = { pitchHits: 0, pitchTotal: 0, timingHits: 0, timingTotal: 0 };
-    setScores({ pitch: 0, timing: 0, expression: 0 });
-  };
 
   return (
     <div className="p-4 md:p-8 space-y-5">
@@ -272,7 +183,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       </div>
 
-      {/* Pitch */}
       {isPlaying && pitch && (
         <div className="glass-card p-3 flex items-center justify-between">
           <span className="font-mono text-lg font-bold text-primary">
@@ -284,7 +194,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
-      {/* Waveform + progress */}
       <div className="glass-card p-4">
         <div className="flex items-center gap-0.5 h-16 mb-3">
           {bars.map((h, i) => (
@@ -300,7 +209,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       </div>
 
-      {/* Scores */}
       <div className="grid grid-cols-3 gap-2">
         {[
           { label: "Afinación", value: scores.pitch },
@@ -314,7 +222,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         ))}
       </div>
 
-      {/* Lyrics */}
       <div className="glass-card p-4 space-y-2 max-h-48 overflow-y-auto">
         {selectedSong.lyrics.map((line, i) => (
           <p key={i} className={`font-serif text-lg transition-all duration-300 ${
@@ -325,7 +232,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         ))}
       </div>
 
-      {/* Playback */}
       {finished && audioUrl && (
         <div className="glass-card p-4 space-y-3">
           <audio controls src={audioUrl} className="w-full" />
@@ -340,7 +246,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
-      {/* Controls */}
       <div className="flex items-center justify-center gap-5">
         <button onClick={() => { handleReset(); setSelectedSong(null); }} className="h-11 w-11 rounded-full glass-card flex items-center justify-center text-muted-foreground hover:text-foreground">
           <RotateCcw className="h-4 w-4" />
