@@ -21,7 +21,6 @@ const pageVariants = {
     scale: 0.98,
     transition: { duration: 0.2, ease: "easeIn" as const },
   },
-  },
 };
 
 export function PageTransition({ children }: { children: ReactNode }) {
