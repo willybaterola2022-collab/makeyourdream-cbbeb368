@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic, Square, RotateCcw, Download, Cloud, Play } from "lucide-react";
+import { Download, Cloud, Play } from "lucide-react";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
+import VintageMicrophone from "./VintageMicrophone";
+import SingingFeedback from "./SingingFeedback";
 
 interface Props {
   genre: string;
