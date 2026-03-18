@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import Login from "./pages/Login";
@@ -56,8 +56,8 @@ function AnimatedRoutes() {
         <Route path="/landing" element={<Landing />} />
         <Route path="/onboarding" element={<Onboarding />} />
 
-        {/* Protected app routes */}
-        <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+        {/* App routes — public, login only needed to save */}
+        <Route element={<AppLayout />}>
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/karaoke" element={<PageTransition><Karaoke /></PageTransition>} />
           <Route path="/fingerprint" element={<PageTransition><Fingerprint /></PageTransition>} />

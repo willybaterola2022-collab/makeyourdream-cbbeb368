@@ -15,11 +15,16 @@ export function useSupabaseRecorder(module: string) {
   const recorder = useRecorder();
   const [isUploading, setIsUploading] = useState(false);
   const [savedResult, setSavedResult] = useState<UploadResult | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   const saveRecording = useCallback(
     async (title?: string, metadata?: Record<string, any>) => {
-      if (!recorder.audioBlob || !user) {
-        toast.error("No hay grabación o usuario no autenticado");
+      if (!recorder.audioBlob) {
+        toast.error("No hay grabación para guardar");
+        return null;
+      }
+      if (!user) {
+        setNeedsAuth(true);
         return null;
       }
 
@@ -81,10 +86,14 @@ export function useSupabaseRecorder(module: string) {
     [recorder.audioBlob, recorder.duration, user, module]
   );
 
+  const dismissAuth = useCallback(() => setNeedsAuth(false), []);
+
   return {
     ...recorder,
     isUploading,
     savedResult,
     saveRecording,
+    needsAuth,
+    dismissAuth,
   };
 }
