@@ -1,8 +1,10 @@
 import { Play, Pause, RotateCcw, Mic, MicOff, SkipForward, Headphones } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMicrophone } from "@/hooks/useMicrophone";
-import { useRecorder } from "@/hooks/useRecorder";
+import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const lyrics = [
