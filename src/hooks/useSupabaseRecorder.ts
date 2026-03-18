@@ -86,10 +86,14 @@ export function useSupabaseRecorder(module: string) {
     [recorder.audioBlob, recorder.duration, user, module]
   );
 
+  const dismissAuth = useCallback(() => setNeedsAuth(false), []);
+
   return {
     ...recorder,
     isUploading,
     savedResult,
     saveRecording,
+    needsAuth,
+    dismissAuth,
   };
 }
