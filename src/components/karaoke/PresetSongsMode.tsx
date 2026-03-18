@@ -269,7 +269,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     setFinished(false);
     stopRecording();
     clearRecording();
-    scoreSamplesRef.current = { pitchHits: 0, pitchTotal: 0, timingHits: 0, timingTotal: 0 };
+    scoreSamplesRef.current = { pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, prevVolumes: [] };
     setScores({ pitch: 0, timing: 0, expression: 0 });
   };
 
