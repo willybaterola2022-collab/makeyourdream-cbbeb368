@@ -4,8 +4,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnimatePresence } from "framer-motion";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
+import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import Index from "./pages/Index";
@@ -26,7 +29,6 @@ import WarmUp from "./pages/WarmUp";
 import Comparator from "./pages/Comparator";
 import AutoMix from "./pages/AutoMix";
 import NotFound from "./pages/NotFound";
-// New modules
 import SongSketch from "./pages/SongSketch";
 import HarmonyLab from "./pages/HarmonyLab";
 import LoopStation from "./pages/LoopStation";
@@ -49,12 +51,13 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Public routes (no sidebar) */}
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
         <Route path="/landing" element={<Landing />} />
         <Route path="/onboarding" element={<Onboarding />} />
 
-        {/* App routes (with sidebar layout) */}
-        <Route element={<AppLayout />}>
+        {/* Protected app routes */}
+        <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/karaoke" element={<PageTransition><Karaoke /></PageTransition>} />
           <Route path="/fingerprint" element={<PageTransition><Fingerprint /></PageTransition>} />
@@ -72,7 +75,6 @@ function AnimatedRoutes() {
           <Route path="/warmup" element={<PageTransition><WarmUp /></PageTransition>} />
           <Route path="/comparator" element={<PageTransition><Comparator /></PageTransition>} />
           <Route path="/automix" element={<PageTransition><AutoMix /></PageTransition>} />
-          {/* New modules */}
           <Route path="/song-sketch" element={<PageTransition><SongSketch /></PageTransition>} />
           <Route path="/harmony-lab" element={<PageTransition><HarmonyLab /></PageTransition>} />
           <Route path="/loop-station" element={<PageTransition><LoopStation /></PageTransition>} />
@@ -100,7 +102,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AnimatedRoutes />
+        <AuthProvider>
+          <AnimatedRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

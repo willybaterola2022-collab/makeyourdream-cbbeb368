@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMicrophone } from "@/hooks/useMicrophone";
-import { useRecorder } from "@/hooks/useRecorder";
+import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { toast } from "sonner";
 
 interface SketchBlock {
@@ -29,7 +29,7 @@ const SECTIONS = ["intro", "verso", "coro", "puente", "outro"];
 
 export default function SongSketch() {
   const { isListening, volume, requestMic, stopMic, stream } = useMicrophone();
-  const { isRecording, audioBlob, audioUrl, duration, startRecording, stopRecording, clearRecording } = useRecorder();
+  const { isRecording, audioBlob, audioUrl, duration, startRecording, stopRecording, clearRecording, saveRecording } = useSupabaseRecorder("song-sketch");
   const [blocks, setBlocks] = useState<SketchBlock[]>([]);
   const [isCapturing, setIsCapturing] = useState(false);
   const [selectedSection, setSelectedSection] = useState("verso");
@@ -75,10 +75,12 @@ export default function SongSketch() {
       audioBlob: audioBlob,
     };
     // Use setTimeout to avoid setState during render
-    setTimeout(() => {
+    setTimeout(async () => {
       setBlocks((prev) => [...prev, newBlock]);
+      // Save to cloud
+      await saveRecording(`Idea #${blocks.length + 1} - ${selectedSection}`, { section: selectedSection });
       clearRecording();
-      toast.success("¡Fragmento guardado!");
+      toast.success("¡Fragmento guardado en la nube! ☁️");
     }, 0);
   }
 

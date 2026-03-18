@@ -1,8 +1,10 @@
 import { Play, Pause, RotateCcw, Mic, MicOff, SkipForward, Headphones } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMicrophone } from "@/hooks/useMicrophone";
-import { useRecorder } from "@/hooks/useRecorder";
+import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const lyrics = [
@@ -20,11 +22,12 @@ const lyrics = [
 const SONG_DURATION = 36; // seconds
 
 const Karaoke = () => {
+  const { user } = useAuth();
   const [isPlaying, setIsPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [finished, setFinished] = useState(false);
   const { isListening, volume, waveformData, requestMic, stopMic, stream, analyserNode } = useMicrophone(2048);
-  const { isRecording, audioUrl, startRecording, stopRecording, clearRecording } = useRecorder();
+  const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, isPlaying);
   const timerRef = useRef<ReturnType<typeof setInterval>>(0 as any);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -83,11 +86,31 @@ const Karaoke = () => {
     return () => clearInterval(interval);
   }, [isPlaying, volume, pitch]);
 
-  // Finished handler
+  // Finished handler — save to cloud
   useEffect(() => {
     if (finished) {
       stopRecording();
-      toast.success("¡Sesión completada! Escucha tu grabación 🎧");
+      // Save recording + session to cloud after a tick (wait for blob)
+      setTimeout(async () => {
+        const result = await saveRecording("Bésame Mucho - Karaoke", {
+          pitch_score: scores.pitch,
+          timing_score: scores.timing,
+          expression_score: scores.expression,
+        });
+        if (result && user) {
+          await supabase.from("training_sessions").insert({
+            user_id: user.id,
+            module: "karaoke",
+            song_title: "Bésame Mucho",
+            pitch_score: scores.pitch,
+            timing_score: scores.timing,
+            expression_score: scores.expression,
+            overall_score: Math.round((scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2)),
+            recording_id: result.recordingId,
+          });
+        }
+        toast.success("¡Sesión completada! Escucha tu grabación 🎧");
+      }, 500);
     }
   }, [finished, stopRecording]);
 
