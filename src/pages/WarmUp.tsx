@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { StaggerContainer, StaggerItem } from "@/components/layout/StaggerContainer";
+import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 
 interface Exercise {
   name: string;
@@ -41,6 +42,7 @@ const routines: Record<number, Exercise[]> = {
 };
 
 const WarmUp = () => {
+  const { playNote, playSuccess } = useAudioEngine();
   const [duration, setDuration] = useState(5);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [timer, setTimer] = useState(0);
@@ -57,6 +59,8 @@ const WarmUp = () => {
         if (t + 1 >= exercises[activeIdx].duration) {
           setCompleted((c) => new Set(c).add(activeIdx));
           setRunning(false);
+          // Play success chord on exercise completion
+          playSuccess();
           if (activeIdx < exercises.length - 1) {
             setActiveIdx(activeIdx + 1);
             return 0;
@@ -67,11 +71,13 @@ const WarmUp = () => {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [running, activeIdx, exercises]);
+  }, [running, activeIdx, exercises, playSuccess]);
 
   const start = () => {
     if (activeIdx < 0) setActiveIdx(0);
     setRunning(true);
+    // Play start tone (C4)
+    playNote(noteToFreq("C4"), 0.5);
   };
 
   const resetAll = () => { setActiveIdx(-1); setTimer(0); setRunning(false); setCompleted(new Set()); };

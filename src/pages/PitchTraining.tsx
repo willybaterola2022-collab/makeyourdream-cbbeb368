@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { useState, useCallback } from "react";
-import { Ear, Zap, Trophy, RotateCcw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Ear, Zap, Trophy, RotateCcw, Volume2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StaggerContainer, StaggerItem } from "@/components/layout/StaggerContainer";
+import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const octave1 = notes.map((n) => `${n}4`);
@@ -22,6 +23,7 @@ const intervals = [
 ];
 
 const PitchTraining = () => {
+  const { playNote } = useAudioEngine();
   const [mode, setMode] = useState<"notes" | "intervals">("notes");
   const [target, setTarget] = useState(() => allNotes[Math.floor(Math.random() * 12)]);
   const [score, setScore] = useState(0);
@@ -29,9 +31,26 @@ const PitchTraining = () => {
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [level, setLevel] = useState(1);
   const [targetInterval, setTargetInterval] = useState(intervals[0]);
+  const [baseNote] = useState("C4");
+  const hasPlayedRef = useRef(false);
+
+  // Play target note/interval when it changes
+  useEffect(() => {
+    if (hasPlayedRef.current) return;
+    hasPlayedRef.current = true;
+    if (mode === "notes") {
+      playNote(noteToFreq(target), 1.2);
+    } else {
+      const baseFreq = noteToFreq(baseNote);
+      const targetFreq = noteToFreq(baseNote) * Math.pow(2, targetInterval.semitones / 12);
+      playNote(baseFreq, 0.6);
+      setTimeout(() => playNote(targetFreq, 0.6), 700);
+    }
+  }, [target, targetInterval, mode, playNote, baseNote]);
 
   const newRound = useCallback(() => {
     setFeedback(null);
+    hasPlayedRef.current = false;
     if (mode === "notes") {
       setTarget(allNotes[Math.floor(Math.random() * (6 + level * 2))]);
     } else {
@@ -39,8 +58,20 @@ const PitchTraining = () => {
     }
   }, [mode, level]);
 
+  const replaySound = () => {
+    if (mode === "notes") {
+      playNote(noteToFreq(target), 1.2);
+    } else {
+      const baseFreq = noteToFreq(baseNote);
+      const targetFreq = baseFreq * Math.pow(2, targetInterval.semitones / 12);
+      playNote(baseFreq, 0.6);
+      setTimeout(() => playNote(targetFreq, 0.6), 700);
+    }
+  };
+
   const handleNoteClick = (note: string) => {
     if (feedback) return;
+    playNote(noteToFreq(note), 0.4);
     if (note === target) {
       setScore((s) => s + 10 * (1 + streak));
       setStreak((s) => s + 1);
@@ -55,6 +86,12 @@ const PitchTraining = () => {
 
   const handleIntervalClick = (interval: typeof intervals[0]) => {
     if (feedback) return;
+    // Play the selected interval for feedback
+    const baseFreq = noteToFreq(baseNote);
+    const selectedFreq = baseFreq * Math.pow(2, interval.semitones / 12);
+    playNote(baseFreq, 0.4);
+    setTimeout(() => playNote(selectedFreq, 0.4), 500);
+
     if (interval.name === targetInterval.name) {
       setScore((s) => s + 15 * (1 + streak));
       setStreak((s) => s + 1);
@@ -66,7 +103,7 @@ const PitchTraining = () => {
     setTimeout(newRound, 1200);
   };
 
-  const reset = () => { setScore(0); setStreak(0); setLevel(1); setFeedback(null); newRound(); };
+  const reset = () => { setScore(0); setStreak(0); setLevel(1); setFeedback(null); hasPlayedRef.current = false; newRound(); };
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
@@ -121,6 +158,9 @@ const PitchTraining = () => {
                   {feedback === "correct" ? "¡Correcto! 🎉" : "Intenta de nuevo"}
                 </motion.p>
               )}
+              <Button variant="ghost" size="sm" onClick={replaySound} className="mt-3 gap-1.5 text-muted-foreground">
+                <Volume2 className="h-3.5 w-3.5" /> Escuchar de nuevo
+              </Button>
             </CardContent>
           </Card>
         </StaggerItem>
