@@ -10,6 +10,13 @@ import {
   AudioWaveform,
   Users,
   UserCircle,
+  Palette,
+  Calendar,
+  Wind,
+  Ear,
+  Thermometer,
+  GitCompareArrows,
+  Wand2,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
