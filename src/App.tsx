@@ -18,6 +18,13 @@ import Challenges from "./pages/Challenges";
 import Matching from "./pages/Matching";
 import Duetos from "./pages/Duetos";
 import Portfolio from "./pages/Portfolio";
+import DreamCanvas from "./pages/DreamCanvas";
+import Plan90 from "./pages/Plan90";
+import BreathTrainer from "./pages/BreathTrainer";
+import PitchTraining from "./pages/PitchTraining";
+import WarmUp from "./pages/WarmUp";
+import Comparator from "./pages/Comparator";
+import AutoMix from "./pages/AutoMix";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
