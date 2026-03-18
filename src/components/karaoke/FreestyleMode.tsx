@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic, Square, Play, RotateCcw, Download, Cloud } from "lucide-react";
+import { Download, Cloud } from "lucide-react";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
 import { useMetronome } from "@/hooks/useMetronome";
+import VintageMicrophone from "./VintageMicrophone";
+import SingingFeedback from "./SingingFeedback";
 
 interface Props {
   genre: string;
@@ -13,12 +15,15 @@ interface Props {
 }
 
 export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
-  const { isListening, volume, waveformData, requestMic, stopMic, stream, analyserNode } = useMicrophone(2048);
+  const { isListening, volume, waveformData, requestMic, stream, analyserNode } = useMicrophone(2048);
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, isRecording);
   const [elapsed, setElapsed] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const [scores, setScores] = useState({ pitch: 0, timing: 0, expression: 0 });
   const timerRef = useRef<ReturnType<typeof setInterval>>(0 as any);
   const metronome = useMetronome(bpm);
+  const samplesRef = useRef({ pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, volumeVariance: 0, prevVolumes: [] as number[] });
 
   const bars = waveformData.length > 0
     ? waveformData.slice(0, 50).map((v) => Math.max(v, 4))
@@ -32,14 +37,66 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
     return () => clearInterval(timerRef.current);
   }, [isRecording]);
 
-  const handleStart = async () => {
+  // Real scoring
+  useEffect(() => {
+    if (!isRecording) return;
+    const interval = setInterval(() => {
+      const s = samplesRef.current;
+      s.totalSamples++;
+      s.prevVolumes.push(volume);
+      if (s.prevVolumes.length > 40) s.prevVolumes.shift();
+
+      // Pitch: only count if actually detecting pitch, and check cents accuracy
+      if (pitch) {
+        s.pitchTotal++;
+        if (Math.abs(pitch.cents) < 25) s.pitchHits++;
+      }
+
+      // Timing: penalize silence heavily in freestyle (you should be singing!)
+      if (volume < 8) s.silentSamples++;
+      s.volumeSum += volume;
+      s.volumeMax = Math.max(s.volumeMax, volume);
+
+      // Expression: calculate dynamic range (variation in volume)
+      const avg = s.volumeSum / s.totalSamples;
+      const variance = s.prevVolumes.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / Math.max(s.prevVolumes.length, 1);
+      const dynamicRange = Math.sqrt(variance);
+
+      const pitchScore = s.pitchTotal > 0 ? Math.round((s.pitchHits / s.pitchTotal) * 100) : 0;
+      const singingRatio = 1 - (s.silentSamples / s.totalSamples);
+      const timingScore = Math.round(singingRatio * 100);
+      // Expression: reward dynamic range (not just loud)
+      const expressionScore = Math.min(Math.round(dynamicRange * 3 + (s.volumeMax > 40 ? 15 : 0)), 100);
+
+      setScores({ pitch: pitchScore, timing: timingScore, expression: expressionScore });
+    }, 500);
+    return () => clearInterval(interval);
+  }, [isRecording, volume, pitch]);
+
+  const handleMicClick = async () => {
+    if (finished) {
+      // Reset
+      clearRecording();
+      setElapsed(0);
+      setFinished(false);
+      setScores({ pitch: 0, timing: 0, expression: 0 });
+      samplesRef.current = { pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, volumeVariance: 0, prevVolumes: [] };
+      return;
+    }
+    if (isRecording) {
+      // Stop
+      stopRecording();
+      metronome.stop();
+      clearInterval(timerRef.current);
+      setFinished(true);
+      return;
+    }
+    // Start
     if (!isListening) {
       const ok = await requestMic();
       if (!ok) return;
     }
-    // wait a tick for stream
     setTimeout(() => {
-      const s = (document.querySelector("body") as any)?.__micStream || stream;
       if (stream) {
         startRecording(stream);
         metronome.start();
@@ -47,38 +104,24 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
     }, 200);
   };
 
-  const handleStop = () => {
-    stopRecording();
-    metronome.stop();
-    clearInterval(timerRef.current);
-  };
-
-  const handleReset = () => {
-    handleStop();
-    clearRecording();
-    setElapsed(0);
-  };
-
-  const handleSave = () => {
-    saveRecording(`Freestyle ${genre}`, { genre, pitchRange });
-  };
-
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
+  const micState = finished ? "finished" : isRecording ? "recording" : "idle";
+
   return (
-    <div className="p-4 md:p-8 space-y-5">
-      <div>
+    <div className="p-4 md:p-8 space-y-4">
+      <div className="text-center">
         <h2 className="font-serif text-2xl font-semibold text-foreground">Freestyle</h2>
-        <p className="text-sm text-muted-foreground">Canta lo que quieras · {genre} · {pitchRange}</p>
+        <p className="text-sm text-muted-foreground">{genre} · {pitchRange === "low" ? "Grave" : pitchRange === "high" ? "Agudo" : "Medio"}{bpm > 0 ? ` · ${bpm} BPM` : ""}</p>
       </div>
 
       {/* Pitch display */}
       {isRecording && pitch && (
-        <div className="glass-card p-4 flex items-center justify-between">
+        <div className="glass-card p-3 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">Nota</span>
-          <span className="font-mono text-2xl font-bold text-primary">
+          <span className="font-mono text-xl font-bold text-primary">
             {pitch.note}{pitch.octave}
-            <span className={`ml-2 text-sm ${Math.abs(pitch.cents) < 20 ? "text-green-400" : "text-destructive"}`}>
+            <span className={`ml-2 text-xs ${Math.abs(pitch.cents) < 20 ? "text-green-400" : Math.abs(pitch.cents) < 40 ? "text-yellow-400" : "text-destructive"}`}>
               {pitch.cents > 0 ? "+" : ""}{pitch.cents}¢
             </span>
           </span>
@@ -86,69 +129,41 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
+      {/* Vintage Microphone */}
+      <VintageMicrophone
+        isActive={isRecording}
+        volume={volume}
+        onClick={handleMicClick}
+        state={micState}
+      />
+
       {/* Waveform */}
-      <div className="glass-card p-5">
-        <div className="flex items-center gap-0.5 h-24 mb-3">
+      <div className="glass-card p-4">
+        <div className="flex items-center gap-0.5 h-16">
           {bars.map((h, i) => (
             <div
               key={i}
-              className={`flex-1 rounded-full transition-all duration-75 ${
-                isRecording && h > 15 ? "gold-gradient" : "bg-muted"
-              }`}
+              className={`flex-1 rounded-full transition-all duration-75 ${isRecording && h > 15 ? "gold-gradient" : "bg-muted"}`}
               style={{ height: `${Math.min(h, 100)}%` }}
             />
           ))}
         </div>
-        <div className="flex justify-between items-center text-sm">
-          <span className="font-mono text-foreground font-semibold text-lg">{formatTime(elapsed)}</span>
+        <div className="flex justify-between items-center text-sm mt-2">
+          <span className="font-mono text-foreground font-semibold">{formatTime(elapsed)}</span>
           {isListening && (
             <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
               <span className={`inline-block h-2 w-2 rounded-full ${volume > 20 ? "bg-primary" : "bg-muted-foreground"}`} />
               {Math.round(volume)}%
             </span>
           )}
-          {bpm > 0 && (
-            <span className="text-xs text-muted-foreground">{bpm} BPM</span>
-          )}
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-center gap-5">
-        <button onClick={handleReset} className="h-11 w-11 rounded-full glass-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-          <RotateCcw className="h-4 w-4" />
-        </button>
+      {/* Live scores while recording */}
+      <SingingFeedback scores={scores} isActive={isRecording} finished={finished} />
 
-        {!isRecording && !audioUrl && (
-          <button
-            onClick={handleStart}
-            className="h-16 w-16 rounded-full gold-gradient flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity glow-gold"
-          >
-            <Mic className="h-7 w-7" />
-          </button>
-        )}
-
-        {isRecording && (
-          <button
-            onClick={handleStop}
-            className="h-16 w-16 rounded-full bg-destructive flex items-center justify-center text-destructive-foreground hover:opacity-90 transition-opacity animate-pulse"
-          >
-            <Square className="h-6 w-6" />
-          </button>
-        )}
-
-        {!isRecording && audioUrl && (
-          <button
-            onClick={handleStart}
-            className="h-16 w-16 rounded-full gold-gradient flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity glow-gold"
-          >
-            <Mic className="h-7 w-7" />
-          </button>
-        )}
-      </div>
-
-      {/* Playback */}
-      {audioUrl && !isRecording && (
+      {/* Playback after finish */}
+      {finished && audioUrl && (
         <div className="glass-card p-4 space-y-3">
           <p className="text-sm text-muted-foreground text-center">🎧 Escucha tu grabación</p>
           <audio controls src={audioUrl} className="w-full" />
@@ -161,7 +176,7 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
               <Download className="h-4 w-4" /> Descargar
             </a>
             <button
-              onClick={handleSave}
+              onClick={() => saveRecording(`Freestyle ${genre}`, { genre, pitchRange, scores })}
               disabled={isUploading}
               className="flex-1 gold-gradient p-2.5 flex items-center justify-center gap-2 text-sm text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
             >
