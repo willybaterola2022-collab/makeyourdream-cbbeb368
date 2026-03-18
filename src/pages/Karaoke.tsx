@@ -26,7 +26,7 @@ const Karaoke = () => {
   const [elapsed, setElapsed] = useState(0);
   const [finished, setFinished] = useState(false);
   const { isListening, volume, waveformData, requestMic, stopMic, stream, analyserNode } = useMicrophone(2048);
-  const { isRecording, audioUrl, startRecording, stopRecording, clearRecording } = useRecorder();
+  const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, isPlaying);
   const timerRef = useRef<ReturnType<typeof setInterval>>(0 as any);
   const audioRef = useRef<HTMLAudioElement | null>(null);
