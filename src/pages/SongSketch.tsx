@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMicrophone } from "@/hooks/useMicrophone";
-import { useRecorder } from "@/hooks/useRecorder";
+import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { toast } from "sonner";
 
 interface SketchBlock {
