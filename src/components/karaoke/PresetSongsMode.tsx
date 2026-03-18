@@ -261,7 +261,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
       <div className="p-4 md:p-8 space-y-5">
         <div>
           <h2 className="font-serif text-2xl font-semibold text-foreground">Canciones</h2>
-          <p className="text-sm text-muted-foreground">Elige una canción para cantar</p>
+          <p className="text-sm text-muted-foreground">Elige una canción para cantar ({PRESET_SONGS.length} disponibles)</p>
         </div>
         <div className="grid gap-3">
           {PRESET_SONGS.map((song) => (
@@ -269,9 +269,13 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
               <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                 <Play className="h-4 w-4 text-primary" />
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <p className="font-serif font-semibold text-foreground">{song.title}</p>
                 <p className="text-xs text-muted-foreground">{song.artist}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[10px] text-muted-foreground">{song.genre}</p>
+                <p className={`text-[10px] font-medium ${difficultyColor[song.difficulty] || "text-muted-foreground"}`}>{song.difficulty}</p>
               </div>
             </button>
           ))}
