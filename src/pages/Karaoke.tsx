@@ -85,11 +85,31 @@ const Karaoke = () => {
     return () => clearInterval(interval);
   }, [isPlaying, volume, pitch]);
 
-  // Finished handler
+  // Finished handler — save to cloud
   useEffect(() => {
     if (finished) {
       stopRecording();
-      toast.success("¡Sesión completada! Escucha tu grabación 🎧");
+      // Save recording + session to cloud after a tick (wait for blob)
+      setTimeout(async () => {
+        const result = await saveRecording("Bésame Mucho - Karaoke", {
+          pitch_score: scores.pitch,
+          timing_score: scores.timing,
+          expression_score: scores.expression,
+        });
+        if (result && user) {
+          await supabase.from("training_sessions").insert({
+            user_id: user.id,
+            module: "karaoke",
+            song_title: "Bésame Mucho",
+            pitch_score: scores.pitch,
+            timing_score: scores.timing,
+            expression_score: scores.expression,
+            overall_score: Math.round((scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2)),
+            recording_id: result.recordingId,
+          });
+        }
+        toast.success("¡Sesión completada! Escucha tu grabación 🎧");
+      }, 500);
     }
   }, [finished, stopRecording]);
 
