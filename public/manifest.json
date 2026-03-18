@@ -1,0 +1,13 @@
+{
+  "name": "MakeYourDream",
+  "short_name": "MYD",
+  "description": "Transforma tu talento musical con IA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "64x64", "type": "image/x-icon" }
+  ]
+}

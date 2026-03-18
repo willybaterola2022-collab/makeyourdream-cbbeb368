@@ -6,8 +6,8 @@ const containerVariants: Variants = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
+      staggerChildren: 0.06,
+      delayChildren: 0.08,
     },
   },
 };
@@ -17,7 +17,16 @@ const itemVariants: Variants = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+    transition: { type: "spring", stiffness: 300, damping: 24 },
+  },
+};
+
+const scaleItemVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.92 },
+  show: {
+    opacity: 1,
+    scale: 1,
+    transition: { type: "spring", stiffness: 300, damping: 24 },
   },
 };
 
@@ -49,6 +58,20 @@ export function StaggerItem({
 }) {
   return (
     <motion.div variants={itemVariants} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+export function StaggerScaleItem({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <motion.div variants={scaleItemVariants} className={className}>
       {children}
     </motion.div>
   );

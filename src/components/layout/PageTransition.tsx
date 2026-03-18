@@ -3,18 +3,23 @@ import { useLocation } from "react-router-dom";
 import { ReactNode } from "react";
 
 const pageVariants = {
-  initial: { opacity: 0, y: 20, scale: 0.98 },
+  initial: { opacity: 0, y: 16, scale: 0.98 },
   animate: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
+    transition: {
+      type: "spring" as const,
+      stiffness: 260,
+      damping: 28,
+      mass: 0.8,
+    },
   },
   exit: {
     opacity: 0,
-    y: -10,
+    y: -8,
     scale: 0.98,
-    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const },
+    transition: { duration: 0.2, ease: "easeIn" as const },
   },
 };
 
