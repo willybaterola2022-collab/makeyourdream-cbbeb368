@@ -1,4 +1,6 @@
 import { Flame, TrendingUp, Play, ChevronRight, Star } from "lucide-react";
+import { motion } from "framer-motion";
+import { StaggerContainer, StaggerItem, HoverCard } from "@/components/layout/StaggerContainer";
 
 const recentLessons = [
   { title: "Técnica de Belting", category: "Vocal Power", progress: 75, img: "🎤" },
