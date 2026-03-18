@@ -13,6 +13,9 @@ import {
   Users,
   Music,
   Flame,
+  Zap,
+  BarChart3,
+  Headphones,
 } from "lucide-react";
 
 /* ─── Animated Equalizer ─── */
@@ -34,6 +37,21 @@ const AnimatedEqualizer = () => (
   <div className="flex items-end justify-center gap-[2px] md:gap-1 h-40 md:h-64 w-full max-w-xl mx-auto opacity-40">
     {Array.from({ length: 28 }).map((_, i) => (
       <EqualizerBar key={i} index={i} total={28} />
+    ))}
+  </div>
+);
+
+/* ─── Sound Wave Rings ─── */
+const SoundWaveRings = () => (
+  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+    {[1, 2, 3, 4].map((ring) => (
+      <motion.div
+        key={ring}
+        className="absolute rounded-full border border-primary/10"
+        style={{ width: `${ring * 120 + 100}px`, height: `${ring * 120 + 100}px` }}
+        animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.05, 0.15] }}
+        transition={{ duration: 4 + ring * 0.5, repeat: Infinity, delay: ring * 0.8, ease: "easeInOut" }}
+      />
     ))}
   </div>
 );
@@ -62,6 +80,12 @@ const features = [
   { icon: Trophy, title: "Challenges Globales", desc: "Compite con cantantes de todo el mundo en ranking semanal" },
   { icon: AudioWaveform, title: "Voice Matching", desc: "Descubre a qué artista famoso suena tu voz" },
   { icon: Users, title: "Duetos con IA", desc: "Canta junto a Freddie Mercury, Adele, Sinatra y más" },
+];
+
+const howItWorks = [
+  { icon: Mic, step: "01", title: "Graba tu voz", desc: "30 segundos es todo lo que necesitamos" },
+  { icon: BarChart3, step: "02", title: "Análisis con IA", desc: "Tu huella vocal en 6 dimensiones al instante" },
+  { icon: Zap, step: "03", title: "Entrena y brilla", desc: "Plan personalizado para transformar tu voz" },
 ];
 
 const testimonials = [
@@ -97,6 +121,9 @@ const Landing = () => {
             }}
           />
         </div>
+
+        {/* Sound wave rings */}
+        <SoundWaveRings />
 
         {/* Floating notes with parallax */}
         {["🎵", "🎶", "🎤", "✨", "🎼", "⭐", "🎹", "🎧"].map((emoji, i) => (
@@ -140,7 +167,7 @@ const Landing = () => {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="font-serif text-5xl md:text-7xl lg:text-8xl font-bold text-foreground leading-[0.92] tracking-tight"
+              className="font-serif text-4xl md:text-7xl lg:text-8xl font-bold text-foreground leading-[0.92] tracking-tight"
             >
               Tu voz merece el
               <br />
@@ -151,7 +178,7 @@ const Landing = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.7 }}
-              className="text-base md:text-xl text-muted-foreground mt-6 max-w-lg mx-auto leading-relaxed"
+              className="text-sm md:text-xl text-muted-foreground mt-6 max-w-lg mx-auto leading-relaxed"
             >
               Graba tu voz, descubre tu potencial y transforma tu talento con inteligencia artificial — en 30 segundos.
             </motion.p>
@@ -170,7 +197,7 @@ const Landing = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/onboarding")}
-              className="h-14 px-8 rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center gap-3 hover:opacity-90 transition-opacity"
+              className="h-14 px-8 w-full sm:w-auto rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
             >
               <Mic className="h-5 w-5" />
               Descubre tu voz — 30s
@@ -180,7 +207,7 @@ const Landing = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/")}
-              className="h-14 px-8 rounded-xl glass-card text-foreground font-medium flex items-center gap-2 hover:border-primary/30 transition-colors"
+              className="h-14 px-8 w-full sm:w-auto rounded-xl glass-card text-foreground font-medium flex items-center justify-center gap-2 hover:border-primary/30 transition-colors"
             >
               <Play className="h-4 w-4" />
               Ver demo
@@ -213,12 +240,44 @@ const Landing = () => {
         </motion.div>
       </section>
 
+      {/* ═══════ HOW IT WORKS ═══════ */}
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
+            <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">Así de fácil</p>
+            <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground">
+              3 pasos para <span className="gold-text">brillar</span>
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {howItWorks.map((item, i) => (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="text-center"
+              >
+                <div className="h-16 w-16 rounded-2xl gold-gradient flex items-center justify-center mx-auto mb-4">
+                  <item.icon className="h-7 w-7 text-primary-foreground" />
+                </div>
+                <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-1">{item.step}</p>
+                <h3 className="font-serif text-xl font-semibold text-foreground mb-2">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ═══════ FEATURES ═══════ */}
       <section className="py-24 px-4">
         <div className="max-w-5xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} className="text-center mb-16">
             <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">10 módulos premium</p>
-            <h2 className="font-serif text-4xl md:text-5xl font-bold text-foreground">
+            <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground">
               Todo lo que necesitas para <br /><span className="gold-text">brillar</span>
             </h2>
           </motion.div>
@@ -242,7 +301,7 @@ const Landing = () => {
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
             <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">Testimonios</p>
-            <h2 className="font-serif text-4xl font-bold text-foreground">Voces que ya <span className="gold-text">brillan</span></h2>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">Voces que ya <span className="gold-text">brillan</span></h2>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {testimonials.map((t, i) => (
@@ -261,10 +320,10 @@ const Landing = () => {
 
       {/* ═══════ FINAL CTA ═══════ */}
       <section className="py-24 px-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-2xl mx-auto text-center glass-card p-10 border-primary/20 glow-gold">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-2xl mx-auto text-center glass-card p-8 md:p-10 border-primary/20 glow-gold">
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">Tu voz merece ser <span className="gold-text">escuchada</span></h2>
-          <p className="text-muted-foreground mb-8">Graba tu voz, recibe tu diagnóstico vocal gratuito y comienza tu transformación hoy.</p>
-          <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 50px -5px hsl(46 65% 52% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/onboarding")} className="h-14 px-10 rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center gap-3 mx-auto">
+          <p className="text-muted-foreground mb-8 text-sm md:text-base">Graba tu voz, recibe tu diagnóstico vocal gratuito y comienza tu transformación hoy.</p>
+          <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 50px -5px hsl(46 65% 52% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/onboarding")} className="h-14 px-10 w-full sm:w-auto rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 mx-auto">
             <Mic className="h-5 w-5" />
             Comenzar gratis
           </motion.button>
@@ -272,12 +331,21 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 py-8 px-4 text-center">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="h-7 w-7 rounded-lg gold-gradient flex items-center justify-center"><Music className="h-4 w-4 text-primary-foreground" /></div>
-          <span className="font-serif text-lg font-semibold text-foreground">MakeYourDream</span>
+      <footer className="border-t border-border/40 py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="h-7 w-7 rounded-lg gold-gradient flex items-center justify-center"><Music className="h-4 w-4 text-primary-foreground" /></div>
+            <span className="font-serif text-lg font-semibold text-foreground">MakeYourDream</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs text-muted-foreground">
+            <button onClick={() => navigate("/karaoke")} className="hover:text-primary transition-colors">Karaoke</button>
+            <button onClick={() => navigate("/fingerprint")} className="hover:text-primary transition-colors">Fingerprint</button>
+            <button onClick={() => navigate("/coach")} className="hover:text-primary transition-colors">Coach IA</button>
+            <button onClick={() => navigate("/challenges")} className="hover:text-primary transition-colors">Challenges</button>
+            <button onClick={() => navigate("/matching")} className="hover:text-primary transition-colors">Matching</button>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">© 2026 MakeYourDream. Transform your voice with AI.</p>
         </div>
-        <p className="text-xs text-muted-foreground">© 2026 MakeYourDream. Transform your voice with AI.</p>
       </footer>
     </div>
   );
