@@ -22,6 +22,7 @@ const lyrics = [
 const SONG_DURATION = 36; // seconds
 
 const Karaoke = () => {
+  const { user } = useAuth();
   const [isPlaying, setIsPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [finished, setFinished] = useState(false);
