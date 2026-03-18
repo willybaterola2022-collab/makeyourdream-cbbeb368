@@ -1,4 +1,6 @@
 import { Flame, TrendingUp, Play, ChevronRight, Star } from "lucide-react";
+import { motion } from "framer-motion";
+import { StaggerContainer, StaggerItem, HoverCard } from "@/components/layout/StaggerContainer";
 
 const recentLessons = [
   { title: "Técnica de Belting", category: "Vocal Power", progress: 75, img: "🎤" },
@@ -10,7 +12,7 @@ const recentLessons = [
 
 const Index = () => {
   return (
-    <div className="p-4 md:p-8 space-y-8 animate-fade-in">
+    <StaggerContainer className="p-4 md:p-8 space-y-8">
       {/* Hero greeting */}
       <div>
         <h1 className="font-serif text-3xl md:text-4xl font-semibold text-foreground">
@@ -118,7 +120,7 @@ const Index = () => {
           ))}
         </div>
       </div>
-    </div>
+    </StaggerContainer>
   );
 };
 
