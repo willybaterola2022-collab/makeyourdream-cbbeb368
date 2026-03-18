@@ -14,16 +14,223 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          vocal_level: string | null
+          xp: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          vocal_level?: string | null
+          xp?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          vocal_level?: string | null
+          xp?: number | null
+        }
+        Relationships: []
+      }
+      recordings: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          file_path: string
+          file_url: string
+          id: string
+          metadata: Json | null
+          module: string
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          file_path: string
+          file_url: string
+          id?: string
+          metadata?: Json | null
+          module: string
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          file_path?: string
+          file_url?: string
+          id?: string
+          metadata?: Json | null
+          module?: string
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      song_sketches: {
+        Row: {
+          blocks: Json | null
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocks?: Json | null
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocks?: Json | null
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      training_sessions: {
+        Row: {
+          created_at: string
+          expression_score: number | null
+          id: string
+          module: string
+          overall_score: number | null
+          pitch_score: number | null
+          recording_id: string | null
+          song_title: string | null
+          timing_score: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expression_score?: number | null
+          id?: string
+          module?: string
+          overall_score?: number | null
+          pitch_score?: number | null
+          recording_id?: string | null
+          song_title?: string | null
+          timing_score?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expression_score?: number | null
+          id?: string
+          module?: string
+          overall_score?: number | null
+          pitch_score?: number | null
+          recording_id?: string | null
+          song_title?: string | null
+          timing_score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_sessions_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      voice_journal_entries: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          pitch_accuracy: number | null
+          power_level: number | null
+          recording_id: string | null
+          user_id: string
+          vocal_range: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pitch_accuracy?: number | null
+          power_level?: number | null
+          recording_id?: string | null
+          user_id: string
+          vocal_range?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pitch_accuracy?: number | null
+          power_level?: number | null
+          recording_id?: string | null
+          user_id?: string
+          vocal_range?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_journal_entries_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +357,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
