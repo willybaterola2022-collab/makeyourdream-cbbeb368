@@ -19,7 +19,8 @@ const pageVariants = {
     opacity: 0,
     y: -8,
     scale: 0.98,
-    transition: { duration: 0.2, ease: "easeIn" },
+    transition: { duration: 0.2, ease: "easeIn" as const },
+  },
   },
 };
 
