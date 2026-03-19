@@ -301,7 +301,7 @@ const Landing = () => {
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
             <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">Testimonios</p>
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">Voces que ya <span className="gold-text">brillan</span></h2>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">Voces que ya <span className="neon-text">brillan</span></h2>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {testimonials.map((t, i) => (
