@@ -17,7 +17,7 @@ export function FloatingBar() {
         <button className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
           <SkipBack className="h-4 w-4" />
         </button>
-        <button className="h-10 w-10 rounded-full gold-gradient flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity">
+        <button className="h-10 w-10 rounded-full stage-gradient flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity">
           <Play className="h-4 w-4 ml-0.5" />
         </button>
         <button className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
