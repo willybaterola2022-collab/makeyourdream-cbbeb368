@@ -56,7 +56,7 @@ const Coach = () => {
       </div>
 
       {/* Recommended Exercise */}
-      <div className="glass-card-hover p-5 border-primary/20 glow-gold">
+      <div className="glass-card-hover p-5 border-primary/20 glow-stage">
         <p className="text-[11px] text-primary uppercase tracking-widest mb-2">Ejercicio recomendado</p>
         <h3 className="font-serif text-xl font-semibold text-foreground">Lip Trill con Escala Mayor</h3>
         <p className="text-sm text-muted-foreground mt-1 mb-4">
