@@ -49,7 +49,7 @@ const Portfolio = () => {
             { label: "Liga", value: "Gold", icon: Trophy },
           ].map((s) => (
             <div key={s.label} className="text-center">
-              <p className="text-lg font-serif font-bold gold-text">{s.value}</p>
+              <p className="text-lg font-serif font-bold neon-text">{s.value}</p>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
             </div>
           ))}
