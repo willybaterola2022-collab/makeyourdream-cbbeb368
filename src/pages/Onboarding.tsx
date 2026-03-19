@@ -114,7 +114,7 @@ const Onboarding = () => {
             return (
               <motion.div
                 key={s}
-                className={`h-2 rounded-full transition-all duration-500 ${i <= stepIndex ? "gold-gradient" : "bg-muted"}`}
+                className={`h-2 rounded-full transition-all duration-500 ${i <= stepIndex ? "stage-gradient" : "bg-muted"}`}
                 animate={{ width: i === stepIndex ? 32 : 8 }}
                 transition={{ duration: 0.4 }}
               />
