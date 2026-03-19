@@ -83,7 +83,7 @@ export default function StageSimulator() {
             <p className="text-sm text-muted-foreground mb-4">
               {venue.capacity.toLocaleString()} personas esperando. ¿Estás listo?
             </p>
-            <Button className="gold-gradient text-primary-foreground text-lg px-8 py-6" size="lg" onClick={startPerformance}>
+            <Button className="stage-gradient text-primary-foreground text-lg px-8 py-6" size="lg" onClick={startPerformance}>
               <Mic className="h-5 w-5 mr-2" />
               SUBIR AL ESCENARIO
             </Button>
