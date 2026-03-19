@@ -179,7 +179,7 @@ const Onboarding = () => {
                 {finalWaveform.map((h, i) => (
                   <motion.div
                     key={i}
-                    className={`flex-1 rounded-full ${isRecording ? "gold-gradient" : "bg-muted"}`}
+                    className={`flex-1 rounded-full ${isRecording ? "stage-gradient" : "bg-muted"}`}
                     animate={{ height: `${h}%` }}
                     transition={{ duration: 0.1 }}
                   />
