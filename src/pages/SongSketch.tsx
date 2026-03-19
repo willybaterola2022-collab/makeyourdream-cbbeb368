@@ -121,7 +121,7 @@ export default function SongSketch() {
             key={s}
             variant={selectedSection === s ? "default" : "outline"}
             size="sm"
-            className={`capitalize ${selectedSection === s ? "gold-gradient text-primary-foreground" : ""}`}
+            className={`capitalize ${selectedSection === s ? "stage-gradient text-primary-foreground" : ""}`}
             onClick={() => setSelectedSection(s)}
           >
             {s}
