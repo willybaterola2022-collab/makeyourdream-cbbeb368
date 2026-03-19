@@ -201,7 +201,7 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
           {bars.map((h, i) => (
             <div
               key={i}
-              className={`flex-1 rounded-full transition-all duration-75 ${started && h > 15 ? "gold-gradient" : "bg-muted"}`}
+              className={`flex-1 rounded-full transition-all duration-75 ${started && h > 15 ? "stage-gradient" : "bg-muted"}`}
               style={{ height: `${Math.min(h, 100)}%` }}
             />
           ))}
