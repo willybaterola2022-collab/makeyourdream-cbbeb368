@@ -232,7 +232,7 @@ const Onboarding = () => {
                   { label: "Generando Vocal Fingerprint", threshold: 90 },
                 ].map((item) => (
                   <motion.div key={item.label} initial={{ opacity: 0.3 }} animate={{ opacity: analyzeProgress > item.threshold ? 1 : 0.3 }} className="glass-card p-3 flex items-center gap-3">
-                    <motion.div className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 ${analyzeProgress > item.threshold ? "gold-gradient" : "bg-muted"}`} animate={analyzeProgress > item.threshold ? { scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.3 }}>
+                    <motion.div className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 ${analyzeProgress > item.threshold ? "stage-gradient" : "bg-muted"}`} animate={analyzeProgress > item.threshold ? { scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.3 }}>
                       {analyzeProgress > item.threshold && <Sparkles className="h-3 w-3 text-primary-foreground" />}
                     </motion.div>
                     <span className="text-sm text-foreground">{item.label}</span>
