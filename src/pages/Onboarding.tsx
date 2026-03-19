@@ -191,7 +191,7 @@ const Onboarding = () => {
                 {isRecording && (
                   <motion.div
                     className="absolute inset-0 rounded-full"
-                    animate={{ boxShadow: ["0 0 0 0px hsl(46 65% 52% / 0.4)", "0 0 0 30px hsl(46 65% 52% / 0)"] }}
+                    animate={{ boxShadow: ["0 0 0 0px hsl(275 85% 60% / 0.4)", "0 0 0 30px hsl(275 85% 60% / 0)"] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   />
                 )}
