@@ -30,7 +30,7 @@ const Matching = () => {
           🎤
         </div>
         <h2 className="font-serif text-3xl font-bold text-foreground">Adele</h2>
-        <p className="text-5xl font-serif font-bold gold-text mt-2">87%</p>
+        <p className="text-5xl font-serif font-bold neon-text mt-2">87%</p>
         <p className="text-sm text-muted-foreground mt-1">de similitud vocal</p>
       </div>
 
