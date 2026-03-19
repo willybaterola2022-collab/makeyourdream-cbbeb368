@@ -92,7 +92,7 @@ export default function Login() {
                 className="pl-10 bg-muted border-border"
               />
             </div>
-            <Button type="submit" disabled={loading} className="w-full gold-gradient text-primary-foreground">
+            <Button type="submit" disabled={loading} className="w-full stage-gradient text-primary-foreground">
               {loading ? "Cargando..." : isSignUp ? "Crear cuenta" : "Entrar"}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
