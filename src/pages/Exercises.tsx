@@ -73,7 +73,7 @@ const Exercises = () => {
               <div
                 className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
                   ex.status === "done"
-                    ? "gold-gradient"
+                    ? "stage-gradient"
                     : ex.status === "active"
                     ? "border-2 border-primary"
                     : "bg-muted"
