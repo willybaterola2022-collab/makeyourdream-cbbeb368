@@ -92,7 +92,7 @@ export default function GenreGym() {
               ))}
             </div>
 
-            <Button className="gold-gradient text-primary-foreground w-full mt-4">
+            <Button className="stage-gradient text-primary-foreground w-full mt-4">
               <Dumbbell className="h-4 w-4 mr-2" />
               EMPEZAR ENTRENAMIENTO
             </Button>

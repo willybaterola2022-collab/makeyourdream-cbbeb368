@@ -86,7 +86,7 @@ export default function LyricsWriter() {
             ))}
           </div>
         </div>
-        <Button className="gold-gradient text-primary-foreground w-full" onClick={generateLyrics}>
+        <Button className="stage-gradient text-primary-foreground w-full" onClick={generateLyrics}>
           <Wand2 className="h-4 w-4 mr-2" />
           GENERAR LETRA CON IA
         </Button>

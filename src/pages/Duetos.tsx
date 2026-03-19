@@ -99,7 +99,7 @@ const Duetos = () => {
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button className="flex-1 h-12 rounded-xl gold-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        <button className="flex-1 h-12 rounded-xl stage-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
           <Play className="h-4 w-4" />
           Escuchar preview
         </button>

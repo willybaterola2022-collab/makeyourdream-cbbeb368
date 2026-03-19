@@ -100,7 +100,7 @@ export default function CollabRoom() {
       <div className="flex justify-center gap-3">
         <Button
           size="lg"
-          className={isRecording ? "bg-destructive text-destructive-foreground" : "gold-gradient text-primary-foreground"}
+          className={isRecording ? "bg-destructive text-destructive-foreground" : "stage-gradient text-primary-foreground"}
           onClick={() => {
             setIsRecording(!isRecording);
             toast(isRecording ? "Grabación detenida" : "Grabando sesión...");

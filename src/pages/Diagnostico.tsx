@@ -65,7 +65,7 @@ const Diagnostico = () => {
                   <div className="h-full rounded-full stage-gradient" style={{ width: `${a.match}%` }} />
                 </div>
               </div>
-              <span className="text-lg font-serif font-bold gold-text">{a.match}%</span>
+              <span className="text-lg font-serif font-bold neon-text">{a.match}%</span>
             </div>
           ))}
         </div>

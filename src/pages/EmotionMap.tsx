@@ -59,7 +59,7 @@ export default function EmotionMap() {
           whileTap={{ scale: 0.95 }}
           onClick={handleAnalyze}
           className={`mx-auto h-20 w-20 rounded-full flex items-center justify-center ${
-            isListening ? "bg-destructive shadow-[0_0_30px_hsl(var(--destructive)/0.5)]" : "gold-gradient"
+            isListening ? "bg-destructive shadow-[0_0_30px_hsl(var(--destructive)/0.5)]" : "stage-gradient"
           }`}
         >
           <Mic className={`h-8 w-8 ${isListening ? "text-destructive-foreground" : "text-primary-foreground"}`} />
