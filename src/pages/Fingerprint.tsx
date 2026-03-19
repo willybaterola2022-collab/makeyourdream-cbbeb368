@@ -47,7 +47,7 @@ const Fingerprint = () => {
       <div className="glass-card p-5 flex items-center justify-between">
         <div>
           <p className="text-[11px] text-muted-foreground uppercase tracking-widest">Score Global</p>
-          <p className="text-4xl font-serif font-bold gold-text">83.3</p>
+          <p className="text-4xl font-serif font-bold neon-text">83.3</p>
         </div>
         <div className="flex items-center gap-1 text-primary text-sm">
           <TrendingUp className="h-4 w-4" />
