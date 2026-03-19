@@ -130,7 +130,7 @@ const Onboarding = () => {
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="h-24 w-24 rounded-3xl gold-gradient flex items-center justify-center mx-auto mb-8 glow-gold"
+                className="h-24 w-24 rounded-3xl stage-gradient flex items-center justify-center mx-auto mb-8 glow-stage"
               >
                 <Music className="h-12 w-12 text-primary-foreground" />
               </motion.div>
