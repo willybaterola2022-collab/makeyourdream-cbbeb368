@@ -91,7 +91,7 @@ const Duetos = () => {
               <span className="text-foreground">75%</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full gold-gradient" style={{ width: "75%" }} />
+              <div className="h-full rounded-full stage-gradient" style={{ width: "75%" }} />
             </div>
           </div>
         ))}
