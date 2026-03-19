@@ -62,7 +62,7 @@ const Matching = () => {
               <div className="flex-1">
                 <p className="text-sm font-medium text-foreground">{a.name}</p>
                 <div className="h-1.5 rounded-full bg-muted mt-2 overflow-hidden">
-                  <div className="h-full rounded-full gold-gradient" style={{ width: `${a.match}%` }} />
+                  <div className="h-full rounded-full stage-gradient" style={{ width: `${a.match}%` }} />
                 </div>
               </div>
               <span className="text-lg font-serif font-bold gold-text">{a.match}%</span>
