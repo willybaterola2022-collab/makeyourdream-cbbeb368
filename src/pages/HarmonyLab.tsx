@@ -47,7 +47,7 @@ export default function HarmonyLab() {
             variant={style === s.id ? "default" : "outline"}
             size="sm"
             onClick={() => setStyle(s.id)}
-            className={style === s.id ? "gold-gradient text-primary-foreground" : ""}
+            className={style === s.id ? "stage-gradient text-primary-foreground" : ""}
           >
             {s.emoji} {s.label}
           </Button>
