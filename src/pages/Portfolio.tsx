@@ -81,7 +81,7 @@ const Portfolio = () => {
           {performances.map((p, i) => (
             <div key={p.song} className="glass-card-hover p-4 flex items-center gap-3">
               <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                i === 0 ? "gold-gradient" : "bg-muted"
+                i === 0 ? "stage-gradient" : "bg-muted"
               }`}>
                 <span className={`text-xs font-bold ${
                   i === 0 ? "text-primary-foreground" : "text-muted-foreground"
