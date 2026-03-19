@@ -54,7 +54,7 @@ const Duetos = () => {
             {Array.from({ length: 40 }).map((_, i) => (
               <div
                 key={`u-${i}`}
-                className="flex-1 rounded-full gold-gradient"
+                className="flex-1 rounded-full stage-gradient"
                 style={{ height: `${30 + Math.sin(i * 0.4) * 50 + Math.random() * 20}%` }}
               />
             ))}
