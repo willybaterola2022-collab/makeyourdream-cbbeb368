@@ -1,18 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Swords, Trophy, Star, Play, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Swords, Trophy } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { StudioRoom } from "@/components/studio/StudioRoom";
 
-interface Challenger {
-  name: string;
-  initials: string;
-  elo: number;
-  wins: number;
-}
+interface Challenger { name: string; initials: string; elo: number; wins: number; }
 
 const LEADERBOARD: Challenger[] = [
   { name: "Luna Vox", initials: "LV", elo: 1850, wins: 42 },
@@ -31,77 +24,74 @@ export default function Duelos() {
   const [myElo] = useState(1620);
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-3">
-        <Swords className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">Duelos 1v1</h1>
-          <p className="text-muted-foreground mt-1">Reta, canta, gana. Sistema ELO competitivo.</p>
-        </div>
-      </div>
-
-      {/* My ELO */}
-      <Card className="p-5 bg-card border-primary/20 text-center">
-        <p className="text-sm text-muted-foreground mb-1">Tu rating</p>
-        <p className="text-5xl font-bold text-primary">{myElo}</p>
-        <Badge className="mt-2 stage-gradient text-primary-foreground">Rango: Plata II</Badge>
-      </Card>
-
-      {/* New Duel */}
-      <Button className="stage-gradient text-primary-foreground w-full text-lg py-6" size="lg">
-        <Swords className="h-5 w-5 mr-2" />
-        BUSCAR RIVAL
-      </Button>
-
+    <StudioRoom
+      roomId="duelos"
+      heroContent={
+        <motion.div className="flex flex-col items-center z-10"
+          initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          {/* Crossed swords / arena hero */}
+          <motion.div className="text-8xl md:text-[130px]"
+            animate={{ rotateZ: [-3, 3, -3] }}
+            transition={{ duration: 2, repeat: Infinity }}>
+            ⚔️
+          </motion.div>
+          <motion.p className="mt-2 text-4xl md:text-5xl font-bold" style={{ color: "hsl(0 80% 55%)" }}>
+            {myElo}
+          </motion.p>
+          <Badge className="mt-2 stage-gradient text-primary-foreground text-sm px-4 py-1">Plata II</Badge>
+          <motion.p className="mt-3 text-lg font-bold uppercase tracking-[0.2em]"
+            style={{ color: "hsl(0 80% 55%)" }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}>
+            ⚡ BUSCAR RIVAL ⚡
+          </motion.p>
+        </motion.div>
+      }
+    >
       {/* Active Duels */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-3">🔥 Duelos activos</h2>
-        <div className="space-y-2">
-          {ACTIVE_DUELS.map((duel, i) => (
-            <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}>
-              <Card className="p-4 bg-card border-border/40">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{duel.song}</p>
-                    <p className="text-xs text-muted-foreground">vs {duel.opponent}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={duel.status === "Tu turno" ? "default" : "outline"} className={duel.status === "Tu turno" ? "bg-primary text-primary-foreground" : ""}>
-                      {duel.status}
-                    </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">{duel.timeLeft}</p>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+      <div className="space-y-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">🔥 Duelos activos</span>
+        {ACTIVE_DUELS.map((duel, i) => (
+          <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
+            className="glass-card p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-foreground">{duel.song}</p>
+              <p className="text-xs text-muted-foreground">vs {duel.opponent}</p>
+            </div>
+            <div className="text-right">
+              <Badge variant={duel.status === "Tu turno" ? "default" : "outline"}
+                className={duel.status === "Tu turno" ? "bg-primary text-primary-foreground animate-pulse" : ""}>
+                {duel.status}
+              </Badge>
+              <p className="text-xs text-muted-foreground mt-1">{duel.timeLeft}</p>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Leaderboard */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-primary" />
-          Ranking semanal
-        </h2>
-        <div className="space-y-2">
-          {LEADERBOARD.map((c, i) => (
-            <Card key={i} className={`p-3 bg-card border-border/40 flex items-center gap-3 ${c.initials === "MK" ? "border-primary/30" : ""}`}>
-              <span className="text-lg font-bold text-muted-foreground w-6">#{i + 1}</span>
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className={`text-xs font-semibold ${c.initials === "MK" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
-                  {c.initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">{c.name}</p>
-                <p className="text-xs text-muted-foreground">{c.wins} victorias</p>
-              </div>
-              <span className="text-sm font-bold text-primary">{c.elo}</span>
-            </Card>
-          ))}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-4 w-4" style={{ color: "hsl(0 80% 55%)" }} />
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Ranking</span>
         </div>
+        {LEADERBOARD.map((c, i) => (
+          <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+            className={`glass-card p-3 flex items-center gap-3 ${c.initials === "MK" ? "border-red-500/30 shadow-[0_0_15px_-5px_hsl(0_80%_55%/0.3)]" : ""}`}>
+            <span className="text-lg font-bold text-muted-foreground w-6">#{i + 1}</span>
+            <Avatar className="h-9 w-9">
+              <AvatarFallback className={`text-xs font-bold ${c.initials === "MK" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                {c.initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">{c.name}</p>
+              <p className="text-xs text-muted-foreground">{c.wins} W</p>
+            </div>
+            <span className="text-sm font-bold" style={{ color: "hsl(0 80% 55%)" }}>{c.elo}</span>
+          </motion.div>
+        ))}
       </div>
-    </div>
+    </StudioRoom>
   );
 }

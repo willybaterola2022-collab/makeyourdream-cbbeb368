@@ -1,30 +1,21 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Mic, Play, Pause, Trash2, GripVertical, Wand2, Download, Square } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { toast } from "sonner";
+import { StudioRoom } from "@/components/studio/StudioRoom";
 
-interface SketchBlock {
-  id: string;
-  label: string;
-  section: string;
-  duration: number;
-  audioUrl: string | null;
-  audioBlob: Blob | null;
-}
+interface SketchBlock { id: string; label: string; section: string; duration: number; audioUrl: string | null; audioBlob: Blob | null; }
 
-const SECTION_COLORS: Record<string, string> = {
-  intro: "bg-blue-500/20 border-blue-500/40 text-blue-400",
-  verso: "bg-emerald-500/20 border-emerald-500/40 text-emerald-400",
-  coro: "bg-primary/20 border-primary/40 text-primary",
-  puente: "bg-violet-500/20 border-violet-500/40 text-violet-400",
-  outro: "bg-rose-500/20 border-rose-500/40 text-rose-400",
+const SECTION_COLORS: Record<string, { bg: string; text: string }> = {
+  intro: { bg: "hsl(210 80% 55% / 0.15)", text: "hsl(210 80% 55%)" },
+  verso: { bg: "hsl(160 60% 50% / 0.15)", text: "hsl(160 60% 50%)" },
+  coro: { bg: "hsl(275 85% 60% / 0.15)", text: "hsl(275 85% 60%)" },
+  puente: { bg: "hsl(280 60% 55% / 0.15)", text: "hsl(280 60% 55%)" },
+  outro: { bg: "hsl(0 70% 55% / 0.15)", text: "hsl(0 70% 55%)" },
 };
-
 const SECTIONS = ["intro", "verso", "coro", "puente", "outro"];
 
 export default function SongSketch() {
@@ -37,24 +28,10 @@ export default function SongSketch() {
   const [playingId, setPlayingId] = useState<string | null>(null);
 
   const handleRecord = async () => {
-    if (isCapturing) {
-      // Stop recording and save block
-      stopRecording();
-      stopMic();
-      setIsCapturing(false);
-    } else {
-      // Start
-      const ok = await requestMic();
-      if (!ok) return;
-      // Wait a tick for stream to be available
-      setTimeout(() => {
-        const mic = document.querySelector("body"); // just a delay trick
-      }, 50);
-      setIsCapturing(true);
-    }
+    if (isCapturing) { stopRecording(); stopMic(); setIsCapturing(false); }
+    else { const ok = await requestMic(); if (!ok) return; setIsCapturing(true); }
   };
 
-  // Start MediaRecorder once stream is ready and we're capturing
   const startedRef = useRef(false);
   if (isCapturing && stream && !isRecording && !startedRef.current) {
     startedRef.current = true;
@@ -62,40 +39,20 @@ export default function SongSketch() {
   }
   if (!isCapturing) startedRef.current = false;
 
-  // When recording finishes, add a block
   const lastBlobRef = useRef<Blob | null>(null);
   if (audioBlob && audioBlob !== lastBlobRef.current && !isCapturing) {
     lastBlobRef.current = audioBlob;
-    const newBlock: SketchBlock = {
-      id: Date.now().toString(),
-      label: `Idea #${blocks.length + 1}`,
-      section: selectedSection,
-      duration: duration,
-      audioUrl: audioUrl,
-      audioBlob: audioBlob,
-    };
-    // Use setTimeout to avoid setState during render
+    const newBlock: SketchBlock = { id: Date.now().toString(), label: `Idea #${blocks.length + 1}`, section: selectedSection, duration, audioUrl, audioBlob };
     setTimeout(async () => {
       setBlocks((prev) => [...prev, newBlock]);
-      // Save to cloud
       await saveRecording(`Idea #${blocks.length + 1} - ${selectedSection}`, { section: selectedSection });
       clearRecording();
-      toast.success("¡Fragmento guardado en la nube! ☁️");
+      toast.success("¡Fragmento guardado! ☁️");
     }, 0);
   }
 
-  const removeBlock = (id: string) => {
-    const block = blocks.find((b) => b.id === id);
-    if (block?.audioUrl) URL.revokeObjectURL(block.audioUrl);
-    setBlocks((prev) => prev.filter((b) => b.id !== id));
-  };
-
   const playBlock = (block: SketchBlock) => {
-    if (playingId === block.id) {
-      playingRef.current?.pause();
-      setPlayingId(null);
-      return;
-    }
+    if (playingId === block.id) { playingRef.current?.pause(); setPlayingId(null); return; }
     if (!block.audioUrl) return;
     if (playingRef.current) playingRef.current.pause();
     const audio = new Audio(block.audioUrl);
@@ -105,132 +62,126 @@ export default function SongSketch() {
     setPlayingId(block.id);
   };
 
-  const totalDuration = blocks.reduce((s, b) => s + b.duration, 0);
-
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Song Sketch</h1>
-        <p className="text-muted-foreground mt-1">Graba ideas en cualquier momento. Arma tu canción pieza a pieza.</p>
-      </div>
+    <StudioRoom
+      roomId="sketch"
+      heroContent={
+        <motion.div className="flex flex-col items-center z-10"
+          initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          {/* Notebook hero */}
+          <div className="relative w-52 h-64 md:w-64 md:h-80 rounded-lg border-2 overflow-hidden"
+            style={{ borderColor: "hsl(150 50% 30%)", background: "hsl(150 10% 8%)" }}>
+            {/* Pentagrama lines */}
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="absolute w-full border-t" style={{ top: `${12 + i * 10}%`, borderColor: "hsl(150 50% 25% / 0.3)" }} />
+            ))}
+            {/* Sticky notes for blocks */}
+            {blocks.slice(-4).map((b, i) => {
+              const sc = SECTION_COLORS[b.section] || SECTION_COLORS.verso;
+              return (
+                <motion.div key={b.id} initial={{ scale: 0, rotate: -10 }} animate={{ scale: 1, rotate: -5 + i * 3 }}
+                  className="absolute w-14 h-10 md:w-16 md:h-12 rounded-sm flex items-center justify-center"
+                  style={{ background: sc.bg, left: `${10 + i * 20}%`, top: `${15 + (i % 2) * 25}%` }}>
+                  <span className="text-[8px] font-bold uppercase" style={{ color: sc.text }}>{b.section}</span>
+                </motion.div>
+              );
+            })}
+            {/* Record button center */}
+            <motion.button whileTap={{ scale: 0.95 }} onClick={handleRecord}
+              className={`absolute bottom-4 left-1/2 -translate-x-1/2 h-14 w-14 rounded-full flex items-center justify-center ${
+                isCapturing ? "bg-destructive shadow-[0_0_25px_hsl(var(--destructive)/0.5)]" : "stage-gradient shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
+              }`}>
+              {isCapturing ? <Square className="h-6 w-6 text-destructive-foreground" /> : <Mic className="h-6 w-6 text-primary-foreground" />}
+            </motion.button>
+          </div>
 
+          <motion.p className="mt-4 text-lg font-bold uppercase tracking-[0.2em]"
+            style={{ color: "hsl(150 50% 55%)" }}
+            animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}>
+            📓 CAPTURA IDEAS 📓
+          </motion.p>
+        </motion.div>
+      }
+    >
       {/* Section picker */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {SECTIONS.map((s) => (
-          <Button
-            key={s}
-            variant={selectedSection === s ? "default" : "outline"}
-            size="sm"
-            className={`capitalize ${selectedSection === s ? "stage-gradient text-primary-foreground" : ""}`}
-            onClick={() => setSelectedSection(s)}
-          >
-            {s}
-          </Button>
-        ))}
+      <div className="flex gap-2 justify-center overflow-x-auto pb-1">
+        {SECTIONS.map((s) => {
+          const sc = SECTION_COLORS[s];
+          return (
+            <motion.button key={s} whileTap={{ scale: 0.93 }}
+              onClick={() => setSelectedSection(s)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all ${
+                selectedSection === s ? "border shadow-[0_0_15px_-5px]" : "glass-card opacity-50 hover:opacity-80"
+              }`}
+              style={selectedSection === s ? { borderColor: sc.text, color: sc.text, background: sc.bg, boxShadow: `0 0 15px -5px ${sc.text}` } : {}}>
+              {s}
+            </motion.button>
+          );
+        })}
       </div>
 
-      {/* Quick Record */}
-      <Card className="p-6 bg-card border-border/40 text-center">
-        <p className="text-sm text-muted-foreground mb-4">
-          {isCapturing ? "Grabando tu idea..." : "Captura una idea rápida"}
-        </p>
-        <motion.button
-          onClick={handleRecord}
-          whileTap={{ scale: 0.95 }}
-          className={`mx-auto h-20 w-20 rounded-full flex items-center justify-center transition-all ${
-            isCapturing
-              ? "bg-destructive shadow-[0_0_30px_hsl(var(--destructive)/0.5)]"
-              : "stage-gradient shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
-          }`}
-        >
-          {isCapturing ? (
-            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.8 }}>
-              <Square className="h-8 w-8 text-destructive-foreground" />
-            </motion.div>
-          ) : (
-            <Mic className="h-8 w-8 text-primary-foreground" />
-          )}
-        </motion.button>
-        {isCapturing && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3">
-            <div className="h-2 w-32 mx-auto bg-muted rounded-full overflow-hidden">
-              <motion.div className="h-full bg-destructive rounded-full" animate={{ width: `${volume}%` }} />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Sección: {selectedSection}</p>
-          </motion.div>
-        )}
-      </Card>
+      {/* Volume indicator */}
+      {isCapturing && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-4 rounded-2xl">
+          <div className="h-3 bg-muted rounded-full overflow-hidden">
+            <motion.div className="h-full bg-destructive rounded-full" animate={{ width: `${volume}%` }} />
+          </div>
+          <p className="text-xs text-muted-foreground text-center mt-2">Grabando: {selectedSection}</p>
+        </motion.div>
+      )}
 
       {/* Blocks Timeline */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-foreground">TUS BLOQUES</h2>
-          <span className="text-sm text-muted-foreground">
-            {blocks.length} fragmentos · {totalDuration}s total
+      {blocks.length > 0 ? (
+        <div className="space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            {blocks.length} fragmentos · {blocks.reduce((s, b) => s + b.duration, 0)}s
           </span>
-        </div>
-
-        {blocks.length === 0 ? (
-          <Card className="p-8 bg-card border-border/40 text-center">
-            <p className="text-muted-foreground text-sm">Aún no hay bloques. ¡Graba tu primera idea! 🎤</p>
-          </Card>
-        ) : (
-          <div className="space-y-2">
-            {blocks.map((block, i) => (
-              <motion.div
-                key={block.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <Card className="p-3 bg-card border-border/40 flex items-center gap-3">
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab shrink-0" />
-                  <Badge variant="outline" className={`text-[10px] uppercase ${SECTION_COLORS[block.section]}`}>
-                    {block.section}
-                  </Badge>
-                  <span className="text-sm text-foreground flex-1 truncate">{block.label}</span>
-                  <span className="text-xs text-muted-foreground">{block.duration}s</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => playBlock(block)}
-                    disabled={!block.audioUrl}
-                  >
-                    {playingId === block.id ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeBlock(block.id)}>
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </Card>
+          {blocks.map((block, i) => {
+            const sc = SECTION_COLORS[block.section] || SECTION_COLORS.verso;
+            return (
+              <motion.div key={block.id} initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                className="glass-card p-3 flex items-center gap-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground/30 cursor-grab shrink-0" />
+                <Badge variant="outline" className="text-[9px] uppercase border" style={{ borderColor: sc.text, color: sc.text, background: sc.bg }}>
+                  {block.section}
+                </Badge>
+                <span className="text-sm font-bold text-foreground flex-1 truncate">{block.label}</span>
+                <span className="text-xs text-muted-foreground">{block.duration}s</span>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => playBlock(block)} disabled={!block.audioUrl}
+                  className="glass-card h-8 w-8 rounded-full flex items-center justify-center">
+                  {playingId === block.id ? <Pause className="h-3 w-3 text-primary" /> : <Play className="h-3 w-3 text-foreground ml-0.5" />}
+                </motion.button>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => { if (block.audioUrl) URL.revokeObjectURL(block.audioUrl); setBlocks(prev => prev.filter(b => b.id !== block.id)); }}
+                  className="h-8 w-8 rounded-full flex items-center justify-center text-destructive">
+                  <Trash2 className="h-3 w-3" />
+                </motion.button>
               </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="glass-card p-8 text-center rounded-2xl">
+          <p className="text-muted-foreground text-sm">¡Graba tu primera idea! 🎤</p>
+        </div>
+      )}
 
       {/* AI Assemble */}
       {blocks.length >= 2 && (
-        <Card className="p-5 bg-card border-primary/20">
-          <div className="flex items-center gap-3 mb-3">
-            <Wand2 className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Ensamblar con IA</h3>
+        <div className="glass-card p-5 rounded-2xl border-primary/20">
+          <div className="flex gap-3 justify-center">
+            <motion.button whileTap={{ scale: 0.95 }}
+              className="stage-gradient text-primary-foreground font-bold px-6 py-3 rounded-2xl flex items-center gap-2"
+              onClick={() => toast.info("Próximamente")}>
+              <Wand2 className="h-5 w-5" /> GENERAR DEMO
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.95 }}
+              className="glass-card px-6 py-3 rounded-2xl flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              onClick={() => toast.info("Próximamente")}>
+              <Download className="h-5 w-5" /> Exportar
+            </motion.button>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            La IA detectará la tonalidad de cada bloque, sugerirá un orden y aplicará crossfade automático.
-          </p>
-          <div className="flex gap-2">
-            <Button className="stage-gradient text-primary-foreground" onClick={() => toast.info("Requiere backend — próximamente")}>
-              <Wand2 className="h-4 w-4 mr-2" />
-              GENERAR DEMO
-            </Button>
-            <Button variant="outline" onClick={() => toast.info("Requiere backend — próximamente")}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar
-            </Button>
-          </div>
-        </Card>
+        </div>
       )}
-    </div>
+    </StudioRoom>
   );
 }
