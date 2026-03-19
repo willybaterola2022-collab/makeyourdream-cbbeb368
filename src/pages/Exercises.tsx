@@ -42,7 +42,7 @@ const Exercises = () => {
               <div
                 className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
                   d.done
-                    ? "gold-gradient text-primary-foreground"
+                    ? "stage-gradient text-primary-foreground"
                     : d.today
                     ? "border-2 border-primary text-primary breathing"
                     : "bg-muted text-muted-foreground"
