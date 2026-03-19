@@ -143,7 +143,7 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
           {bars.map((h, i) => (
             <div
               key={i}
-              className={`flex-1 rounded-full transition-all duration-75 ${isRecording && h > 15 ? "gold-gradient" : "bg-muted"}`}
+              className={`flex-1 rounded-full transition-all duration-75 ${isRecording && h > 15 ? "stage-gradient" : "bg-muted"}`}
               style={{ height: `${Math.min(h, 100)}%` }}
             />
           ))}
@@ -178,7 +178,7 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
             <button
               onClick={() => saveRecording(`Freestyle ${genre}`, { genre, pitchRange, scores })}
               disabled={isUploading}
-              className="flex-1 gold-gradient p-2.5 flex items-center justify-center gap-2 text-sm text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="flex-1 stage-gradient p-2.5 flex items-center justify-center gap-2 text-sm text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               <Cloud className="h-4 w-4" /> {isUploading ? "Guardando..." : "Guardar"}
             </button>

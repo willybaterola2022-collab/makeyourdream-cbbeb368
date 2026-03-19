@@ -59,10 +59,13 @@ const Index = () => {
       </StaggerItem>
 
       {/* ─── Headline ─── */}
-      <StaggerItem className="text-center">
-        <h1 className="font-serif text-4xl md:text-6xl font-bold uppercase tracking-wider gold-text leading-tight">
-          El escenario<br />es tuyo
+      <StaggerItem className="text-center space-y-2">
+        <h1 className="font-serif text-4xl md:text-6xl font-bold uppercase tracking-wider neon-text leading-tight">
+          Tu voz.<br />Tu momento.
         </h1>
+        <p className="text-sm md:text-base text-muted-foreground max-w-xs mx-auto">
+          Entrena, graba y descubre lo que tu voz puede hacer — con feedback real, no palmaditas.
+        </p>
       </StaggerItem>
 
       {/* ─── Giant Mic Button ─── */}
@@ -80,14 +83,14 @@ const Index = () => {
           </div>
           <motion.button
             onClick={() => navigate("/karaoke")}
-            className="relative z-10 h-[160px] w-[160px] md:h-[220px] md:w-[220px] rounded-full gold-gradient flex items-center justify-center cursor-pointer"
+            className="relative z-10 h-[160px] w-[160px] md:h-[220px] md:w-[220px] rounded-full stage-gradient flex items-center justify-center cursor-pointer"
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.95 }}
             animate={{
               boxShadow: [
-                "0 0 40px -10px hsl(46 65% 52% / 0.4)",
-                "0 0 80px -10px hsl(46 65% 52% / 0.7)",
-                "0 0 40px -10px hsl(46 65% 52% / 0.4)",
+                "0 0 40px -10px hsl(275 85% 60% / 0.4), 0 0 40px -10px hsl(185 90% 55% / 0.2)",
+                "0 0 80px -10px hsl(275 85% 60% / 0.6), 0 0 60px -10px hsl(185 90% 55% / 0.4)",
+                "0 0 40px -10px hsl(275 85% 60% / 0.4), 0 0 40px -10px hsl(185 90% 55% / 0.2)",
               ],
             }}
             transition={{ boxShadow: { duration: 3, repeat: Infinity, ease: "easeInOut" } }}
@@ -101,15 +104,23 @@ const Index = () => {
       <StaggerItem className="w-full flex flex-col items-center gap-3 -mt-1">
         <motion.button
           onClick={() => navigate("/karaoke")}
-          className="w-full max-w-xs gold-gradient text-primary-foreground text-lg font-bold uppercase tracking-widest py-4 rounded-xl flex items-center justify-center gap-3 cursor-pointer"
+          className="w-full max-w-xs stage-gradient text-primary-foreground text-lg font-bold uppercase tracking-widest py-4 rounded-xl flex items-center justify-center gap-3 cursor-pointer"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
+          animate={{
+            boxShadow: [
+              "0 0 20px -5px hsl(275 85% 60% / 0.3)",
+              "0 0 40px -5px hsl(275 85% 60% / 0.5)",
+              "0 0 20px -5px hsl(275 85% 60% / 0.3)",
+            ],
+          }}
+          transition={{ boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" } }}
         >
           <Mic className="h-5 w-5" />
-          Cantar ahora
+          Empezar a cantar gratis
         </motion.button>
-        <p className="text-sm text-foreground italic text-center">
-          Sin preparación. Sin excusas. Solo tú y tu voz.
+        <p className="text-sm text-muted-foreground italic text-center">
+          Canta. Escúchate. Mejora. Repite.
         </p>
       </StaggerItem>
 
@@ -123,7 +134,7 @@ const Index = () => {
           ].map((s) => (
             <div key={s.label} className="flex items-center gap-1.5">
               <s.icon className={`h-4 w-4 ${s.accent ? "text-primary" : "text-muted-foreground"}`} />
-              <span className={`font-semibold ${s.accent ? "gold-text" : "text-foreground"}`}>{s.value}</span>
+              <span className={`font-semibold ${s.accent ? "neon-text" : "text-foreground"}`}>{s.value}</span>
               <span className="text-muted-foreground text-sm">{s.label}</span>
             </div>
           ))}
@@ -136,7 +147,7 @@ const Index = () => {
           onClick={() => navigate("/karaoke")}
           className="glass-card-hover p-4 flex items-center gap-3 cursor-pointer group"
         >
-          <div className="h-11 w-11 rounded-lg gold-gradient flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <div className="h-11 w-11 rounded-lg stage-gradient flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
             <Play className="h-5 w-5 text-primary-foreground ml-0.5" />
           </div>
           <div className="flex-1 min-w-0">
@@ -153,7 +164,7 @@ const Index = () => {
       {/* ─── Sube de Nivel ─── */}
       <StaggerItem className="w-full">
         <div className="flex items-center gap-2 mb-1">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-secondary">
             <Zap className="h-3.5 w-3.5" /> Recomendado para ti
           </span>
         </div>
@@ -168,11 +179,11 @@ const Index = () => {
               className="glass-card-hover min-w-[170px] md:min-w-[200px] p-3 snap-start cursor-pointer"
             >
               <div className="text-2xl mb-2">{lesson.img}</div>
-              <p className="text-[9px] text-primary uppercase tracking-widest">{lesson.category}</p>
+              <p className="text-[9px] text-secondary uppercase tracking-widest">{lesson.category}</p>
               <h4 className="font-serif text-sm font-semibold text-foreground mt-0.5">{lesson.title}</h4>
               <div className="mt-2">
                 <div className="h-1 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full gold-gradient" style={{ width: `${lesson.progress}%` }} />
+                  <div className="h-full rounded-full stage-gradient" style={{ width: `${lesson.progress}%` }} />
                 </div>
                 <p className="text-[9px] text-muted-foreground mt-1">{lesson.progress}%</p>
               </div>

@@ -114,7 +114,7 @@ const Onboarding = () => {
             return (
               <motion.div
                 key={s}
-                className={`h-2 rounded-full transition-all duration-500 ${i <= stepIndex ? "gold-gradient" : "bg-muted"}`}
+                className={`h-2 rounded-full transition-all duration-500 ${i <= stepIndex ? "stage-gradient" : "bg-muted"}`}
                 animate={{ width: i === stepIndex ? 32 : 8 }}
                 transition={{ duration: 0.4 }}
               />
@@ -130,12 +130,12 @@ const Onboarding = () => {
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="h-24 w-24 rounded-3xl gold-gradient flex items-center justify-center mx-auto mb-8 glow-gold"
+                className="h-24 w-24 rounded-3xl stage-gradient flex items-center justify-center mx-auto mb-8 glow-stage"
               >
                 <Music className="h-12 w-12 text-primary-foreground" />
               </motion.div>
               <h1 className="font-serif text-3xl font-bold text-foreground mb-3">
-                Bienvenido a<br /><span className="gold-text">MakeYourDream</span>
+                Bienvenido a<br /><span className="neon-text">MakeYourDream</span>
               </h1>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 Vamos a descubrir tu voz única. Graba un fragmento cantando y nuestra IA analizará tu perfil vocal en segundos.
@@ -143,14 +143,14 @@ const Onboarding = () => {
               <div className="space-y-3">
                 {["Canta al menos 10 segundos", "Busca un lugar tranquilo", "Canta como te salga, sin miedo"].map((tip, i) => (
                   <motion.div key={tip} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.1 }} className="glass-card p-3 flex items-center gap-3 text-left">
-                    <div className="h-7 w-7 rounded-full gold-gradient flex items-center justify-center shrink-0">
+                    <div className="h-7 w-7 rounded-full stage-gradient flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-primary-foreground">{i + 1}</span>
                     </div>
                     <span className="text-sm text-foreground">{tip}</span>
                   </motion.div>
                 ))}
               </div>
-              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setStep("record")} className="mt-8 h-14 px-8 rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center gap-3 mx-auto">
+              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setStep("record")} className="mt-8 h-14 px-8 rounded-xl stage-gradient text-primary-foreground font-semibold text-lg flex items-center gap-3 mx-auto">
                 Estoy listo <ChevronRight className="h-5 w-5" />
               </motion.button>
             </motion.div>
@@ -179,7 +179,7 @@ const Onboarding = () => {
                 {finalWaveform.map((h, i) => (
                   <motion.div
                     key={i}
-                    className={`flex-1 rounded-full ${isRecording ? "gold-gradient" : "bg-muted"}`}
+                    className={`flex-1 rounded-full ${isRecording ? "stage-gradient" : "bg-muted"}`}
                     animate={{ height: `${h}%` }}
                     transition={{ duration: 0.1 }}
                   />
@@ -191,14 +191,14 @@ const Onboarding = () => {
                 {isRecording && (
                   <motion.div
                     className="absolute inset-0 rounded-full"
-                    animate={{ boxShadow: ["0 0 0 0px hsl(46 65% 52% / 0.4)", "0 0 0 30px hsl(46 65% 52% / 0)"] }}
+                    animate={{ boxShadow: ["0 0 0 0px hsl(275 85% 60% / 0.4)", "0 0 0 30px hsl(275 85% 60% / 0)"] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   />
                 )}
                 <motion.button
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}
                   onClick={isRecording ? stopRecording : startRecording}
-                  className={`h-24 w-24 rounded-full flex items-center justify-center transition-all ${isRecording ? "bg-destructive text-destructive-foreground" : "gold-gradient text-primary-foreground glow-gold"}`}
+                  className={`h-24 w-24 rounded-full flex items-center justify-center transition-all ${isRecording ? "bg-destructive text-destructive-foreground" : "stage-gradient text-primary-foreground glow-stage"}`}
                 >
                   {isRecording ? <MicOff className="h-10 w-10" /> : <Mic className="h-10 w-10" />}
                 </motion.button>
@@ -232,7 +232,7 @@ const Onboarding = () => {
                   { label: "Generando Vocal Fingerprint", threshold: 90 },
                 ].map((item) => (
                   <motion.div key={item.label} initial={{ opacity: 0.3 }} animate={{ opacity: analyzeProgress > item.threshold ? 1 : 0.3 }} className="glass-card p-3 flex items-center gap-3">
-                    <motion.div className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 ${analyzeProgress > item.threshold ? "gold-gradient" : "bg-muted"}`} animate={analyzeProgress > item.threshold ? { scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.3 }}>
+                    <motion.div className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 ${analyzeProgress > item.threshold ? "stage-gradient" : "bg-muted"}`} animate={analyzeProgress > item.threshold ? { scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.3 }}>
                       {analyzeProgress > item.threshold && <Sparkles className="h-3 w-3 text-primary-foreground" />}
                     </motion.div>
                     <span className="text-sm text-foreground">{item.label}</span>
@@ -241,7 +241,7 @@ const Onboarding = () => {
               </div>
               <div className="mt-8">
                 <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <motion.div className="h-full rounded-full gold-gradient" animate={{ width: `${Math.min(analyzeProgress, 100)}%` }} />
+                  <motion.div className="h-full rounded-full stage-gradient" animate={{ width: `${Math.min(analyzeProgress, 100)}%` }} />
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">{Math.min(Math.round(analyzeProgress), 100)}%</p>
               </div>
@@ -256,7 +256,7 @@ const Onboarding = () => {
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                 <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-1">Tu clasificación vocal</p>
-                <h2 className="font-serif text-3xl font-bold gold-text mb-1">Mezzosoprano Lírica</h2>
+                <h2 className="font-serif text-3xl font-bold neon-text mb-1">Mezzosoprano Lírica</h2>
                 <p className="text-muted-foreground text-sm">Rango: A3 — E5 · Top 12%</p>
               </motion.div>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="mt-6 space-y-2">
@@ -267,17 +267,17 @@ const Onboarding = () => {
                       <span className="font-medium text-foreground">{d.value}%</span>
                     </div>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <motion.div className="h-full rounded-full gold-gradient" initial={{ width: 0 }} animate={{ width: `${d.value}%` }} transition={{ duration: 0.8, delay: 0.8 + i * 0.1 }} />
+                      <motion.div className="h-full rounded-full stage-gradient" initial={{ width: 0 }} animate={{ width: `${d.value}%` }} transition={{ duration: 0.8, delay: 0.8 + i * 0.1 }} />
                     </div>
                   </div>
                 ))}
               </motion.div>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }} className="mt-6 glass-card p-4 border-primary/20">
-                <p className="text-sm text-foreground mb-1"><span className="gold-text font-semibold">Suenas a Adele</span> — 87% de similitud</p>
+                <p className="text-sm text-foreground mb-1"><span className="neon-text font-semibold">Suenas a Adele</span> — 87% de similitud</p>
                 <p className="text-xs text-muted-foreground">Timbre cálido con gran control de registro medio</p>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }} className="mt-8 space-y-3">
-                <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 40px -5px hsl(46 65% 52% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/")} className="w-full h-14 rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-2">
+                <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 40px -5px hsl(275 85% 60% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/")} className="w-full h-14 rounded-xl stage-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-2">
                   Comenzar mi transformación <ChevronRight className="h-5 w-5" />
                 </motion.button>
                 <button className="w-full h-12 rounded-xl glass-card text-muted-foreground font-medium flex items-center justify-center gap-2 hover:text-foreground transition-colors">

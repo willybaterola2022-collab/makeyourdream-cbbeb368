@@ -121,7 +121,7 @@ export default function SongSketch() {
             key={s}
             variant={selectedSection === s ? "default" : "outline"}
             size="sm"
-            className={`capitalize ${selectedSection === s ? "gold-gradient text-primary-foreground" : ""}`}
+            className={`capitalize ${selectedSection === s ? "stage-gradient text-primary-foreground" : ""}`}
             onClick={() => setSelectedSection(s)}
           >
             {s}
@@ -140,7 +140,7 @@ export default function SongSketch() {
           className={`mx-auto h-20 w-20 rounded-full flex items-center justify-center transition-all ${
             isCapturing
               ? "bg-destructive shadow-[0_0_30px_hsl(var(--destructive)/0.5)]"
-              : "gold-gradient shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
+              : "stage-gradient shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
           }`}
         >
           {isCapturing ? (
@@ -220,7 +220,7 @@ export default function SongSketch() {
             La IA detectará la tonalidad de cada bloque, sugerirá un orden y aplicará crossfade automático.
           </p>
           <div className="flex gap-2">
-            <Button className="gold-gradient text-primary-foreground" onClick={() => toast.info("Requiere backend — próximamente")}>
+            <Button className="stage-gradient text-primary-foreground" onClick={() => toast.info("Requiere backend — próximamente")}>
               <Wand2 className="h-4 w-4 mr-2" />
               GENERAR DEMO
             </Button>

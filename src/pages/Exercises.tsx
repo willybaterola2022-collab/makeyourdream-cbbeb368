@@ -25,7 +25,7 @@ const Exercises = () => {
       </div>
 
       {/* Streak alert */}
-      <div className="glass-card p-4 border-primary/20 glow-gold flex items-center gap-3">
+      <div className="glass-card p-4 border-primary/20 glow-stage flex items-center gap-3">
         <Flame className="h-6 w-6 text-primary breathing" />
         <div>
           <p className="text-sm font-medium text-foreground">¡Racha de 3 días! 🔥</p>
@@ -42,7 +42,7 @@ const Exercises = () => {
               <div
                 className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
                   d.done
-                    ? "gold-gradient text-primary-foreground"
+                    ? "stage-gradient text-primary-foreground"
                     : d.today
                     ? "border-2 border-primary text-primary breathing"
                     : "bg-muted text-muted-foreground"
@@ -67,13 +67,13 @@ const Exercises = () => {
             <div
               key={ex.name}
               className={`glass-card p-4 flex items-center gap-4 ${
-                ex.status === "active" ? "border-primary/20 glow-gold" : ""
+                ex.status === "active" ? "border-primary/20 glow-stage" : ""
               }`}
             >
               <div
                 className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
                   ex.status === "done"
-                    ? "gold-gradient"
+                    ? "stage-gradient"
                     : ex.status === "active"
                     ? "border-2 border-primary"
                     : "bg-muted"
@@ -96,7 +96,7 @@ const Exercises = () => {
                 <p className="text-xs text-muted-foreground">{ex.duration}</p>
               </div>
               {ex.status === "active" && (
-                <button className="px-4 py-2 rounded-lg gold-gradient text-primary-foreground text-xs font-medium">
+                <button className="px-4 py-2 rounded-lg stage-gradient text-primary-foreground text-xs font-medium">
                   Iniciar
                 </button>
               )}

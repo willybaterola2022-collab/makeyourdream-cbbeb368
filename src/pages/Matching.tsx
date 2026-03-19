@@ -23,14 +23,14 @@ const Matching = () => {
       </div>
 
       {/* Main match */}
-      <div className="glass-card p-6 text-center glow-gold border-primary/20">
+      <div className="glass-card p-6 text-center glow-stage border-primary/20">
         <Sparkles className="h-8 w-8 text-primary mx-auto mb-3 breathing" />
         <p className="text-[11px] text-primary uppercase tracking-widest mb-2">Suenas a...</p>
         <div className="h-20 w-20 rounded-full bg-muted mx-auto flex items-center justify-center text-4xl mb-3">
           🎤
         </div>
         <h2 className="font-serif text-3xl font-bold text-foreground">Adele</h2>
-        <p className="text-5xl font-serif font-bold gold-text mt-2">87%</p>
+        <p className="text-5xl font-serif font-bold neon-text mt-2">87%</p>
         <p className="text-sm text-muted-foreground mt-1">de similitud vocal</p>
       </div>
 
@@ -42,7 +42,7 @@ const Matching = () => {
             <div key={d.name} className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground w-24">{d.name}</span>
               <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full gold-gradient" style={{ width: `${d.value}%` }} />
+                <div className="h-full rounded-full stage-gradient" style={{ width: `${d.value}%` }} />
               </div>
               <span className="text-sm font-medium text-foreground w-8 text-right">{d.value}%</span>
             </div>
@@ -62,10 +62,10 @@ const Matching = () => {
               <div className="flex-1">
                 <p className="text-sm font-medium text-foreground">{a.name}</p>
                 <div className="h-1.5 rounded-full bg-muted mt-2 overflow-hidden">
-                  <div className="h-full rounded-full gold-gradient" style={{ width: `${a.match}%` }} />
+                  <div className="h-full rounded-full stage-gradient" style={{ width: `${a.match}%` }} />
                 </div>
               </div>
-              <span className="text-lg font-serif font-bold gold-text">{a.match}%</span>
+              <span className="text-lg font-serif font-bold neon-text">{a.match}%</span>
             </div>
           ))}
         </div>
@@ -79,7 +79,7 @@ const Matching = () => {
           <p className="font-serif text-lg font-semibold text-foreground mt-1">Sueno a Adele — 87%</p>
           <p className="text-xs text-muted-foreground mt-1">¿Y tú a quién suenas?</p>
         </div>
-        <button className="w-full h-12 rounded-xl gold-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        <button className="w-full h-12 rounded-xl stage-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
           <Share2 className="h-4 w-4" />
           Compartir
         </button>

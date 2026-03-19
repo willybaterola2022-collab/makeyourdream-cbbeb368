@@ -60,7 +60,7 @@ export default function VocalFX() {
             key={p.id}
             variant={activePreset === p.id ? "default" : "outline"}
             size="sm"
-            className={`whitespace-nowrap ${activePreset === p.id ? "gold-gradient text-primary-foreground" : ""}`}
+            className={`whitespace-nowrap ${activePreset === p.id ? "stage-gradient text-primary-foreground" : ""}`}
             onClick={() => setActivePreset(p.id)}
           >
             {p.emoji} {p.label}
@@ -85,7 +85,7 @@ export default function VocalFX() {
             whileTap={{ scale: 0.95 }}
             onClick={handleToggle}
             className={`h-14 w-14 rounded-full flex items-center justify-center ${
-              isListening ? "bg-destructive" : "gold-gradient"
+              isListening ? "bg-destructive" : "stage-gradient"
             }`}
           >
             <Mic className={`h-6 w-6 ${isListening ? "text-destructive-foreground" : "text-primary-foreground"}`} />

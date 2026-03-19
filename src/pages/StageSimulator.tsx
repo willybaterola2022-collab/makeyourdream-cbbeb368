@@ -83,7 +83,7 @@ export default function StageSimulator() {
             <p className="text-sm text-muted-foreground mb-4">
               {venue.capacity.toLocaleString()} personas esperando. ¿Estás listo?
             </p>
-            <Button className="gold-gradient text-primary-foreground text-lg px-8 py-6" size="lg" onClick={startPerformance}>
+            <Button className="stage-gradient text-primary-foreground text-lg px-8 py-6" size="lg" onClick={startPerformance}>
               <Mic className="h-5 w-5 mr-2" />
               SUBIR AL ESCENARIO
             </Button>
@@ -96,7 +96,7 @@ export default function StageSimulator() {
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
           <Card className="p-5 bg-card border-primary/20">
             <div className="flex items-center justify-between mb-3">
-              <Badge className="gold-gradient text-primary-foreground animate-pulse">EN VIVO</Badge>
+              <Badge className="stage-gradient text-primary-foreground animate-pulse">EN VIVO</Badge>
               <div className="flex items-center gap-2">
                 <Star className="h-4 w-4 text-primary" />
                 <span className="text-lg font-bold text-primary">{score}</span>

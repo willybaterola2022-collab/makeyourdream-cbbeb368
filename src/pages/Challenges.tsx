@@ -25,7 +25,7 @@ const Challenges = () => {
       </div>
 
       {/* Active challenge */}
-      <div className="glass-card p-5 border-primary/20 glow-gold">
+      <div className="glass-card p-5 border-primary/20 glow-stage">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" />
@@ -55,7 +55,7 @@ const Challenges = () => {
             <div key={c.name} className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground w-20">{c.name}</span>
               <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full gold-gradient" style={{ width: `${c.weight * 3.3}%` }} />
+                <div className="h-full rounded-full stage-gradient" style={{ width: `${c.weight * 3.3}%` }} />
               </div>
               <span className="text-xs font-medium text-foreground w-8 text-right">{c.weight}%</span>
             </div>
@@ -66,7 +66,7 @@ const Challenges = () => {
       {/* Your position */}
       <div className="glass-card p-5 text-center">
         <p className="text-[11px] text-muted-foreground uppercase tracking-widest">Tu posición</p>
-        <p className="text-5xl font-serif font-bold gold-text mt-1">#4</p>
+        <p className="text-5xl font-serif font-bold neon-text mt-1">#4</p>
         <p className="text-sm text-muted-foreground mt-1">Score: 91.7</p>
       </div>
 
@@ -78,11 +78,11 @@ const Challenges = () => {
             <div
               key={u.rank}
               className={`glass-card p-3 flex items-center gap-3 ${
-                u.isUser ? "border-primary/20 glow-gold" : ""
+                u.isUser ? "border-primary/20 glow-stage" : ""
               }`}
             >
               <span className={`text-lg font-serif font-bold w-8 text-center ${
-                u.rank <= 3 ? "gold-text" : "text-muted-foreground"
+                u.rank <= 3 ? "neon-text" : "text-muted-foreground"
               }`}>
                 {u.rank}
               </span>
@@ -109,7 +109,7 @@ const Challenges = () => {
       </div>
 
       {/* Submit */}
-      <button className="w-full h-12 rounded-xl gold-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+      <button className="w-full h-12 rounded-xl stage-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
         <Send className="h-4 w-4" />
         Enviar mi performance
       </button>

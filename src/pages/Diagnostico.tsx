@@ -23,10 +23,10 @@ const Diagnostico = () => {
       </div>
 
       {/* Main Result */}
-      <div className="glass-card p-6 text-center glow-gold border-primary/20">
+      <div className="glass-card p-6 text-center glow-stage border-primary/20">
         <Award className="h-10 w-10 text-primary mx-auto mb-3" />
         <p className="text-[11px] text-primary uppercase tracking-widest mb-1">Clasificación vocal</p>
-        <h2 className="font-serif text-3xl font-bold gold-text">Mezzosoprano Lírica</h2>
+        <h2 className="font-serif text-3xl font-bold neon-text">Mezzosoprano Lírica</h2>
         <p className="text-muted-foreground text-sm mt-2">Rango detectado: A3 — E5</p>
         <div className="mt-4 inline-flex items-center gap-2 glass-card px-4 py-2">
           <span className="text-sm text-muted-foreground">Percentil:</span>
@@ -44,7 +44,7 @@ const Diagnostico = () => {
               <span className="text-sm font-medium text-primary">{d.value}%</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full gold-gradient transition-all duration-700" style={{ width: `${d.value}%` }} />
+              <div className="h-full rounded-full stage-gradient transition-all duration-700" style={{ width: `${d.value}%` }} />
             </div>
           </div>
         ))}
@@ -62,10 +62,10 @@ const Diagnostico = () => {
               <div className="flex-1">
                 <p className="text-sm font-medium text-foreground">{a.name}</p>
                 <div className="h-1.5 rounded-full bg-muted mt-2 overflow-hidden">
-                  <div className="h-full rounded-full gold-gradient" style={{ width: `${a.match}%` }} />
+                  <div className="h-full rounded-full stage-gradient" style={{ width: `${a.match}%` }} />
                 </div>
               </div>
-              <span className="text-lg font-serif font-bold gold-text">{a.match}%</span>
+              <span className="text-lg font-serif font-bold neon-text">{a.match}%</span>
             </div>
           ))}
         </div>

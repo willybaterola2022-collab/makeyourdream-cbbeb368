@@ -28,7 +28,7 @@ const Duetos = () => {
               onClick={() => setSelectedArtist(i)}
               className={`glass-card p-4 text-left transition-all duration-200 ${
                 selectedArtist === i
-                  ? "border-primary/30 glow-gold"
+                  ? "border-primary/30 glow-stage"
                   : "hover:border-border/60"
               }`}
             >
@@ -54,7 +54,7 @@ const Duetos = () => {
             {Array.from({ length: 40 }).map((_, i) => (
               <div
                 key={`u-${i}`}
-                className="flex-1 rounded-full gold-gradient"
+                className="flex-1 rounded-full stage-gradient"
                 style={{ height: `${30 + Math.sin(i * 0.4) * 50 + Math.random() * 20}%` }}
               />
             ))}
@@ -91,7 +91,7 @@ const Duetos = () => {
               <span className="text-foreground">75%</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full gold-gradient" style={{ width: "75%" }} />
+              <div className="h-full rounded-full stage-gradient" style={{ width: "75%" }} />
             </div>
           </div>
         ))}
@@ -99,7 +99,7 @@ const Duetos = () => {
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button className="flex-1 h-12 rounded-xl gold-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        <button className="flex-1 h-12 rounded-xl stage-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
           <Play className="h-4 w-4" />
           Escuchar preview
         </button>

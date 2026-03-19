@@ -47,7 +47,7 @@ export default function HarmonyLab() {
             variant={style === s.id ? "default" : "outline"}
             size="sm"
             onClick={() => setStyle(s.id)}
-            className={style === s.id ? "gold-gradient text-primary-foreground" : ""}
+            className={style === s.id ? "stage-gradient text-primary-foreground" : ""}
           >
             {s.emoji} {s.label}
           </Button>
@@ -92,7 +92,7 @@ export default function HarmonyLab() {
           whileTap={{ scale: 0.95 }}
           onClick={handleToggle}
           className={`h-16 w-16 rounded-full flex items-center justify-center ${
-            isListening ? "bg-destructive" : "gold-gradient"
+            isListening ? "bg-destructive" : "stage-gradient"
           }`}
         >
           <Mic className={`h-7 w-7 ${isListening ? "text-destructive-foreground" : "text-primary-foreground"}`} />

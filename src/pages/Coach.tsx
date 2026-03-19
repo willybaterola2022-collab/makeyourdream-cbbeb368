@@ -56,7 +56,7 @@ const Coach = () => {
       </div>
 
       {/* Recommended Exercise */}
-      <div className="glass-card-hover p-5 border-primary/20 glow-gold">
+      <div className="glass-card-hover p-5 border-primary/20 glow-stage">
         <p className="text-[11px] text-primary uppercase tracking-widest mb-2">Ejercicio recomendado</p>
         <h3 className="font-serif text-xl font-semibold text-foreground">Lip Trill con Escala Mayor</h3>
         <p className="text-sm text-muted-foreground mt-1 mb-4">
@@ -69,7 +69,7 @@ const Coach = () => {
           </div>
           <div className="text-sm text-muted-foreground">3 series × 8 reps</div>
         </div>
-        <button className="w-full h-12 rounded-xl gold-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        <button className="w-full h-12 rounded-xl stage-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
           <Play className="h-4 w-4" />
           Iniciar ejercicio
         </button>

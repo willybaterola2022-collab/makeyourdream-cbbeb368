@@ -171,7 +171,7 @@ const Landing = () => {
             >
               Tu voz merece el
               <br />
-              <span className="gold-text">escenario mundial</span>
+              <span className="neon-text">escenario mundial</span>
             </motion.h1>
 
             <motion.p
@@ -192,12 +192,12 @@ const Landing = () => {
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10"
           >
             <motion.button
-              animate={{ boxShadow: ["0 0 20px -5px hsl(46 65% 52% / 0.3)", "0 0 40px -5px hsl(46 65% 52% / 0.6)", "0 0 20px -5px hsl(46 65% 52% / 0.3)"] }}
+              animate={{ boxShadow: ["0 0 20px -5px hsl(275 85% 60% / 0.3)", "0 0 40px -5px hsl(275 85% 60% / 0.6)", "0 0 20px -5px hsl(275 85% 60% / 0.3)"] }}
               transition={{ duration: 3, repeat: Infinity }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/onboarding")}
-              className="h-14 px-8 w-full sm:w-auto rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
+              className="h-14 px-8 w-full sm:w-auto rounded-xl stage-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
             >
               <Mic className="h-5 w-5" />
               Descubre tu voz — 30s
@@ -246,7 +246,7 @@ const Landing = () => {
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
             <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">Así de fácil</p>
             <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground">
-              3 pasos para <span className="gold-text">brillar</span>
+              3 pasos para <span className="neon-text">brillar</span>
             </h2>
           </motion.div>
 
@@ -260,7 +260,7 @@ const Landing = () => {
                 transition={{ delay: i * 0.15 }}
                 className="text-center"
               >
-                <div className="h-16 w-16 rounded-2xl gold-gradient flex items-center justify-center mx-auto mb-4">
+                <div className="h-16 w-16 rounded-2xl stage-gradient flex items-center justify-center mx-auto mb-4">
                   <item.icon className="h-7 w-7 text-primary-foreground" />
                 </div>
                 <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-1">{item.step}</p>
@@ -278,7 +278,7 @@ const Landing = () => {
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} className="text-center mb-16">
             <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">10 módulos premium</p>
             <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground">
-              Todo lo que necesitas para <br /><span className="gold-text">brillar</span>
+              Todo lo que necesitas para <br /><span className="neon-text">brillar</span>
             </h2>
           </motion.div>
 
@@ -301,7 +301,7 @@ const Landing = () => {
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
             <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">Testimonios</p>
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">Voces que ya <span className="gold-text">brillan</span></h2>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground">Voces que ya <span className="neon-text">brillan</span></h2>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {testimonials.map((t, i) => (
@@ -320,10 +320,10 @@ const Landing = () => {
 
       {/* ═══════ FINAL CTA ═══════ */}
       <section className="py-24 px-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-2xl mx-auto text-center glass-card p-8 md:p-10 border-primary/20 glow-gold">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">Tu voz merece ser <span className="gold-text">escuchada</span></h2>
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-2xl mx-auto text-center glass-card p-8 md:p-10 border-primary/20 glow-stage">
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">Tu voz merece ser <span className="neon-text">escuchada</span></h2>
           <p className="text-muted-foreground mb-8 text-sm md:text-base">Graba tu voz, recibe tu diagnóstico vocal gratuito y comienza tu transformación hoy.</p>
-          <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 50px -5px hsl(46 65% 52% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/onboarding")} className="h-14 px-10 w-full sm:w-auto rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 mx-auto">
+          <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 50px -5px hsl(275 85% 60% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/onboarding")} className="h-14 px-10 w-full sm:w-auto rounded-xl stage-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 mx-auto">
             <Mic className="h-5 w-5" />
             Comenzar gratis
           </motion.button>
@@ -334,7 +334,7 @@ const Landing = () => {
       <footer className="border-t border-border/40 py-8 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="h-7 w-7 rounded-lg gold-gradient flex items-center justify-center"><Music className="h-4 w-4 text-primary-foreground" /></div>
+            <div className="h-7 w-7 rounded-lg stage-gradient flex items-center justify-center"><Music className="h-4 w-4 text-primary-foreground" /></div>
             <span className="font-serif text-lg font-semibold text-foreground">MakeYourDream</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs text-muted-foreground">

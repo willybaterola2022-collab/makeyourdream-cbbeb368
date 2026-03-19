@@ -27,7 +27,7 @@ export function SaveAuthGate({ open, onOpenChange, onContinueLocal }: SaveAuthGa
         </DialogHeader>
         <div className="space-y-3 pt-2">
           <Button
-            className="w-full gold-gradient text-primary-foreground"
+            className="w-full stage-gradient text-primary-foreground"
             onClick={() => {
               onOpenChange(false);
               navigate("/login");

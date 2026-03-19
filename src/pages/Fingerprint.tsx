@@ -47,7 +47,7 @@ const Fingerprint = () => {
       <div className="glass-card p-5 flex items-center justify-between">
         <div>
           <p className="text-[11px] text-muted-foreground uppercase tracking-widest">Score Global</p>
-          <p className="text-4xl font-serif font-bold gold-text">83.3</p>
+          <p className="text-4xl font-serif font-bold neon-text">83.3</p>
         </div>
         <div className="flex items-center gap-1 text-primary text-sm">
           <TrendingUp className="h-4 w-4" />
@@ -107,7 +107,7 @@ const Fingerprint = () => {
           <div key={d.name} className="glass-card p-3 flex items-center gap-3">
             <span className="text-sm text-muted-foreground w-20 shrink-0">{d.name}</span>
             <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full gold-gradient" style={{ width: `${d.value}%` }} />
+              <div className="h-full rounded-full stage-gradient" style={{ width: `${d.value}%` }} />
             </div>
             <span className="text-sm font-medium text-foreground w-8 text-right">{d.value}</span>
           </div>
@@ -121,7 +121,7 @@ const Fingerprint = () => {
           {weeklyData.map((v, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-1">
               <div
-                className="w-full rounded-t gold-gradient transition-all duration-500"
+                className="w-full rounded-t stage-gradient transition-all duration-500"
                 style={{ height: `${((v - 60) / 40) * 100}%` }}
               />
               <span className="text-[9px] text-muted-foreground">

@@ -49,7 +49,7 @@ const Portfolio = () => {
             { label: "Liga", value: "Gold", icon: Trophy },
           ].map((s) => (
             <div key={s.label} className="text-center">
-              <p className="text-lg font-serif font-bold gold-text">{s.value}</p>
+              <p className="text-lg font-serif font-bold neon-text">{s.value}</p>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
             </div>
           ))}
@@ -81,7 +81,7 @@ const Portfolio = () => {
           {performances.map((p, i) => (
             <div key={p.song} className="glass-card-hover p-4 flex items-center gap-3">
               <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                i === 0 ? "gold-gradient" : "bg-muted"
+                i === 0 ? "stage-gradient" : "bg-muted"
               }`}>
                 <span className={`text-xs font-bold ${
                   i === 0 ? "text-primary-foreground" : "text-muted-foreground"
@@ -93,7 +93,7 @@ const Portfolio = () => {
                 <p className="text-sm font-medium text-foreground truncate">{p.song}</p>
                 <p className="text-[10px] text-muted-foreground">{p.date}</p>
               </div>
-              <span className={`text-lg font-serif font-bold ${i === 0 ? "gold-text" : "text-foreground"}`}>
+              <span className={`text-lg font-serif font-bold ${i === 0 ? "neon-text" : "text-foreground"}`}>
                 {p.score}
               </span>
             </div>

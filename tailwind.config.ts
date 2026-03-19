@@ -51,14 +51,8 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        gold: {
-          DEFAULT: "hsl(var(--gold))",
-          foreground: "hsl(var(--gold-foreground))",
-        },
-        violet: {
-          DEFAULT: "hsl(var(--violet))",
-          foreground: "hsl(var(--violet-foreground))",
-        },
+        "stage-violet": "hsl(var(--stage-violet))",
+        "stage-cyan": "hsl(var(--stage-cyan))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

@@ -78,7 +78,7 @@ export default function LyricsWriter() {
                 key={s}
                 variant={structure === s ? "default" : "outline"}
                 size="sm"
-                className={`text-xs justify-start ${structure === s ? "gold-gradient text-primary-foreground" : ""}`}
+                className={`text-xs justify-start ${structure === s ? "stage-gradient text-primary-foreground" : ""}`}
                 onClick={() => setStructure(s)}
               >
                 {s}
@@ -86,7 +86,7 @@ export default function LyricsWriter() {
             ))}
           </div>
         </div>
-        <Button className="gold-gradient text-primary-foreground w-full" onClick={generateLyrics}>
+        <Button className="stage-gradient text-primary-foreground w-full" onClick={generateLyrics}>
           <Wand2 className="h-4 w-4 mr-2" />
           GENERAR LETRA CON IA
         </Button>

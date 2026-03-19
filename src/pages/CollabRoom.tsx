@@ -43,7 +43,7 @@ export default function CollabRoom() {
           <p className="text-sm font-medium text-foreground">Sala: Golden Vibes 🎶</p>
           <p className="text-xs text-muted-foreground">{participants.length}/4 participantes</p>
         </div>
-        <Badge className="gold-gradient text-primary-foreground">EN VIVO</Badge>
+        <Badge className="stage-gradient text-primary-foreground">EN VIVO</Badge>
       </Card>
 
       {/* Participants */}
@@ -100,7 +100,7 @@ export default function CollabRoom() {
       <div className="flex justify-center gap-3">
         <Button
           size="lg"
-          className={isRecording ? "bg-destructive text-destructive-foreground" : "gold-gradient text-primary-foreground"}
+          className={isRecording ? "bg-destructive text-destructive-foreground" : "stage-gradient text-primary-foreground"}
           onClick={() => {
             setIsRecording(!isRecording);
             toast(isRecording ? "Grabación detenida" : "Grabando sesión...");

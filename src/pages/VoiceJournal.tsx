@@ -45,7 +45,7 @@ export default function VoiceJournal() {
       {/* Record Today */}
       <Card className="p-5 bg-card border-primary/20 text-center">
         <p className="text-sm text-muted-foreground mb-3">Graba el snippet de hoy</p>
-        <Button className="gold-gradient text-primary-foreground">
+        <Button className="stage-gradient text-primary-foreground">
           <Mic className="h-4 w-4 mr-2" />
           GRABAR HOY
         </Button>

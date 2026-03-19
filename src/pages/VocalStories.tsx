@@ -115,7 +115,7 @@ export default function VocalStories() {
         <Button variant="outline" onClick={prev} disabled={currentIdx === 0}>
           <ChevronUp className="h-4 w-4 mr-1" /> Anterior
         </Button>
-        <Button className="gold-gradient text-primary-foreground">
+        <Button className="stage-gradient text-primary-foreground">
           <Plus className="h-4 w-4 mr-1" /> Grabar story
         </Button>
         <Button variant="outline" onClick={next} disabled={currentIdx === stories.length - 1}>
