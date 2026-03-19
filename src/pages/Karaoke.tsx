@@ -63,7 +63,7 @@ const Karaoke = () => {
                 onClick={() => setGenre(g)}
                 className={`px-3 py-1.5 rounded-full text-sm transition-all ${
                   genre === g
-                    ? "gold-gradient text-primary-foreground font-medium"
+                    ? "stage-gradient text-primary-foreground font-medium"
                     : "glass-card text-muted-foreground hover:text-foreground"
                 }`}
               >
