@@ -99,7 +99,7 @@ const Karaoke = () => {
             <button
               onClick={() => setBpm(0)}
               className={`px-3 py-1.5 rounded-full text-sm ${
-                bpm === 0 ? "gold-gradient text-primary-foreground" : "glass-card text-muted-foreground"
+                bpm === 0 ? "stage-gradient text-primary-foreground" : "glass-card text-muted-foreground"
               }`}
             >
               Sin ritmo
