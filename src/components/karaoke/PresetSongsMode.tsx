@@ -172,33 +172,6 @@ const PRESET_SONGS: Song[] = [
   },
 ];
 
-  // Playback ref for iconic controls
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlayingBack, setIsPlayingBack] = useState(false);
-
-  const handlePlay = () => {
-    if (!audioUrl) return;
-    if (!audioRef.current) {
-      audioRef.current = new Audio(audioUrl);
-      audioRef.current.onended = () => setIsPlayingBack(false);
-    }
-    if (isPlayingBack) {
-      audioRef.current.pause();
-      setIsPlayingBack(false);
-    } else {
-      audioRef.current.play();
-      setIsPlayingBack(true);
-    }
-  };
-
-  const handleShare = async () => {
-    if (!audioUrl) return;
-    try {
-      const blob = await fetch(audioUrl).then(r => r.blob());
-      const file = new File([blob], `${selectedSong?.title || "song"}.webm`, { type: "audio/webm" });
-      if (navigator.share) await navigator.share({ files: [file], title: selectedSong?.title });
-    } catch {}
-  };
 
 export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
