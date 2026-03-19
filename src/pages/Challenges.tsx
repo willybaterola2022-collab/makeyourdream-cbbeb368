@@ -82,7 +82,7 @@ const Challenges = () => {
               }`}
             >
               <span className={`text-lg font-serif font-bold w-8 text-center ${
-                u.rank <= 3 ? "gold-text" : "text-muted-foreground"
+                u.rank <= 3 ? "neon-text" : "text-muted-foreground"
               }`}>
                 {u.rank}
               </span>
