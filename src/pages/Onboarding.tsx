@@ -143,7 +143,7 @@ const Onboarding = () => {
               <div className="space-y-3">
                 {["Canta al menos 10 segundos", "Busca un lugar tranquilo", "Canta como te salga, sin miedo"].map((tip, i) => (
                   <motion.div key={tip} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.1 }} className="glass-card p-3 flex items-center gap-3 text-left">
-                    <div className="h-7 w-7 rounded-full gold-gradient flex items-center justify-center shrink-0">
+                    <div className="h-7 w-7 rounded-full stage-gradient flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-primary-foreground">{i + 1}</span>
                     </div>
                     <span className="text-sm text-foreground">{tip}</span>
