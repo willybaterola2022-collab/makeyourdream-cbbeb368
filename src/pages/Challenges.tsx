@@ -78,7 +78,7 @@ const Challenges = () => {
             <div
               key={u.rank}
               className={`glass-card p-3 flex items-center gap-3 ${
-                u.isUser ? "border-primary/20 glow-gold" : ""
+                u.isUser ? "border-primary/20 glow-stage" : ""
               }`}
             >
               <span className={`text-lg font-serif font-bold w-8 text-center ${
