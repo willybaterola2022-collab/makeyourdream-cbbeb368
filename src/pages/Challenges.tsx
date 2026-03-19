@@ -66,7 +66,7 @@ const Challenges = () => {
       {/* Your position */}
       <div className="glass-card p-5 text-center">
         <p className="text-[11px] text-muted-foreground uppercase tracking-widest">Tu posición</p>
-        <p className="text-5xl font-serif font-bold gold-text mt-1">#4</p>
+        <p className="text-5xl font-serif font-bold neon-text mt-1">#4</p>
         <p className="text-sm text-muted-foreground mt-1">Score: 91.7</p>
       </div>
 
