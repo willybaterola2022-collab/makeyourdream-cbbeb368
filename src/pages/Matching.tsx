@@ -23,7 +23,7 @@ const Matching = () => {
       </div>
 
       {/* Main match */}
-      <div className="glass-card p-6 text-center glow-gold border-primary/20">
+      <div className="glass-card p-6 text-center glow-stage border-primary/20">
         <Sparkles className="h-8 w-8 text-primary mx-auto mb-3 breathing" />
         <p className="text-[11px] text-primary uppercase tracking-widest mb-2">Suenas a...</p>
         <div className="h-20 w-20 rounded-full bg-muted mx-auto flex items-center justify-center text-4xl mb-3">
