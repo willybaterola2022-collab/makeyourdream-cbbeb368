@@ -109,7 +109,7 @@ const Challenges = () => {
       </div>
 
       {/* Submit */}
-      <button className="w-full h-12 rounded-xl gold-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+      <button className="w-full h-12 rounded-xl stage-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
         <Send className="h-4 w-4" />
         Enviar mi performance
       </button>

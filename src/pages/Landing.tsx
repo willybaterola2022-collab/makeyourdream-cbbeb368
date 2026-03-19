@@ -192,12 +192,12 @@ const Landing = () => {
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10"
           >
             <motion.button
-              animate={{ boxShadow: ["0 0 20px -5px hsl(46 65% 52% / 0.3)", "0 0 40px -5px hsl(46 65% 52% / 0.6)", "0 0 20px -5px hsl(46 65% 52% / 0.3)"] }}
+              animate={{ boxShadow: ["0 0 20px -5px hsl(275 85% 60% / 0.3)", "0 0 40px -5px hsl(275 85% 60% / 0.6)", "0 0 20px -5px hsl(275 85% 60% / 0.3)"] }}
               transition={{ duration: 3, repeat: Infinity }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/onboarding")}
-              className="h-14 px-8 w-full sm:w-auto rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
+              className="h-14 px-8 w-full sm:w-auto rounded-xl stage-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
             >
               <Mic className="h-5 w-5" />
               Descubre tu voz — 30s

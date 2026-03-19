@@ -121,7 +121,7 @@ const Fingerprint = () => {
           {weeklyData.map((v, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-1">
               <div
-                className="w-full rounded-t gold-gradient transition-all duration-500"
+                className="w-full rounded-t stage-gradient transition-all duration-500"
                 style={{ height: `${((v - 60) / 40) * 100}%` }}
               />
               <span className="text-[9px] text-muted-foreground">

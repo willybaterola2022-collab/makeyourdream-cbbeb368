@@ -79,7 +79,7 @@ const Matching = () => {
           <p className="font-serif text-lg font-semibold text-foreground mt-1">Sueno a Adele — 87%</p>
           <p className="text-xs text-muted-foreground mt-1">¿Y tú a quién suenas?</p>
         </div>
-        <button className="w-full h-12 rounded-xl gold-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+        <button className="w-full h-12 rounded-xl stage-gradient text-primary-foreground font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
           <Share2 className="h-4 w-4" />
           Compartir
         </button>
