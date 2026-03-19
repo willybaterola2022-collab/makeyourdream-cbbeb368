@@ -107,7 +107,7 @@ const Fingerprint = () => {
           <div key={d.name} className="glass-card p-3 flex items-center gap-3">
             <span className="text-sm text-muted-foreground w-20 shrink-0">{d.name}</span>
             <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full gold-gradient" style={{ width: `${d.value}%` }} />
+              <div className="h-full rounded-full stage-gradient" style={{ width: `${d.value}%` }} />
             </div>
             <span className="text-sm font-medium text-foreground w-8 text-right">{d.value}</span>
           </div>
