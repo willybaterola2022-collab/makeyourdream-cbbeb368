@@ -220,7 +220,7 @@ export default function SongSketch() {
             La IA detectará la tonalidad de cada bloque, sugerirá un orden y aplicará crossfade automático.
           </p>
           <div className="flex gap-2">
-            <Button className="gold-gradient text-primary-foreground" onClick={() => toast.info("Requiere backend — próximamente")}>
+            <Button className="stage-gradient text-primary-foreground" onClick={() => toast.info("Requiere backend — próximamente")}>
               <Wand2 className="h-4 w-4 mr-2" />
               GENERAR DEMO
             </Button>

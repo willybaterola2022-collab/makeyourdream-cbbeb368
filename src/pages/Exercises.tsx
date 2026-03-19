@@ -96,7 +96,7 @@ const Exercises = () => {
                 <p className="text-xs text-muted-foreground">{ex.duration}</p>
               </div>
               {ex.status === "active" && (
-                <button className="px-4 py-2 rounded-lg gold-gradient text-primary-foreground text-xs font-medium">
+                <button className="px-4 py-2 rounded-lg stage-gradient text-primary-foreground text-xs font-medium">
                   Iniciar
                 </button>
               )}

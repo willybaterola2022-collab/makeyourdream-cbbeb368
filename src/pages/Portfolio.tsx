@@ -93,7 +93,7 @@ const Portfolio = () => {
                 <p className="text-sm font-medium text-foreground truncate">{p.song}</p>
                 <p className="text-[10px] text-muted-foreground">{p.date}</p>
               </div>
-              <span className={`text-lg font-serif font-bold ${i === 0 ? "gold-text" : "text-foreground"}`}>
+              <span className={`text-lg font-serif font-bold ${i === 0 ? "neon-text" : "text-foreground"}`}>
                 {p.score}
               </span>
             </div>

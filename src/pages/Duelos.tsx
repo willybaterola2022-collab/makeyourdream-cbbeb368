@@ -48,7 +48,7 @@ export default function Duelos() {
       </Card>
 
       {/* New Duel */}
-      <Button className="gold-gradient text-primary-foreground w-full text-lg py-6" size="lg">
+      <Button className="stage-gradient text-primary-foreground w-full text-lg py-6" size="lg">
         <Swords className="h-5 w-5 mr-2" />
         BUSCAR RIVAL
       </Button>

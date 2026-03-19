@@ -37,7 +37,7 @@ export default function FanRadar() {
       <Card className="p-5 bg-card border-primary/20">
         <p className="text-sm text-muted-foreground mb-2">Tu perfil vocal atrae a:</p>
         <div className="flex gap-2 flex-wrap">
-          <Badge className="gold-gradient text-primary-foreground">R&B</Badge>
+          <Badge className="stage-gradient text-primary-foreground">R&B</Badge>
           <Badge variant="outline">Soul</Badge>
           <Badge variant="outline">Pop Latino</Badge>
           <Badge variant="outline">Ballad</Badge>
