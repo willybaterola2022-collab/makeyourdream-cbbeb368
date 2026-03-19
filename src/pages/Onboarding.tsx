@@ -277,7 +277,7 @@ const Onboarding = () => {
                 <p className="text-xs text-muted-foreground">Timbre cálido con gran control de registro medio</p>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }} className="mt-8 space-y-3">
-                <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 40px -5px hsl(46 65% 52% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/")} className="w-full h-14 rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-2">
+                <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 40px -5px hsl(275 85% 60% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/")} className="w-full h-14 rounded-xl stage-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-2">
                   Comenzar mi transformación <ChevronRight className="h-5 w-5" />
                 </motion.button>
                 <button className="w-full h-12 rounded-xl glass-card text-muted-foreground font-medium flex items-center justify-center gap-2 hover:text-foreground transition-colors">
