@@ -363,8 +363,8 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
 
       {/* Progress bar */}
       <div className="glass-card p-3">
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
-          <div className="h-full gold-gradient rounded-full transition-all duration-200" style={{ width: `${progress}%` }} />
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
+            <div className="h-full stage-gradient rounded-full transition-all duration-200" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex justify-between text-[10px] text-muted-foreground">
           <span>{formatTime(elapsed)}</span>
