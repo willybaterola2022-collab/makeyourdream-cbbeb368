@@ -44,7 +44,7 @@ const Diagnostico = () => {
               <span className="text-sm font-medium text-primary">{d.value}%</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full gold-gradient transition-all duration-700" style={{ width: `${d.value}%` }} />
+              <div className="h-full rounded-full stage-gradient transition-all duration-700" style={{ width: `${d.value}%` }} />
             </div>
           </div>
         ))}
