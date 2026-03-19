@@ -171,7 +171,7 @@ const Landing = () => {
             >
               Tu voz merece el
               <br />
-              <span className="gold-text">escenario mundial</span>
+              <span className="neon-text">escenario mundial</span>
             </motion.h1>
 
             <motion.p
