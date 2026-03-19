@@ -150,7 +150,7 @@ const Onboarding = () => {
                   </motion.div>
                 ))}
               </div>
-              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setStep("record")} className="mt-8 h-14 px-8 rounded-xl gold-gradient text-primary-foreground font-semibold text-lg flex items-center gap-3 mx-auto">
+              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setStep("record")} className="mt-8 h-14 px-8 rounded-xl stage-gradient text-primary-foreground font-semibold text-lg flex items-center gap-3 mx-auto">
                 Estoy listo <ChevronRight className="h-5 w-5" />
               </motion.button>
             </motion.div>
