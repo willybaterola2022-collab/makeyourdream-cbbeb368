@@ -241,7 +241,7 @@ const Onboarding = () => {
               </div>
               <div className="mt-8">
                 <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <motion.div className="h-full rounded-full gold-gradient" animate={{ width: `${Math.min(analyzeProgress, 100)}%` }} />
+                  <motion.div className="h-full rounded-full stage-gradient" animate={{ width: `${Math.min(analyzeProgress, 100)}%` }} />
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">{Math.min(Math.round(analyzeProgress), 100)}%</p>
               </div>
