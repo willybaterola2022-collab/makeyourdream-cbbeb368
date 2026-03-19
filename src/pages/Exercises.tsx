@@ -25,7 +25,7 @@ const Exercises = () => {
       </div>
 
       {/* Streak alert */}
-      <div className="glass-card p-4 border-primary/20 glow-gold flex items-center gap-3">
+      <div className="glass-card p-4 border-primary/20 glow-stage flex items-center gap-3">
         <Flame className="h-6 w-6 text-primary breathing" />
         <div>
           <p className="text-sm font-medium text-foreground">¡Racha de 3 días! 🔥</p>
