@@ -1,28 +1,21 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mic, Sliders, Save, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Mic, Save } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { toast } from "sonner";
+import { StudioRoom } from "@/components/studio/StudioRoom";
+import { HeroPedals } from "@/components/studio/HeroPedals";
 
-interface FXParam {
-  id: string;
-  label: string;
-  emoji: string;
-  value: number;
-  active: boolean;
-}
+interface FXParam { id: string; label: string; emoji: string; value: number; active: boolean; }
 
 const PRESETS = [
   { id: "cathedral", label: "Catedral", emoji: "⛪" },
   { id: "stadium", label: "Estadio", emoji: "🏟️" },
-  { id: "radio", label: "Radio Vintage", emoji: "📻" },
+  { id: "radio", label: "Radio", emoji: "📻" },
   { id: "robot", label: "Vocoder", emoji: "🤖" },
-  { id: "studio", label: "Estudio Pro", emoji: "🎚️" },
+  { id: "studio", label: "Estudio", emoji: "🎚️" },
 ];
 
 export default function VocalFX() {
@@ -47,88 +40,71 @@ export default function VocalFX() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground">Vocal FX Studio</h1>
-        <p className="text-muted-foreground mt-1">Efectos en tiempo real mientras cantas</p>
-      </div>
-
-      {/* Presets */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+    <StudioRoom
+      roomId="vocalfx"
+      heroContent={
+        <HeroPedals
+          activeEffects={effects.filter(e => e.active).map(e => e.id)}
+          onClick={handleToggle}
+        />
+      }
+    >
+      {/* Presets as knob-style buttons */}
+      <div className="flex gap-3 justify-center overflow-x-auto pb-1">
         {PRESETS.map((p) => (
-          <Button
-            key={p.id}
-            variant={activePreset === p.id ? "default" : "outline"}
-            size="sm"
-            className={`whitespace-nowrap ${activePreset === p.id ? "stage-gradient text-primary-foreground" : ""}`}
+          <motion.button key={p.id} whileTap={{ scale: 0.93 }}
             onClick={() => setActivePreset(p.id)}
-          >
-            {p.emoji} {p.label}
-          </Button>
+            className={`glass-card p-3 md:p-4 flex flex-col items-center gap-1.5 min-w-[70px] transition-all ${
+              activePreset === p.id ? "border-primary/40 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.3)]" : "opacity-50 hover:opacity-80"
+            }`}>
+            <span className="text-2xl">{p.emoji}</span>
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${activePreset === p.id ? "neon-text" : "text-muted-foreground"}`}>{p.label}</span>
+          </motion.button>
         ))}
       </div>
 
-      {/* Live Waveform */}
-      <Card className="p-4 bg-card border-border/40">
-        <div className="flex items-end gap-[2px] h-16 mb-4">
+      {/* Waveform */}
+      <div className="glass-card p-4 rounded-2xl">
+        <div className="flex items-end gap-[2px] h-12 mb-4">
           {(isListening ? waveformData.slice(0, 64) : Array(64).fill(5)).map((v, i) => (
-            <motion.div
-              key={i}
-              className="flex-1 rounded-sm bg-primary"
+            <motion.div key={i} className="flex-1 rounded-sm bg-primary"
               animate={{ height: `${Math.max(v, 3)}%`, opacity: isListening ? 0.8 : 0.15 }}
-              transition={{ duration: 0.05 }}
-            />
+              transition={{ duration: 0.05 }} />
           ))}
         </div>
         <div className="flex justify-center">
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={handleToggle}
-            className={`h-14 w-14 rounded-full flex items-center justify-center ${
-              isListening ? "bg-destructive" : "stage-gradient"
-            }`}
-          >
-            <Mic className={`h-6 w-6 ${isListening ? "text-destructive-foreground" : "text-primary-foreground"}`} />
+          <motion.button whileTap={{ scale: 0.95 }} onClick={handleToggle}
+            className={`h-16 w-16 rounded-full flex items-center justify-center ${isListening ? "bg-destructive shadow-[0_0_25px_hsl(var(--destructive)/0.5)]" : "stage-gradient shadow-[0_0_25px_hsl(var(--primary)/0.3)]"}`}>
+            <Mic className={`h-7 w-7 ${isListening ? "text-destructive-foreground" : "text-primary-foreground"}`} />
           </motion.button>
         </div>
-      </Card>
+      </div>
 
       {/* FX Controls */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Sliders className="h-5 w-5 text-primary" />
-            Efectos
-          </h2>
-          <Button variant="outline" size="sm" onClick={() => toast.success("Preset guardado")}>
-            <Save className="h-4 w-4 mr-1" />
-            Guardar preset
-          </Button>
+          <span className="text-sm font-bold uppercase tracking-wider text-foreground">Efectos</span>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => toast.success("Preset guardado")}
+            className="glass-card px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+            <Save className="h-3 w-3" /> Guardar
+          </motion.button>
         </div>
         {effects.map((fx) => (
-          <Card key={fx.id} className={`p-3 bg-card border-border/40 ${!fx.active ? "opacity-50" : ""}`}>
+          <div key={fx.id} className={`glass-card p-3 rounded-xl ${!fx.active ? "opacity-40" : ""}`}>
             <div className="flex items-center gap-3">
               <span className="text-lg">{fx.emoji}</span>
-              <span className="text-sm font-medium text-foreground flex-1">{fx.label}</span>
+              <span className="text-sm font-bold text-foreground flex-1">{fx.label}</span>
               <span className="text-xs text-muted-foreground w-8 text-right">{fx.value}%</span>
-              <Switch
-                checked={fx.active}
-                onCheckedChange={(checked) => updateEffect(fx.id, { active: checked })}
-              />
+              <Switch checked={fx.active} onCheckedChange={(checked) => updateEffect(fx.id, { active: checked })} />
             </div>
             {fx.active && (
               <div className="mt-2 pl-8">
-                <Slider
-                  value={[fx.value]}
-                  max={100}
-                  step={1}
-                  onValueChange={([v]) => updateEffect(fx.id, { value: v })}
-                />
+                <Slider value={[fx.value]} max={100} step={1} onValueChange={([v]) => updateEffect(fx.id, { value: v })} />
               </div>
             )}
-          </Card>
+          </div>
         ))}
       </div>
-    </div>
+    </StudioRoom>
   );
 }
