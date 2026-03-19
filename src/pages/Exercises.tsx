@@ -67,7 +67,7 @@ const Exercises = () => {
             <div
               key={ex.name}
               className={`glass-card p-4 flex items-center gap-4 ${
-                ex.status === "active" ? "border-primary/20 glow-gold" : ""
+                ex.status === "active" ? "border-primary/20 glow-stage" : ""
               }`}
             >
               <div
