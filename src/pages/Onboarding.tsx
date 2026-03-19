@@ -273,7 +273,7 @@ const Onboarding = () => {
                 ))}
               </motion.div>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4 }} className="mt-6 glass-card p-4 border-primary/20">
-                <p className="text-sm text-foreground mb-1"><span className="gold-text font-semibold">Suenas a Adele</span> — 87% de similitud</p>
+                <p className="text-sm text-foreground mb-1"><span className="neon-text font-semibold">Suenas a Adele</span> — 87% de similitud</p>
                 <p className="text-xs text-muted-foreground">Timbre cálido con gran control de registro medio</p>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }} className="mt-8 space-y-3">
