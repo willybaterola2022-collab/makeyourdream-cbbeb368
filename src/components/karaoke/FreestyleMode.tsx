@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Download, Cloud } from "lucide-react";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
@@ -21,6 +20,8 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [finished, setFinished] = useState(false);
   const [scores, setScores] = useState({ pitch: 0, timing: 0, expression: 0 });
+  const [isPlayingBack, setIsPlayingBack] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>(0 as any);
   const metronome = useMetronome(bpm);
   const samplesRef = useRef({ pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, volumeVariance: 0, prevVolumes: [] as number[] });
@@ -29,7 +30,6 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
     ? waveformData.slice(0, 50).map((v) => Math.max(v, 4))
     : Array.from({ length: 50 }, () => 4);
 
-  // Timer
   useEffect(() => {
     if (isRecording) {
       timerRef.current = setInterval(() => setElapsed((p) => p + 1), 1000);
@@ -37,7 +37,6 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
     return () => clearInterval(timerRef.current);
   }, [isRecording]);
 
-  // Real scoring
   useEffect(() => {
     if (!isRecording) return;
     const interval = setInterval(() => {
@@ -45,53 +44,34 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
       s.totalSamples++;
       s.prevVolumes.push(volume);
       if (s.prevVolumes.length > 40) s.prevVolumes.shift();
-
-      // Pitch: only count if actually detecting pitch, and check cents accuracy
       if (pitch) {
         s.pitchTotal++;
         if (Math.abs(pitch.cents) < 25) s.pitchHits++;
       }
-
-      // Timing: penalize silence heavily in freestyle (you should be singing!)
       if (volume < 8) s.silentSamples++;
       s.volumeSum += volume;
       s.volumeMax = Math.max(s.volumeMax, volume);
-
-      // Expression: calculate dynamic range (variation in volume)
       const avg = s.volumeSum / s.totalSamples;
       const variance = s.prevVolumes.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / Math.max(s.prevVolumes.length, 1);
       const dynamicRange = Math.sqrt(variance);
-
       const pitchScore = s.pitchTotal > 0 ? Math.round((s.pitchHits / s.pitchTotal) * 100) : 0;
       const singingRatio = 1 - (s.silentSamples / s.totalSamples);
       const timingScore = Math.round(singingRatio * 100);
-      // Expression: reward dynamic range (not just loud)
       const expressionScore = Math.min(Math.round(dynamicRange * 3 + (s.volumeMax > 40 ? 15 : 0)), 100);
-
       setScores({ pitch: pitchScore, timing: timingScore, expression: expressionScore });
     }, 500);
     return () => clearInterval(interval);
   }, [isRecording, volume, pitch]);
 
   const handleMicClick = async () => {
-    if (finished) {
-      // Reset
-      clearRecording();
-      setElapsed(0);
-      setFinished(false);
-      setScores({ pitch: 0, timing: 0, expression: 0 });
-      samplesRef.current = { pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, volumeVariance: 0, prevVolumes: [] };
-      return;
-    }
+    if (finished) return;
     if (isRecording) {
-      // Stop
       stopRecording();
       metronome.stop();
       clearInterval(timerRef.current);
       setFinished(true);
       return;
     }
-    // Start
     if (!isListening) {
       const ok = await requestMic();
       if (!ok) return;
@@ -104,8 +84,44 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
     }, 200);
   };
 
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const handlePlay = () => {
+    if (!audioUrl) return;
+    if (!audioRef.current) {
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.onended = () => setIsPlayingBack(false);
+    }
+    if (isPlayingBack) {
+      audioRef.current.pause();
+      setIsPlayingBack(false);
+    } else {
+      audioRef.current.play();
+      setIsPlayingBack(true);
+    }
+  };
 
+  const handleRetry = () => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setIsPlayingBack(false);
+    clearRecording();
+    setElapsed(0);
+    setFinished(false);
+    setScores({ pitch: 0, timing: 0, expression: 0 });
+    samplesRef.current = { pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, volumeVariance: 0, prevVolumes: [] };
+  };
+
+  const handleShare = async () => {
+    if (!audioUrl) return;
+    try {
+      const blob = await fetch(audioUrl).then(r => r.blob());
+      const file = new File([blob], `freestyle-${genre}.webm`, { type: "audio/webm" });
+      if (navigator.share) {
+        await navigator.share({ files: [file], title: `Freestyle ${genre}` });
+      }
+    } catch {}
+  };
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const micState = finished ? "finished" : isRecording ? "recording" : "idle";
 
   return (
@@ -115,7 +131,6 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
         <p className="text-sm text-muted-foreground">{genre} · {pitchRange === "low" ? "Grave" : pitchRange === "high" ? "Agudo" : "Medio"}{bpm > 0 ? ` · ${bpm} BPM` : ""}</p>
       </div>
 
-      {/* Pitch display */}
       {isRecording && pitch && (
         <div className="glass-card p-3 flex items-center justify-between">
           <span className="text-xs text-muted-foreground">Nota</span>
@@ -129,15 +144,18 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
-      {/* Vintage Microphone */}
       <VintageMicrophone
         isActive={isRecording}
         volume={volume}
         onClick={handleMicClick}
         state={micState}
+        onPlay={finished && audioUrl ? handlePlay : undefined}
+        onSave={finished && audioUrl ? () => saveRecording(`Freestyle ${genre}`, { genre, pitchRange, scores }) : undefined}
+        onShare={finished && audioUrl ? handleShare : undefined}
+        onRetry={finished ? handleRetry : undefined}
+        isPlaying={isPlayingBack}
       />
 
-      {/* Waveform */}
       <div className="glass-card p-4">
         <div className="flex items-center gap-0.5 h-16">
           {bars.map((h, i) => (
@@ -159,33 +177,7 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
         </div>
       </div>
 
-      {/* Live scores while recording */}
       <SingingFeedback scores={scores} isActive={isRecording} finished={finished} />
-
-      {/* Playback after finish */}
-      {finished && audioUrl && (
-        <div className="glass-card p-4 space-y-3">
-          <p className="text-sm text-muted-foreground text-center">🎧 Escucha tu grabación</p>
-          <audio controls src={audioUrl} className="w-full" />
-          <div className="flex gap-2">
-            <a
-              href={audioUrl}
-              download={`freestyle-${genre}.webm`}
-              className="flex-1 glass-card p-2.5 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg"
-            >
-              <Download className="h-4 w-4" /> Descargar
-            </a>
-            <button
-              onClick={() => saveRecording(`Freestyle ${genre}`, { genre, pitchRange, scores })}
-              disabled={isUploading}
-              className="flex-1 stage-gradient p-2.5 flex items-center justify-center gap-2 text-sm text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-            >
-              <Cloud className="h-4 w-4" /> {isUploading ? "Guardando..." : "Guardar"}
-            </button>
-          </div>
-        </div>
-      )}
-
       <SaveAuthGate open={needsAuth} onOpenChange={dismissAuth} />
     </div>
   );
