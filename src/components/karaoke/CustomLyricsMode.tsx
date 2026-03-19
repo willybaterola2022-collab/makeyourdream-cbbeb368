@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Download, Cloud } from "lucide-react";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
@@ -19,6 +18,8 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
   const [speed, setSpeed] = useState(4);
   const [started, setStarted] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [isPlayingBack, setIsPlayingBack] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { isListening, volume, waveformData, requestMic, stream, analyserNode } = useMicrophone(2048);
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
@@ -37,12 +38,10 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
     setActiveLine(0);
     setElapsed(0);
     setFinished(false);
-
     if (!isListening) {
       const ok = await requestMic();
       if (!ok) return;
     }
-
     setTimeout(() => {
       if (stream) {
         startRecording(stream);
@@ -51,7 +50,6 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
     }, 200);
   };
 
-  // Advance lines
   useEffect(() => {
     if (!started || lines.length === 0) return;
     timerRef.current = setInterval(() => {
@@ -82,6 +80,9 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
     clearInterval(timerRef.current);
     stopRecording();
     clearRecording();
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setIsPlayingBack(false);
     setActiveLine(0);
     setElapsed(0);
     setStarted(false);
@@ -89,21 +90,38 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
   };
 
   const handleMicClick = () => {
-    if (finished) {
-      handleReset();
-      return;
-    }
-    if (started) {
-      handleStop();
-      return;
-    }
+    if (finished) return;
+    if (started) { handleStop(); return; }
     handleStart();
+  };
+
+  const handlePlay = () => {
+    if (!audioUrl) return;
+    if (!audioRef.current) {
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.onended = () => setIsPlayingBack(false);
+    }
+    if (isPlayingBack) {
+      audioRef.current.pause();
+      setIsPlayingBack(false);
+    } else {
+      audioRef.current.play();
+      setIsPlayingBack(true);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!audioUrl) return;
+    try {
+      const blob = await fetch(audioUrl).then(r => r.blob());
+      const file = new File([blob], "mi-cancion.webm", { type: "audio/webm" });
+      if (navigator.share) await navigator.share({ files: [file], title: "Mi Canción" });
+    } catch {}
   };
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const micState = finished ? "finished" : started ? "recording" : "idle";
 
-  // Pre-start: show textarea
   if (!started && !finished) {
     return (
       <div className="p-4 md:p-8 space-y-5">
@@ -111,39 +129,24 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
           <h2 className="font-serif text-2xl font-semibold text-foreground">Tu Letra</h2>
           <p className="text-sm text-muted-foreground">Pega o escribe la letra que quieras cantar</p>
         </div>
-
         <textarea
           value={lyrics}
           onChange={(e) => setLyrics(e.target.value)}
           placeholder={"Escribe tu letra aquí...\nCada línea aparecerá una a una\nmientras cantas"}
           className="w-full h-48 glass-card p-4 bg-transparent text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-primary/30 rounded-xl text-sm"
         />
-
-        {/* Speed selector */}
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Velocidad (seg/línea)</p>
           <div className="flex gap-2">
             {[2, 3, 4, 5, 6].map((s) => (
-              <button
-                key={s}
-                onClick={() => setSpeed(s)}
-                className={`px-3 py-1.5 rounded-full text-sm ${
-                  speed === s ? "stage-gradient text-primary-foreground" : "glass-card text-muted-foreground"
-                }`}
-              >
+              <button key={s} onClick={() => setSpeed(s)}
+                className={`px-3 py-1.5 rounded-full text-sm ${speed === s ? "stage-gradient text-primary-foreground" : "glass-card text-muted-foreground"}`}>
                 {s}s
               </button>
             ))}
           </div>
         </div>
-
-        {/* Vintage mic as start button */}
-        <VintageMicrophone
-          isActive={false}
-          volume={0}
-          onClick={handleStart}
-          state="idle"
-        />
+        <VintageMicrophone isActive={false} volume={0} onClick={handleStart} state="idle" />
       </div>
     );
   }
@@ -155,7 +158,6 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
         <span className="font-mono text-foreground">{formatTime(elapsed)}</span>
       </div>
 
-      {/* Pitch */}
       {started && pitch && (
         <div className="glass-card p-3 flex items-center justify-between">
           <span className="font-mono text-lg font-bold text-primary">
@@ -167,65 +169,36 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
-      {/* Lyrics display */}
       {lines.length > 0 && (
         <div className="glass-card p-5 space-y-2 max-h-64 overflow-y-auto">
           {lines.map((line, i) => (
-            <p
-              key={i}
-              className={`font-serif text-lg transition-all duration-300 ${
-                i === activeLine
-                  ? "text-primary font-semibold text-xl"
-                  : i < activeLine
-                  ? "text-muted-foreground/40"
-                  : "text-muted-foreground/70"
-              }`}
-            >
-              {line}
-            </p>
+            <p key={i} className={`font-serif text-lg transition-all duration-300 ${
+              i === activeLine ? "text-primary font-semibold text-xl" : i < activeLine ? "text-muted-foreground/40" : "text-muted-foreground/70"
+            }`}>{line}</p>
           ))}
         </div>
       )}
 
-      {/* Vintage Microphone */}
       <VintageMicrophone
         isActive={started}
         volume={volume}
         onClick={handleMicClick}
         state={micState}
+        onPlay={finished && audioUrl ? handlePlay : undefined}
+        onSave={finished && audioUrl ? () => saveRecording(`Letra propia - ${genre}`) : undefined}
+        onShare={finished && audioUrl ? handleShare : undefined}
+        onRetry={finished ? handleReset : undefined}
+        isPlaying={isPlayingBack}
       />
 
-      {/* Waveform */}
       <div className="glass-card p-3">
         <div className="flex items-center gap-0.5 h-12">
           {bars.map((h, i) => (
-            <div
-              key={i}
-              className={`flex-1 rounded-full transition-all duration-75 ${started && h > 15 ? "stage-gradient" : "bg-muted"}`}
-              style={{ height: `${Math.min(h, 100)}%` }}
-            />
+            <div key={i} className={`flex-1 rounded-full transition-all duration-75 ${started && h > 15 ? "stage-gradient" : "bg-muted"}`}
+              style={{ height: `${Math.min(h, 100)}%` }} />
           ))}
         </div>
       </div>
-
-      {/* Playback */}
-      {finished && audioUrl && (
-        <div className="glass-card p-4 space-y-3">
-          <p className="text-sm text-muted-foreground text-center">🎧 Escucha tu interpretación</p>
-          <audio controls src={audioUrl} className="w-full" />
-          <div className="flex gap-2">
-            <a href={audioUrl} download="mi-cancion.webm" className="flex-1 glass-card p-2.5 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground rounded-lg">
-              <Download className="h-4 w-4" /> Descargar
-            </a>
-            <button onClick={() => saveRecording(`Letra propia - ${genre}`)} disabled={isUploading} className="flex-1 stage-gradient p-2.5 flex items-center justify-center gap-2 text-sm text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50">
-              <Cloud className="h-4 w-4" /> {isUploading ? "Guardando..." : "Guardar"}
-            </button>
-          </div>
-          <button onClick={handleReset} className="w-full glass-card p-2.5 text-sm text-muted-foreground hover:text-foreground rounded-lg">
-            Cantar de nuevo
-          </button>
-        </div>
-      )}
 
       <SaveAuthGate open={needsAuth} onOpenChange={dismissAuth} />
     </div>
