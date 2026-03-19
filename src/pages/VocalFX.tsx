@@ -60,7 +60,7 @@ export default function VocalFX() {
             key={p.id}
             variant={activePreset === p.id ? "default" : "outline"}
             size="sm"
-            className={`whitespace-nowrap ${activePreset === p.id ? "gold-gradient text-primary-foreground" : ""}`}
+            className={`whitespace-nowrap ${activePreset === p.id ? "stage-gradient text-primary-foreground" : ""}`}
             onClick={() => setActivePreset(p.id)}
           >
             {p.emoji} {p.label}
