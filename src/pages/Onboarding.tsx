@@ -135,7 +135,7 @@ const Onboarding = () => {
                 <Music className="h-12 w-12 text-primary-foreground" />
               </motion.div>
               <h1 className="font-serif text-3xl font-bold text-foreground mb-3">
-                Bienvenido a<br /><span className="gold-text">MakeYourDream</span>
+                Bienvenido a<br /><span className="neon-text">MakeYourDream</span>
               </h1>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 Vamos a descubrir tu voz única. Graba un fragmento cantando y nuestra IA analizará tu perfil vocal en segundos.
