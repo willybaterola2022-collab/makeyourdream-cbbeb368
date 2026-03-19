@@ -149,7 +149,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border/40">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg gold-gradient flex items-center justify-center shrink-0">
+          <div className="h-9 w-9 rounded-lg stage-gradient flex items-center justify-center shrink-0">
             <Music className="h-5 w-5 text-primary-foreground" />
           </div>
           {!collapsed && (

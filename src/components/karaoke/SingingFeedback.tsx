@@ -115,7 +115,7 @@ export default function SingingFeedback({ scores, isActive, finished }: Props) {
                   </div>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                     <motion.div
-                      className="h-full rounded-full gold-gradient"
+                      className="h-full rounded-full stage-gradient"
                       initial={{ width: 0 }}
                       animate={{ width: `${s.value}%` }}
                       transition={{ duration: 0.8, ease: "easeOut" }}

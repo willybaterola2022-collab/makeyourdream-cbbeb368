@@ -109,7 +109,7 @@ const Karaoke = () => {
                 key={b}
                 onClick={() => setBpm(b)}
                 className={`px-3 py-1.5 rounded-full text-sm ${
-                  bpm === b ? "gold-gradient text-primary-foreground" : "glass-card text-muted-foreground"
+                  bpm === b ? "stage-gradient text-primary-foreground" : "glass-card text-muted-foreground"
                 }`}
               >
                 {b}

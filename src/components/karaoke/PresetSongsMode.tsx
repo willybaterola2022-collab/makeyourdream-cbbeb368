@@ -384,7 +384,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
             <a href={audioUrl} download={`${selectedSong.title}.webm`} className="flex-1 glass-card p-2.5 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground rounded-lg">
               <Download className="h-4 w-4" /> Descargar
             </a>
-            <button onClick={() => saveRecording(selectedSong.title, { scores, genre })} disabled={isUploading} className="flex-1 gold-gradient p-2.5 flex items-center justify-center gap-2 text-sm text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50">
+            <button onClick={() => saveRecording(selectedSong.title, { scores, genre })} disabled={isUploading} className="flex-1 stage-gradient p-2.5 flex items-center justify-center gap-2 text-sm text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50">
               <Cloud className="h-4 w-4" /> {isUploading ? "..." : "Guardar"}
             </button>
           </div>

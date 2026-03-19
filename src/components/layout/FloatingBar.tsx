@@ -31,7 +31,7 @@ export function FloatingBar() {
         </button>
         <div className="hidden sm:flex items-center gap-2">
           <div className="w-16 h-1 rounded-full bg-muted overflow-hidden">
-            <div className="w-1/3 h-full gold-gradient rounded-full" />
+            <div className="w-1/3 h-full stage-gradient rounded-full" />
           </div>
           <span className="text-[10px] text-muted-foreground">1:24</span>
         </div>
