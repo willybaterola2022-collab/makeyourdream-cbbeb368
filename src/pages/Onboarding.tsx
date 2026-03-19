@@ -256,7 +256,7 @@ const Onboarding = () => {
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                 <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-1">Tu clasificación vocal</p>
-                <h2 className="font-serif text-3xl font-bold gold-text mb-1">Mezzosoprano Lírica</h2>
+                <h2 className="font-serif text-3xl font-bold neon-text mb-1">Mezzosoprano Lírica</h2>
                 <p className="text-muted-foreground text-sm">Rango: A3 — E5 · Top 12%</p>
               </motion.div>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="mt-6 space-y-2">
