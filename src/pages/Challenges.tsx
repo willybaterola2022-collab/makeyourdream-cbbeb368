@@ -55,7 +55,7 @@ const Challenges = () => {
             <div key={c.name} className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground w-20">{c.name}</span>
               <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full gold-gradient" style={{ width: `${c.weight * 3.3}%` }} />
+                <div className="h-full rounded-full stage-gradient" style={{ width: `${c.weight * 3.3}%` }} />
               </div>
               <span className="text-xs font-medium text-foreground w-8 text-right">{c.weight}%</span>
             </div>
