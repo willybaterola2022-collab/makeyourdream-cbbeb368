@@ -198,7 +198,7 @@ const Onboarding = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}
                   onClick={isRecording ? stopRecording : startRecording}
-                  className={`h-24 w-24 rounded-full flex items-center justify-center transition-all ${isRecording ? "bg-destructive text-destructive-foreground" : "gold-gradient text-primary-foreground glow-gold"}`}
+                  className={`h-24 w-24 rounded-full flex items-center justify-center transition-all ${isRecording ? "bg-destructive text-destructive-foreground" : "stage-gradient text-primary-foreground glow-stage"}`}
                 >
                   {isRecording ? <MicOff className="h-10 w-10" /> : <Mic className="h-10 w-10" />}
                 </motion.button>
