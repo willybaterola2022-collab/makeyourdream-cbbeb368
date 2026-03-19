@@ -1,39 +1,61 @@
 import { motion } from "framer-motion";
+import { Play, Pause, Save, Share2, RotateCcw, Square } from "lucide-react";
 
 interface Props {
   isActive: boolean;
   volume: number;
   onClick: () => void;
   state: "idle" | "recording" | "finished";
+  size?: "hero" | "section";
+  onPlay?: () => void;
+  onSave?: () => void;
+  onShare?: () => void;
+  onRetry?: () => void;
+  isPlaying?: boolean;
 }
 
-export default function VintageMicrophone({ isActive, volume, onClick, state }: Props) {
-  const pulseScale = isActive ? 1 + (volume / 100) * 0.12 : 1;
-  const glowIntensity = isActive ? Math.max(25, volume * 0.9) : 0;
+export default function VintageMicrophone({
+  isActive,
+  volume,
+  onClick,
+  state,
+  size = "section",
+  onPlay,
+  onSave,
+  onShare,
+  onRetry,
+  isPlaying,
+}: Props) {
+  const isHero = size === "hero";
+  const pulseScale = isActive ? 1 + (volume / 100) * 0.15 : 1;
+  const glowIntensity = isActive ? Math.max(35, volume * 1.2) : 0;
+
+  const ringCount = isHero ? 6 : 5;
+  const ringSpacing = isHero ? 90 : 70;
 
   return (
-    <div className="relative flex flex-col items-center justify-center py-8 md:py-12">
-      {/* Always-visible idle rings — soft when idle, intense when recording */}
-      {[1, 2, 3, 4].map((ring) => (
+    <div className={`relative flex flex-col items-center justify-center ${isHero ? "py-6 md:py-10" : "py-6 md:py-8"}`}>
+      {/* Expanding rings */}
+      {Array.from({ length: ringCount }).map((_, ring) => (
         <motion.div
           key={ring}
           className="absolute rounded-full"
           style={{
-            border: `1px solid`,
+            border: `1.5px solid`,
             borderColor: isActive
-              ? `hsl(275 85% 60% / ${0.3 - ring * 0.05})`
-              : `hsl(185 90% 55% / ${0.15 - ring * 0.03})`,
+              ? `hsl(275 85% 60% / ${0.35 - ring * 0.04})`
+              : `hsl(185 90% 55% / ${0.2 - ring * 0.025})`,
           }}
-          initial={{ width: 100, height: 100, opacity: 0 }}
+          initial={{ width: 120, height: 120, opacity: 0 }}
           animate={{
-            width: [100, 100 + ring * 70],
-            height: [100, 100 + ring * 70],
-            opacity: isActive ? [0.5, 0] : [0.25, 0],
+            width: [120, 120 + ring * ringSpacing],
+            height: [120, 120 + ring * ringSpacing],
+            opacity: isActive ? [0.6, 0] : [0.3, 0],
           }}
           transition={{
-            duration: isActive ? 1.5 : 3,
+            duration: isActive ? 1.2 : 2.5,
             repeat: Infinity,
-            delay: ring * 0.5,
+            delay: ring * 0.4,
             ease: "easeOut",
           }}
         />
@@ -44,73 +66,75 @@ export default function VintageMicrophone({ isActive, volume, onClick, state }: 
         className="absolute rounded-full"
         animate={{
           boxShadow: isActive
-            ? `0 0 ${glowIntensity}px ${glowIntensity / 2}px hsl(275 85% 60% / 0.35), 0 0 ${glowIntensity * 0.7}px ${glowIntensity * 0.3}px hsl(185 90% 55% / 0.2)`
-            : "0 0 20px 8px hsl(275 85% 60% / 0.08), 0 0 40px 15px hsl(185 90% 55% / 0.05)",
+            ? `0 0 ${glowIntensity * 1.5}px ${glowIntensity * 0.7}px hsl(275 85% 60% / 0.4), 0 0 ${glowIntensity}px ${glowIntensity * 0.4}px hsl(185 90% 55% / 0.25)`
+            : "0 0 30px 12px hsl(275 85% 60% / 0.1), 0 0 60px 25px hsl(185 90% 55% / 0.07)",
         }}
-        style={{ width: 160, height: 160 }}
-        transition={{ duration: 0.15 }}
+        style={{ width: isHero ? 240 : 180, height: isHero ? 240 : 180 }}
+        transition={{ duration: 0.12 }}
       />
 
-      {/* Idle breathing glow */}
+      {/* Idle breathing glow — intense */}
       {!isActive && (
         <motion.div
           className="absolute rounded-full"
-          style={{ width: 170, height: 170 }}
+          style={{ width: isHero ? 280 : 200, height: isHero ? 280 : 200 }}
           animate={{
             boxShadow: [
-              "0 0 30px 10px hsl(275 85% 60% / 0.06), 0 0 60px 20px hsl(185 90% 55% / 0.04)",
-              "0 0 50px 18px hsl(275 85% 60% / 0.15), 0 0 80px 30px hsl(185 90% 55% / 0.1)",
-              "0 0 30px 10px hsl(275 85% 60% / 0.06), 0 0 60px 20px hsl(185 90% 55% / 0.04)",
+              "0 0 40px 15px hsl(275 85% 60% / 0.08), 0 0 80px 30px hsl(185 90% 55% / 0.06)",
+              "0 0 70px 28px hsl(275 85% 60% / 0.22), 0 0 120px 50px hsl(185 90% 55% / 0.15)",
+              "0 0 40px 15px hsl(275 85% 60% / 0.08), 0 0 80px 30px hsl(185 90% 55% / 0.06)",
             ],
           }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />
       )}
 
       {/* Main microphone button */}
       <motion.button
         onClick={onClick}
-        whileTap={{ scale: 0.9 }}
-        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
+        whileHover={{ scale: 1.06 }}
         animate={{ scale: pulseScale }}
-        transition={{ type: "spring", stiffness: 250, damping: 18 }}
+        transition={{ type: "spring", stiffness: 220, damping: 16 }}
         className="relative z-10 flex flex-col items-center justify-center cursor-pointer"
         aria-label={state === "idle" ? "Empezar a cantar" : state === "recording" ? "Parar" : "Reiniciar"}
       >
         {/* Mic body */}
         <div className="relative">
-          {/* Head / grille — MUCH BIGGER */}
+          {/* Head / grille — MASSIVE */}
           <motion.div
-            className="w-28 h-36 md:w-36 md:h-44 rounded-t-full border-2 flex items-center justify-center overflow-hidden"
+            className={`${
+              isHero
+                ? "w-44 h-56 md:w-56 md:h-72"
+                : "w-36 h-44 md:w-44 md:h-56"
+            } rounded-t-full border-2 flex items-center justify-center overflow-hidden`}
             style={{
               background: isActive
-                ? `radial-gradient(ellipse at center, hsl(275 85% 60% / 0.2), hsl(185 90% 55% / 0.08), hsl(0 0% 8% / 0.95))`
-                : `radial-gradient(ellipse at center, hsl(275 85% 25% / 0.3), hsl(0 0% 8%))`,
-              borderColor: isActive
-                ? `hsl(275 85% 60%)`
-                : `hsl(275 85% 40% / 0.5)`,
+                ? `radial-gradient(ellipse at center, hsl(275 85% 60% / 0.25), hsl(185 90% 55% / 0.1), hsl(0 0% 6% / 0.95))`
+                : `radial-gradient(ellipse at center, hsl(275 85% 25% / 0.35), hsl(0 0% 6%))`,
+              borderColor: isActive ? `hsl(275 85% 60%)` : `hsl(275 85% 40% / 0.5)`,
             }}
             animate={{
               borderColor: isActive
                 ? [`hsl(275 85% 60%)`, `hsl(185 90% 55%)`, `hsl(275 85% 60%)`]
-                : [`hsl(275 85% 35% / 0.4)`, `hsl(185 90% 40% / 0.4)`, `hsl(275 85% 35% / 0.4)`],
+                : [`hsl(275 85% 35% / 0.5)`, `hsl(185 90% 40% / 0.5)`, `hsl(275 85% 35% / 0.5)`],
             }}
-            transition={{ duration: isActive ? 1.5 : 3, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: isActive ? 1.2 : 2.5, repeat: Infinity, ease: "easeInOut" }}
           >
             {/* Grille lines */}
-            <div className="absolute inset-4 md:inset-5 flex flex-col gap-[4px] md:gap-[5px]">
-              {Array.from({ length: 10 }).map((_, i) => (
+            <div className={`absolute ${isHero ? "inset-6 md:inset-8" : "inset-5 md:inset-6"} flex flex-col gap-[5px] md:gap-[6px]`}>
+              {Array.from({ length: isHero ? 14 : 11 }).map((_, i) => (
                 <motion.div
                   key={i}
                   className="w-full rounded-full"
-                  style={{ height: 2.5 }}
+                  style={{ height: isHero ? 3.5 : 2.5 }}
                   animate={{
                     backgroundColor: isActive && volume > 10
-                      ? `hsl(${275 - (i * 8)} ${85 - i * 2}% ${50 + (volume / 100) * 30}%)`
-                      : `hsl(275 40% ${25 + i * 2}%)`,
-                    scaleX: isActive ? 0.6 + (volume / 100) * 0.4 : 0.65,
+                      ? `hsl(${275 - (i * 6)} ${85 - i}% ${50 + (volume / 100) * 35}%)`
+                      : `hsl(275 40% ${22 + i * 2}%)`,
+                    scaleX: isActive ? 0.55 + (volume / 100) * 0.45 : 0.6,
                   }}
-                  transition={{ duration: 0.06, delay: i * 0.012 }}
+                  transition={{ duration: 0.05, delay: i * 0.01 }}
                 />
               ))}
             </div>
@@ -118,53 +142,103 @@ export default function VintageMicrophone({ isActive, volume, onClick, state }: 
             {/* Center recording indicator */}
             {isActive && (
               <motion.div
-                className="absolute bottom-3 w-3 h-3 rounded-full bg-destructive"
-                animate={{ opacity: [1, 0.2, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              />
+                className="absolute bottom-4 md:bottom-5 flex items-center gap-2"
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+              >
+                <Square className="h-4 w-4 md:h-5 md:w-5 text-destructive fill-destructive" />
+              </motion.div>
             )}
           </motion.div>
 
           {/* Neck ring */}
-          <div className="mx-auto w-14 md:w-16 h-3 md:h-4 rounded-b-md stage-gradient opacity-70" />
+          <div className={`mx-auto ${isHero ? "w-20 md:w-24 h-4 md:h-5" : "w-16 md:w-20 h-3 md:h-4"} rounded-b-md stage-gradient opacity-80`} />
 
           {/* Stem */}
-          <div className="mx-auto w-4 md:w-5 h-10 md:h-12 bg-gradient-to-b from-muted-foreground/30 to-muted-foreground/10 rounded-b-full" />
+          <div className={`mx-auto ${isHero ? "w-5 md:w-6 h-14 md:h-16" : "w-4 md:w-5 h-10 md:h-12"} bg-gradient-to-b from-muted-foreground/30 to-muted-foreground/10 rounded-b-full`} />
 
           {/* Base */}
-          <div className="mx-auto w-20 md:w-24 h-2.5 bg-muted-foreground/20 rounded-full" />
+          <div className={`mx-auto ${isHero ? "w-28 md:w-32 h-3" : "w-20 md:w-24 h-2.5"} bg-muted-foreground/20 rounded-full`} />
         </div>
       </motion.button>
 
-      {/* Label — BIG and BRIGHT */}
+      {/* Labels & post-recording controls */}
       <motion.div
-        className="absolute -bottom-3 md:-bottom-2 text-center"
+        className={`${isHero ? "mt-6 md:mt-8" : "mt-4 md:mt-5"} text-center`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.15 }}
       >
         {state === "idle" && (
           <motion.p
-            className="text-sm md:text-base font-bold uppercase tracking-[0.2em] neon-text"
-            animate={{ opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className={`${isHero ? "text-xl md:text-3xl" : "text-base md:text-xl"} font-bold uppercase tracking-[0.25em] neon-text`}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           >
             ⚡ TOCA Y CANTA ⚡
           </motion.p>
         )}
         {state === "recording" && (
-          <motion.p
-            className="text-sm font-semibold uppercase tracking-wider text-destructive"
-            animate={{ opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 1.2, repeat: Infinity }}
-          >
-            ● GRABANDO — TOCA PARA PARAR
-          </motion.p>
+          <motion.div className="flex items-center justify-center gap-3">
+            <motion.div
+              className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-destructive"
+              animate={{ opacity: [1, 0.2, 1], scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+            />
+            <p className={`${isHero ? "text-lg md:text-2xl" : "text-sm md:text-base"} font-bold uppercase tracking-widest text-destructive`}>
+              GRABANDO
+            </p>
+          </motion.div>
         )}
         {state === "finished" && (
-          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Toca para reiniciar
-          </p>
+          <div className="flex items-center justify-center gap-4 md:gap-6">
+            {onPlay && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onPlay(); }}
+                className="h-14 w-14 md:h-16 md:w-16 rounded-full glass-card flex items-center justify-center hover:border-primary/40 transition-all group"
+                aria-label="Escuchar"
+              >
+                {isPlaying ? (
+                  <Pause className="h-6 w-6 md:h-7 md:w-7 text-primary group-hover:scale-110 transition-transform" />
+                ) : (
+                  <Play className="h-6 w-6 md:h-7 md:w-7 text-primary ml-0.5 group-hover:scale-110 transition-transform" />
+                )}
+              </button>
+            )}
+            {onSave && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onSave(); }}
+                className="h-14 w-14 md:h-16 md:w-16 rounded-full glass-card flex items-center justify-center hover:border-secondary/40 transition-all group"
+                aria-label="Guardar"
+              >
+                <Save className="h-6 w-6 md:h-7 md:w-7 text-secondary group-hover:scale-110 transition-transform" />
+              </button>
+            )}
+            {onShare && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onShare(); }}
+                className="h-14 w-14 md:h-16 md:w-16 rounded-full glass-card flex items-center justify-center hover:border-primary/40 transition-all group"
+                aria-label="Compartir"
+              >
+                <Share2 className="h-6 w-6 md:h-7 md:w-7 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all" />
+              </button>
+            )}
+            {onRetry && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onRetry(); }}
+                className="h-14 w-14 md:h-16 md:w-16 rounded-full glass-card flex items-center justify-center hover:border-primary/40 transition-all group"
+                aria-label="Otra vez"
+              >
+                <RotateCcw className="h-6 w-6 md:h-7 md:w-7 text-muted-foreground group-hover:text-primary group-hover:scale-110 transition-all" />
+              </button>
+            )}
+            {/* Fallback if no action props */}
+            {!onPlay && !onSave && !onShare && !onRetry && (
+              <p className={`${isHero ? "text-base" : "text-sm"} font-medium uppercase tracking-wider text-muted-foreground`}>
+                Toca para reiniciar
+              </p>
+            )}
+          </div>
         )}
       </motion.div>
     </div>
