@@ -25,7 +25,7 @@ const Challenges = () => {
       </div>
 
       {/* Active challenge */}
-      <div className="glass-card p-5 border-primary/20 glow-gold">
+      <div className="glass-card p-5 border-primary/20 glow-stage">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" />
