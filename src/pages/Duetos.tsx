@@ -28,7 +28,7 @@ const Duetos = () => {
               onClick={() => setSelectedArtist(i)}
               className={`glass-card p-4 text-left transition-all duration-200 ${
                 selectedArtist === i
-                  ? "border-primary/30 glow-gold"
+                  ? "border-primary/30 glow-stage"
                   : "hover:border-border/60"
               }`}
             >
