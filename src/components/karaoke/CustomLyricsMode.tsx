@@ -128,7 +128,7 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
                 key={s}
                 onClick={() => setSpeed(s)}
                 className={`px-3 py-1.5 rounded-full text-sm ${
-                  speed === s ? "gold-gradient text-primary-foreground" : "glass-card text-muted-foreground"
+                  speed === s ? "stage-gradient text-primary-foreground" : "glass-card text-muted-foreground"
                 }`}
               >
                 {s}s
