@@ -43,7 +43,7 @@ export default function CollabRoom() {
           <p className="text-sm font-medium text-foreground">Sala: Golden Vibes 🎶</p>
           <p className="text-xs text-muted-foreground">{participants.length}/4 participantes</p>
         </div>
-        <Badge className="gold-gradient text-primary-foreground">EN VIVO</Badge>
+        <Badge className="stage-gradient text-primary-foreground">EN VIVO</Badge>
       </Card>
 
       {/* Participants */}
