@@ -267,7 +267,7 @@ const Onboarding = () => {
                       <span className="font-medium text-foreground">{d.value}%</span>
                     </div>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <motion.div className="h-full rounded-full gold-gradient" initial={{ width: 0 }} animate={{ width: `${d.value}%` }} transition={{ duration: 0.8, delay: 0.8 + i * 0.1 }} />
+                      <motion.div className="h-full rounded-full stage-gradient" initial={{ width: 0 }} animate={{ width: `${d.value}%` }} transition={{ duration: 0.8, delay: 0.8 + i * 0.1 }} />
                     </div>
                   </div>
                 ))}
