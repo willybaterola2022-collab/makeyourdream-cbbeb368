@@ -140,7 +140,7 @@ export default function SongSketch() {
           className={`mx-auto h-20 w-20 rounded-full flex items-center justify-center transition-all ${
             isCapturing
               ? "bg-destructive shadow-[0_0_30px_hsl(var(--destructive)/0.5)]"
-              : "gold-gradient shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
+              : "stage-gradient shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
           }`}
         >
           {isCapturing ? (
