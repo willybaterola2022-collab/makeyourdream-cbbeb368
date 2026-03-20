@@ -90,7 +90,7 @@ const Exercises = () => {
     if (phase !== "exercise" || !currentFrequency) return;
     pitchTotal.current++;
     // Check if current frequency is close to any target note
-    const closest = TARGET_NOTES.reduce((a, b) =>
+    const closest = targetNotes.reduce((a, b) =>
       Math.abs(b - currentFrequency) < Math.abs(a - currentFrequency) ? b : a
     );
     const cents = 1200 * Math.log2(currentFrequency / closest);
