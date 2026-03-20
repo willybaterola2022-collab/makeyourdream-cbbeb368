@@ -1,148 +1,76 @@
 
 
-# Plan: Conectar Frontend a Edge Functions + UI Fixes + Login Completo + Karaoke Real
+# Plan: Crear y Desplegar las 7 Edge Functions Prioritarias
 
-Las 6 edge functions YA existen en el backend (construidas por Claude Code). Este plan conecta el frontend a ellas y arregla los bugs pendientes.
+## Situacion
 
----
+- El frontend YA tiene los `supabase.functions.invoke()` correctos con fallbacks locales en 5 archivos (FreestyleMode, Fingerprint, Coach, Exercises, Index)
+- Las tablas en la base de datos YA existen (user_progress, vocal_fingerprints, training_sessions, daily_challenges, etc.)
+- El directorio `supabase/functions/` esta VACIO — no hay ninguna edge function desplegada
+- Claude Code las escribio en una Mac local pero no pudo subirlas. Lovable las crea y las despliega automaticamente
 
-## 1. SQL Migration — Realtime + Triggers
+## Que voy a hacer
 
-Ejecutar migration para habilitar realtime y verificar triggers:
+Crear las 7 edge functions prioritarias directamente en este proyecto. Lovable las despliega automaticamente — no necesitas GitHub, terminal ni Supabase dashboard.
 
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE social_feed;
-ALTER PUBLICATION supabase_realtime ADD TABLE collab_rooms;
-ALTER PUBLICATION supabase_realtime ADD TABLE duels;
-```
+### Las 7 funciones
 
-Los triggers ya se crearon en la migration anterior (`20260320191926`), pero la config muestra "no triggers" — puede que hayan fallado por el trigger en `auth.users` (schema reservado). Se reintentara con `DO $$ BEGIN ... END $$` safety wrapper.
+| # | Funcion | Que hace | Frontend que la consume |
+|---|---------|----------|------------------------|
+| 1 | `vocal-analysis` | Calcula pitch/timing/expression score server-side, guarda training_session | FreestyleMode.tsx |
+| 2 | `save-training-session` | Guarda sesion + actualiza XP/streak/badges en user_progress | FreestyleMode.tsx (fallback) |
+| 3 | `vocal-fingerprint` | Guarda/lee fingerprint con clasificacion vocal + artistas similares | Fingerprint.tsx |
+| 4 | `ai-coach-feedback` | Lee ultimas 20 sesiones, calcula metricas + observaciones | Coach.tsx |
+| 5 | `daily-exercise` | Recomienda ejercicio personalizado segun nivel del usuario | Exercises.tsx |
+| 6 | `daily-challenge` | Retorna reto del dia + estado de completitud | Index.tsx |
+| 7 | `gamification-engine` | Retorna XP, nivel, streak, badges del usuario | Index.tsx |
 
----
+### Logica de cada funcion
 
-## 2. Fix 3 Bugs de UI
+Todas siguen el mismo patron:
+- CORS headers + OPTIONS preflight
+- Crean cliente Supabase con `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (ya configurados como secrets)
+- Parsean body JSON
+- Queries a las tablas existentes
+- Respuesta JSON
 
-### 2.1 PageTransition — quitar AnimatePresence duplicado
-`PageTransition.tsx` tiene `AnimatePresence` pero `App.tsx` ya tiene otro wrapping las Routes. Quitar el de `PageTransition` dejando solo el `motion.div`.
+**vocal-analysis**: Recibe pitch_samples + onset_times_ms, calcula score continuo (1 - |cents|/50), timing sync, guarda en training_sessions, actualiza user_progress con XP ganado.
 
-### 2.2 Mood capsules mobile overflow
-`Index.tsx` linea 139: cambiar `className="flex gap-2 mt-6 z-10"` a `"flex gap-2 mt-6 z-10 overflow-x-auto max-w-full px-1 scrollbar-hide"` y agregar `shrink-0` a cada capsule.
+**save-training-session**: Inserta en training_sessions, calcula grade (S/A/B+/B/C/D/F), actualiza XP y streak en user_progress, evalua badges.
 
-### 2.3 Piano keys mobile overflow  
-`HeroPiano.tsx` linea 76: agregar `scale-[0.7] sm:scale-90 md:scale-100 origin-bottom` al contenedor de teclas.
+**vocal-fingerprint**: action "save" inserta en vocal_fingerprints con clasificacion por rango (soprano/mezzo/tenor/baritono/bajo) y artistas similares mapeados por rango. action "get_latest" retorna el ultimo.
 
----
+**ai-coach-feedback**: Lee ultimas 20 training_sessions, compara semana actual vs anterior, genera observaciones basadas en deltas, recomienda ejercicio para la metrica mas baja.
 
-## 3. Conectar Frontend a Edge Functions Existentes
+**daily-exercise**: Lee user_progress.level + ultimo fingerprint, selecciona ejercicio adaptado al nivel (escalas basicas para principiantes, melismas para avanzados).
 
-### 3.1 FreestyleMode.tsx — invocar `vocal-analysis` + `save-training-session`
-Reemplazar el scoring manual y el `.insert()` directo con:
-```typescript
-const { data } = await supabase.functions.invoke("vocal-analysis", {
-  body: { user_id, pitch_samples, onset_times_ms, expected_beat_ms, expression_score, song_title, module: "karaoke" }
-});
-// data.analysis.{pitch, timing, expression, overall}, data.grade, data.xp_earned
-```
-Fallback: si la edge function falla, mantener el scoring local existente.
+**daily-challenge**: Busca reto con active_date = hoy. Si no existe, genera uno basado en la metrica mas debil del usuario (insert con service role). Verifica si ya esta completado.
 
-### 3.2 Fingerprint.tsx — invocar `vocal-fingerprint`
-Reemplazar `saveToBackend` con:
-```typescript
-const { data } = await supabase.functions.invoke("vocal-fingerprint", {
-  body: { action: "save", user_id, dimensions, vocal_range_low, vocal_range_high, recording_id }
-});
-// data.fingerprint con classification + similar_artists reales
-```
+**gamification-engine**: Lee user_progress, calcula nivel (XP/100), retorna badges, streak, XP total.
 
-### 3.3 Coach.tsx — invocar `ai-coach-feedback`
-Reemplazar la logica local de observaciones con:
-```typescript
-const { data } = await supabase.functions.invoke("ai-coach-feedback", {
-  body: { user_id }
-});
-// data.metrics[], data.observations[], data.recommended_exercise
-```
-Fallback local si falla.
+### Archivos a crear
 
-### 3.4 Exercises.tsx — invocar `daily-exercise`
-Agregar fetch al montar para obtener ejercicio personalizado:
-```typescript
-const { data } = await supabase.functions.invoke("daily-exercise", {
-  body: { action: "get_recommended", user_id }
-});
-```
+| Archivo | Descripcion |
+|---------|-------------|
+| `supabase/functions/vocal-analysis/index.ts` | Scoring + save |
+| `supabase/functions/save-training-session/index.ts` | Save + XP + streak |
+| `supabase/functions/vocal-fingerprint/index.ts` | Save/read fingerprint |
+| `supabase/functions/ai-coach-feedback/index.ts` | Metricas + observaciones |
+| `supabase/functions/daily-exercise/index.ts` | Ejercicio personalizado |
+| `supabase/functions/daily-challenge/index.ts` | Reto del dia |
+| `supabase/functions/gamification-engine/index.ts` | Progreso XP/nivel |
 
-### 3.5 Index.tsx — invocar `daily-challenge` + `gamification-engine`
-Reemplazar queries directas a tablas con:
-```typescript
-const { data: challenge } = await supabase.functions.invoke("daily-challenge", {
-  body: { action: "get_today", user_id }
-});
-const { data: progress } = await supabase.functions.invoke("gamification-engine", {
-  body: { action: "get_progress", user_id }
-});
-```
+### Frontend — Sin cambios
 
----
+El frontend ya tiene las llamadas correctas con fallbacks. Una vez desplegadas las funciones, todo conecta automaticamente.
 
-## 4. Karaoke Scoring Real (mejorado)
+### Despliegue
 
-Mejorar el algoritmo en FreestyleMode.tsx para que el scoring local sea mas preciso (como fallback y para feedback en tiempo real):
+Despues de crear los archivos, uso `supabase--deploy_edge_functions` para desplegar las 7 funciones. El despliegue es automatico e inmediato.
 
-- **Pitch**: `score = max(0, 1 - |cents| / 50)` continuo, bonus 1.2x para notas sostenidas >1s
-- **Timing**: ventana deslizante de 10s en vez de acumulativo
-- **Expression**: deteccion de vibrato (varianza 15-50 cents a 4-7Hz) + dynamic range (p90/p10 de volume)
-- Post-grabacion: enviar a `vocal-analysis` edge function para score definitivo
+### Orden de ejecucion
 
----
-
-## 5. Login Flow Completo
-
-### 5.1 Forgot Password en Login.tsx
-Agregar boton "¿Olvidaste tu contrasena?" que llama `supabase.auth.resetPasswordForEmail(email, { redirectTo: origin + '/reset-password' })`.
-
-### 5.2 Nueva pagina ResetPassword.tsx
-- Detecta `type=recovery` en URL hash
-- Formulario nueva contrasena + confirmacion
-- Llama `supabase.auth.updateUser({ password })`
-- Redirige a `/` post-exito
-
-### 5.3 Ruta en App.tsx
-Agregar `<Route path="/reset-password" element={<ResetPassword />} />` como ruta publica.
-
----
-
-## 6. Scrollbar-hide CSS utility
-
-Agregar a `src/index.css`:
-```css
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-.scrollbar-hide::-webkit-scrollbar { display: none; }
-```
-
----
-
-## Archivos modificados/creados
-
-| Archivo | Accion |
-|---------|--------|
-| Migration SQL | CREAR — realtime + retry triggers |
-| `src/components/layout/PageTransition.tsx` | MODIFICAR — quitar AnimatePresence |
-| `src/pages/Index.tsx` | MODIFICAR — edge functions + scroll fix |
-| `src/components/studio/HeroPiano.tsx` | MODIFICAR — scale mobile |
-| `src/components/karaoke/FreestyleMode.tsx` | MODIFICAR — edge function + scoring real |
-| `src/pages/Fingerprint.tsx` | MODIFICAR — edge function |
-| `src/pages/Coach.tsx` | MODIFICAR — edge function |
-| `src/pages/Exercises.tsx` | MODIFICAR — edge function |
-| `src/pages/Login.tsx` | MODIFICAR — forgot password |
-| `src/pages/ResetPassword.tsx` | CREAR |
-| `src/App.tsx` | MODIFICAR — ruta /reset-password |
-| `src/index.css` | MODIFICAR — scrollbar-hide |
-
-## Orden de ejecucion
-1. SQL migration (realtime)
-2. Fix 3 bugs UI
-3. Conectar 5 modulos a edge functions
-4. Scoring real en Karaoke
-5. Login flow completo
+1. Crear los 7 archivos index.ts
+2. Desplegar las 7 funciones
+3. Verificar con logs que responden correctamente
 
