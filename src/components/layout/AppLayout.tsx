@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { BottomNav } from "./BottomNav";
+import { MobileMenu } from "./MobileMenu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Outlet } from "react-router-dom";
 
@@ -30,6 +31,9 @@ export function AppLayout() {
 
         {/* Mobile bottom nav */}
         <BottomNav />
+
+        {/* Mobile hamburger menu */}
+        <MobileMenu />
       </div>
     </SidebarProvider>
   );
