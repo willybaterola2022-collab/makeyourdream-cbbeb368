@@ -1,249 +1,247 @@
 
 
-# Propuestas de Diseño: "El Estudio del Artista" — Cada Sección es un Mundo
-
-## Diagnóstico Actual
-
-Todos los módulos tienen el mismo problema: parecen formularios genéricos con cards, badges y progress bars. No transmiten que estás EN un estudio de grabación. No hay jerarquía visual, no hay "héroe" por sección, y un usuario novato no sabe por dónde empezar.
+# PLAN COMPLETO: MakeYourDream v5.0 "Stage Edition"
+## Documento narrativo + hoja de ruta integral en español
 
 ---
 
-## Filosofía de Diseño
+## MI OPINION HONESTA COMO TU FRONTEND DEVELOPER
 
-Cada sección = una **habitación diferente del estudio de grabación**. Al entrar, el usuario siente que cruzó una puerta física. Cada habitación tiene:
+Willy, después de auditar cada archivo del proyecto, esto es lo que hay:
 
-1. **Un objeto héroe visual** (como el micrófono vintage en Home/Karaoke)
-2. **Fondo único temático** (gradiente/ambiente que identifica la sala)
-3. **Botones enormes e intuitivos** — los principales titilan/brillan
-4. **Cero texto explicativo** — todo se entiende por iconografía
-5. **Scroll 1 = Héroe + CTA principal**, scroll 2 = contenido
+### LO QUE FUNCIONA DE VERDAD (puedes cantar y grabar)
+| Modulo | Que hace realmente | Hooks conectados |
+|--------|-------------------|-----------------|
+| **Karaoke Freestyle** | Graba tu voz, detecta pitch en tiempo real, muestra waveform, guarda en la nube | useMicrophone + usePitchDetection + useSupabaseRecorder + useMetronome |
+| **Karaoke Custom/Preset** | Igual que Freestyle pero con letra o canciones preseleccionadas | Los mismos 4 hooks |
+| **Breath Trainer** | Ejercicios de respiracion con temporizador y sonido real | useAudioEngine (playSweep, playTone) |
+| **Pitch Training** | Juego de oido: escuchas nota, eliges cual es, scoring real | useAudioEngine (playNote) |
+| **WarmUp** | Rutina cronometrada con sonidos guia reales | useAudioEngine |
+| **Song Sketch** | Graba bloques (intro/verso/coro) con mic real | useMicrophone + useSupabaseRecorder |
 
----
+### LO QUE SE VE BONITO PERO NO HACE NADA
+| Modulo | Problema |
+|--------|---------|
+| **Home (Index)** | Solo un mic decorativo que navega a Karaoke. Cero stats, cero datos reales |
+| **Diagnostico** | Click en osciloscopio = muestra datos HARDCODEADOS. No analiza nada |
+| **Fingerprint** | 100% estatico. Numeros inventados. No usa mic |
+| **Coach** | Texto estatico. No hay IA, no hay conexion a datos reales |
+| **Exercises** | Calendario mock. El boton Play no hace nada |
+| **Challenges** | UI bonita con datos falsos. No hay sistema de retos |
+| **Duelos** | Leaderboard inventado. No hay matchmaking |
+| **CollabRoom** | Participantes falsos. Grabacion no funciona |
+| **LoopStation** | Capas visuales pero no graban audio real por capa |
+| **EmotionMap** | Datos hardcodeados. El mic se conecta pero no analiza |
+| **VocalFX** | Tiene useMicrophone pero los efectos no procesan audio real |
+| **HarmonyLab** | Tiene useMicrophone pero no genera armonias |
+| **AutoMix** | Waveform decorativa. No procesa audio |
+| **Matching, Duetos, FanRadar, GenreGym, StageSimulator, VocalStories, DreamCanvas, Comparator, VoiceJournal, Portfolio, Plan90, LyricsWriter** | Placeholders con datos mock |
 
-## 30 Propuestas de Optimización
-
-### A. NAVEGACIÓN Y ESTRUCTURA (1-5)
-
-**1. Puerta de Entrada por Sección**
-Cada módulo abre con una animación de "entrar a la sala": fade-in con un destello de luz como cuando se encienden las luces del estudio.
-
-**2. Sidebar Visual con Iconos de Estudio**
-Reemplazar el sidebar textual por iconos de equipamiento de estudio: micrófono (karaoke), auriculares (práctica), mesa de mezclas (crear), analizador (analizar), trofeo (competir). Sin texto, solo iconos enormes.
-
-**3. Breadcrumb Visual de Sala**
-En lugar de breadcrumbs de texto, un indicador visual tipo "estás en la Sala de Grabación" con el icono de la sala iluminado arriba.
-
-**4. Transiciones entre Salas**
-Al navegar entre secciones, animación de "apagar luces / encender luces" — un fadeout-fadein con el color de cada sala.
-
-**5. Onboarding por Sala (Primera Vez)**
-La primera vez que entras a una sala, un overlay minimalista con 3 pasos visuales (sin texto largo): icono animado → flecha → resultado. 3 segundos, auto-dismiss.
-
-### B. KARAOKE — "La Cabina de Grabación" (6-8)
-
-**6. Objeto Héroe: Micrófono Vintage (ya existe)**
-Mantener pero con luz de "ON AIR" roja que titila cuando estás grabando. El fondo simula la cabina con paneles acústicos.
-
-**7. Cards de Modo como Puertas**
-Los 3 modos (Freestyle, Tu Letra, Canciones) como 3 puertas de estudio: cada una con un icono tridimensional y luz que indica "disponible". Al tocar, efecto de abrir puerta.
-
-**8. Selector de Canciones tipo Jukebox**
-En lugar de lista plana, un carrusel visual tipo jukebox vintage con portadas de color por género. Swipe horizontal. Cada canción muestra dificultad con estrellas luminosas.
-
-### C. WARM-UP — "La Sala de Calentamiento" (9-11)
-
-**9. Objeto Héroe: Termómetro Vocal Gigante**
-Un termómetro visual enorme que sube de azul (frío) a rojo (caliente) conforme completas ejercicios. Es el scroll 1.
-
-**10. Ejercicios como Niveles de Temperatura**
-En lugar de lista de ejercicios, un medidor circular tipo "gauge" que va subiendo. Cada ejercicio completado = más calor.
-
-**11. Fondo: Sala de ensayo con espejos**
-Gradiente cálido (ámbar/naranja sutil) que simula la sala de calentamiento.
-
-### D. BREATH TRAINER — "La Cámara de Aire" (12-13)
-
-**12. Objeto Héroe: Pulmones Animados**
-En lugar del círculo genérico, una representación estilizada de pulmones que se expanden/contraen con la respiración. Neon outline que brilla.
-
-**13. Fondo: Espacio abierto/zen**
-Gradiente azul profundo a negro, partículas flotantes como polvo en el aire. Sensación de espacio infinito.
-
-### E. PITCH TRAINING — "La Sala del Piano" (14-15)
-
-**14. Objeto Héroe: Piano de Cola Brillante**
-Un piano visual gigante con teclas que brillan cuando las tocas. Scroll 1 = piano héroe, scroll 2 = ejercicio.
-
-**15. Feedback Visual con Notas Musicales**
-Cuando aciertas, notas musicales animadas salen del piano hacia arriba. Cuando fallas, las notas caen.
-
-### F. LOOP STATION — "La Mesa de Mezclas" (16-17)
-
-**16. Objeto Héroe: Mesa de Mezclas con Faders**
-Cada capa = un canal de la mesa con fader visual deslizable. LEDs que parpadean con el volumen. Botones tipo hardware real.
-
-**17. Capas como Vinilos Giratorios**
-Cada capa grabada = un disco de vinilo miniatura girando. Al agregar capas, aparecen más vinilos. Visual vintage.
-
-### G. SONG SKETCH — "El Bloc de Notas del Productor" (18-19)
-
-**18. Objeto Héroe: Libreta/Cuaderno Abierto**
-Estética de cuaderno de compositor con líneas de pentagrama. Los bloques grabados aparecen como notas adhesivas de colores sobre el cuaderno.
-
-**19. Timeline como Cinta de Cassette**
-La línea de tiempo de bloques visualizada como una cinta de cassette que se va llenando. Progreso visual tangible.
-
-### H. DIAGNOSTICO / FINGERPRINT — "El Laboratorio" (20-21)
-
-**20. Objeto Héroe: Osciloscopio / Analizador de Espectro**
-Un osciloscopio retro con la onda de tu voz. Estética de equipo de medición profesional. Verde fosforescente sobre negro.
-
-**21. Radar como Holograma**
-El radar 6D actual pero con efecto de holograma 3D flotante, rotando lentamente. Líneas de neón.
-
-### I. EMOTION MAP — "La Sala de los Espejos" (22-23)
-
-**22. Objeto Héroe: Espejo con Reflejo Emocional**
-Un espejo estilizado que "refleja" la emoción dominante con colores y efectos visuales. Cada emoción tiene un color (tristeza=azul, poder=rojo, ternura=rosa).
-
-**23. Resultado como Aura**
-En lugar de barras de progreso, un aura luminosa alrededor del micrófono con los colores de las emociones mezclados proporcionalmente.
-
-### J. CHALLENGES / DUELOS — "La Arena" (24-25)
-
-**24. Objeto Héroe: Trofeo Brillante**
-Un trofeo 3D dorado que rota, con partículas brillantes. El scroll 1 muestra el trofeo y tu posición en el ranking.
-
-**25. Leaderboard como Coliseo**
-Los rankings presentados en gradas de un coliseo/arena. Tu posición iluminada con spotlight.
-
-### K. VOCAL FX — "El Rack de Efectos" (26-27)
-
-**26. Objeto Héroe: Rack de Pedales**
-Los efectos presentados como pedales de guitarra/voz reales (stomp boxes). Tap para activar/desactivar con luz LED.
-
-**27. Presets como Perillas de Amplificador**
-En lugar de botones planos, perillas giratorias estilo amplificador vintage.
-
-### L. SOCIAL (Duetos, Collab, Stories) — "El Backstage" (28-30)
-
-**28. Duetos: Escenario Split**
-Pantalla dividida visualmente con spotlight en cada lado. Tu lado vs. el artista IA. Efecto de escenario real.
-
-**29. Collab Room: Mesa Redonda de Estudio**
-Los participantes alrededor de una mesa de estudio vista desde arriba. Cada uno con su micrófono. Al hablar, su zona se ilumina.
-
-**30. Vocal Stories: Feed tipo Vinilo**
-Cada story es un mini vinilo que gira. Swipe vertical para pasar. Like = disco de oro.
+### LO QUE NUNCA SE EJECUTO (propuestas anteriores pendientes)
+1. **30 propuestas de diseño "El Estudio del Artista"** — Solo se implemento StudioRoom como wrapper + 7 hero components. Faltan 6 heroes nuevos (HeroBrain, HeroRadar6D, HeroSplitStage, HeroVinyl, HeroBook, HeroConsole)
+2. **50 modulos de retencion/viralidad** — Ninguno se construyo (Daily Voice Check, Streak Rewards, Vocal Passport, etc.)
+3. **Comentarios BACKEND-REQUEST** — CERO insertados en el codigo (busque y no hay ninguno)
+4. **Master prompt para Claude Code** — No se genero
+5. **Modulo Voice Translator** — No existe
+6. **Bottom navigation mobile** — No existe
+7. **Renombrado de modulos** — Siguen con nombres tecnicos
+8. **Onboarding por sala** — No existe
+9. **Sonidos de UI** — useAudioEngine existe pero solo lo usan WarmUp, Breath y Pitch
+10. **Celebraciones** — No hay confetti, aplausos ni feedback sonoro al completar algo
 
 ---
 
-## 50 Sugerencias de Módulos para Retención, Fidelización y Viralidad
+## HOJA DE RUTA COMPLETA EN SPRINTS
 
-### RETENCIÓN DIARIA (1-10)
-1. **Daily Voice Check** — 30 seg de voz cada mañana, tracking automático de rango/calidad
-2. **Nota del Día** — Una nota aleatoria que debes clavar con precisión, streak de días consecutivos
-3. **Reto Relámpago** — Desafío de 60 seg aleatorio cada 4 horas, notificación push
-4. **Mood Singing** — "¿Cómo te sientes?" → sugiere canción y ejercicio según estado emocional
-5. **Vocal Horoscope** — Predicción diaria basada en tu historial ("Hoy tu registro agudo estará fuerte")
-6. **Streak Rewards** — Cada 7 días consecutivos, desbloqueas efecto/preset/escenario
-7. **Morning Warm-Up Alarm** — Alarma que solo se apaga cantando una nota correcta
-8. **Song of the Day** — Canción destacada diaria con bonus XP si la cantas
-9. **Voice Weather** — Gráfico tipo clima de tu voz ("Soleado = buena afinación, Nublado = cansancio vocal")
-10. **Micro-Lessons** — 90 seg de tip vocal diario con video/audio de ejemplo
+### SPRINT 1: "LIMPIEZA" (Lovable solo, sin backend)
+**Que se hace:**
+- Ocultar del sidebar las 20 paginas que no funcionan (NO se borra codigo, solo se quitan del menu)
+- Renombrar los modulos visibles con nombres en español marketeros
+- Crear bottom navigation mobile con 5 tabs: Escenario | Estudio | CANTA (boton central grande) | Entrena | Perfil
+- Reorganizar sidebar desktop en 5 grupos colapsables
 
-### GAMIFICACIÓN (11-20)
-11. **Vocal Passport** — Pasaporte con sellos por cada género dominado
-12. **Season Pass** — Temporadas de 30 días con rewards exclusivos
-13. **Vocal Avatar** — Avatar que evoluciona visualmente según tu progreso
-14. **Achievement Gallery** — Galería de trofeos/badges con vitrina 3D
-15. **XP por Todo** — XP por cada acción (grabar, practicar, compartir, comentar)
-16. **Ligas Semanales** — Bronce → Plata → Oro → Diamante → Leyenda
-17. **Misiones Semanales** — 5 objetivos semanales variados (ej: "Canta 3 géneros diferentes")
-18. **Combo Multiplier** — Multiplicador de puntos por acciones consecutivas sin parar
-19. **Unlockable Scenes** — Escenarios que se desbloquean con logros
-20. **Vocal Power Level** — Número tipo Dragon Ball que sube con cada sesión
+**Resultado:** El usuario solo ve lo que funciona. Navegacion limpia.
 
-### SOCIAL Y VIRAL (21-35)
-21. **Vocal Duels 1v1** — Sistema ELO, matchmaking, replays compartibles
-22. **Voice Chain** — Cadena viral: graba 10 seg, pasa al siguiente, al final suena como coro
-23. **Duet Challenge** — Reta a un amigo a cantar la misma canción, comparación side-by-side
-24. **Share Card** — Tarjeta visual compartible con tu score + waveform + clasificación
-25. **Vocal Reaction** — Graba tu reacción cantando encima de la grabación de otro
-26. **Battle Royale Vocal** — 8 cantantes, eliminación por rondas, público vota
-27. **Playlist Colaborativa** — Playlist de grabaciones de la comunidad por género
-28. **Hashtag Challenges** — Retos virales tipo TikTok (#NotaImposible, #RetoDeSirena)
-29. **Fan Voting** — Los usuarios votan las mejores performances de la semana
-30. **Vocal Gift** — Graba un mensaje/canción personalizada y envíala como regalo
-31. **Community Choir** — Coro masivo donde cada user graba su parte
-32. **Mentor Match** — Conecta usuarios avanzados con principiantes
-33. **Live Sessions** — Sesiones en vivo donde cantas y la audiencia puntúa
-34. **Collab Invite Link** — Link compartible para invitar a sesión colaborativa
-35. **Vocal Roast** — Feedback humorístico de IA sobre tu performance (opt-in)
+### SPRINT 2: "HOME QUE FUNCIONA" (Lovable solo)
+**Que se hace:**
+- Rediseñar Home con 3 CTAs gigantes: "CANTA", "ENTRENA", "TU VOZ"
+- Conectar datos reales de la tabla `recordings` para mostrar grabaciones recientes
+- Conectar datos reales de la tabla `training_sessions` para mostrar racha de dias
+- Leer `profiles.xp` y `profiles.vocal_level` para mostrar nivel del usuario
+- Diseñar card "Reto del Dia" con countdown (mock, preparado para backend)
+- Insertar `// BACKEND-REQUEST: daily-challenge edge function`
 
-### FIDELIZACIÓN Y PROFUNDIDAD (36-45)
-36. **Vocal Timeline** — Historia completa de tu evolución con hitos marcados
-37. **Before/After Showcase** — Compara tu primera grabación con la última
-38. **Personal Coach Plan** — Plan de 90 días generado por IA basado en tu diagnóstico
-39. **Vocal DNA** — Análisis profundo de qué hace ÚNICA tu voz (timbre, color, vibrato)
-40. **Style Transfer** — "Canta como X artista" con IA que modula tu voz
-41. **Lyrics + Melody Generator** — IA genera letra Y melodía basada en tu voz
-42. **Cover Creator** — Graba tu versión, IA agrega instrumentación automática
-43. **Vocal Health Monitor** — Detecta fatiga vocal, sugiere descanso
-44. **Progress Report Semanal** — Email/notificación con resumen visual de la semana
-45. **Goal Setting** — Define metas vocales, la app te guía hacia ellas
+**Resultado:** Home muestra datos reales del usuario logueado.
 
-### MONETIZACIÓN Y PREMIUM (46-50)
-46. **Pro Recordings** — Exporta en alta calidad con masterización IA
-47. **Vocal Skins** — Efectos premium para tu voz (eco de catedral, reverb de estudio)
-48. **Private Lessons** — Booking de clases con coaches reales dentro de la app
-49. **Artist Profile Verified** — Perfil verificado con portfolio público compartible
-50. **Marketplace de Beats** — Compra/vende beats para cantar encima
+### SPRINT 3: "KARAOKE PERFECTO" (Lovable solo)
+**Que se hace:**
+- Hacer el microfono mucho mas grande en la pantalla de grabacion
+- Crear pantalla de RESULTADOS al terminar de grabar: score S/A/B/C/D/E, radar de dimensiones, boton "Compartir" y "Cantar otra vez"
+- Los 3 modos siempre visibles como tabs arriba (no escondidos tras "Volver")
+- Canciones con caratula de color, badge de genero, estrellas de dificultad
+- Insertar `// BACKEND-REQUEST: vocal-analysis — analisis real de pitch/timing/expression`
 
----
+**Resultado:** Karaoke es una experiencia completa de grabar + ver resultados.
 
-## Plan para Claude Code (Backend)
+### SPRINT 4: "ENTRENAMIENTO UNIFICADO" (Lovable solo)
+**Que se hace:**
+- Crear una sola pagina "Entrena" que unifica WarmUp + BreathTrainer + PitchTraining
+- "Ejercicio del dia" arriba: grande, con boton PLAY para escuchar demo + boton REC para intentarlo con mic real
+- Conectar `useMicrophone` + `usePitchDetection` para feedback en tiempo real mientras haces el ejercicio
+- Cada ejercicio tiene: demo audio (useAudioEngine), grabar intento (useMicrophone), ver precision de pitch
+- Barra de progreso: cuantos ejercicios completaste hoy
+- Insertar `// BACKEND-REQUEST: daily-exercise — generar ejercicio del dia personalizado`
 
-Puedo organizar master prompts para Claude Code en este orden de prioridad:
+**Resultado:** El entrenamiento funciona con mic real y feedback visual.
 
-1. **Auth + Profiles + Roles** — Base para todo lo demás
-2. **Recordings pipeline** — Upload, storage, metadata, playback
-3. **Gamification engine** — XP, streaks, levels, badges, leagues
-4. **AI Vocal Analysis** — Edge functions con modelo de IA para análisis real
-5. **Social features** — Duels, voting, sharing, reactions
-6. **Realtime** — Collab rooms, live sessions, notifications
+### SPRINT 5: "TU VOZ" (Lovable + Claude Code)
+**Que se hace:**
+- Fusionar Fingerprint + Diagnostico en una sola pagina "Tu Voz"
+- Hero: radar 6D existente pero ENORME y animado
+- Boton "Hacer Analisis" → abre mic → graba 30 seg → envia al backend
+- Muestra resultados del ultimo analisis (de tabla `recordings.metadata`)
+- Grafico de evolucion con datos reales de `training_sessions`
+- Rango vocal: nota mas grave a nota mas aguda detectada
+- Artista similar (mock hasta que Claude Code conecte)
+- Insertar:
+  - `// BACKEND-REQUEST: vocal-analysis { recording_id, audio_url } → { classification, range, dimensions[], similar_artists[] }`
+  - `// BACKEND-REQUEST: vocal-fingerprint { recording_id, audio_url } → { dimensions[], global_score, weekly_evolution[] }`
 
-Cuando apruebes la dirección de diseño, preparo los prompts específicos.
+**Que necesita Claude Code:** Edge functions `vocal-analysis` y `vocal-fingerprint`. Tabla `vocal_fingerprints`.
+
+### SPRINT 6: "ARENA SOCIAL" (Lovable + Claude Code)
+**Que se hace:**
+- Feed vertical tipo TikTok con grabaciones de la comunidad
+- Card: waveform mini + nombre + cancion + score + play
+- Filtros: Populares, Recientes, Retos
+- Boton flotante "Subir mi performance"
+- Mock data realista hasta que el backend conecte
+- Insertar:
+  - `// BACKEND-REQUEST: social-feed { user_id, filter } → { posts[] }`
+  - `// BACKEND-REQUEST: Realtime subscription para nuevos posts`
+
+**Que necesita Claude Code:** Tabla `social_feed`. Edge function `social-feed`. Realtime channel.
 
 ---
 
-## Resumen Visual
+## SPRINTS FUTUROS (despues de que las 5 pantallas sean perfectas)
 
-```text
-┌─────────────────────────────────────────────┐
-│  CADA SECCIÓN = UNA SALA DEL ESTUDIO        │
-│                                             │
-│  Scroll 1: OBJETO HÉROE (ocupa 60% screen)  │
-│  ├── Karaoke    → 🎙️ Micrófono Vintage      │
-│  ├── Warm-Up    → 🌡️ Termómetro Vocal       │
-│  ├── Breath     → 🫁 Pulmones Animados       │
-│  ├── Pitch      → 🎹 Piano de Cola          │
-│  ├── Loop       → 🎛️ Mesa de Mezclas        │
-│  ├── Song Sketch→ 📓 Cuaderno Compositor    │
-│  ├── Diagnóstico→ 📊 Osciloscopio           │
-│  ├── Emotion    → 🪞 Espejo Emocional       │
-│  ├── Challenges → 🏆 Trofeo Dorado          │
-│  ├── Vocal FX   → 🎸 Rack de Pedales        │
-│  ├── Duetos     → 🎭 Escenario Split        │
-│  └── Collab     → 🛋️ Mesa de Estudio        │
-│                                             │
-│  Scroll 2: CONTENIDO con botones ENORMES    │
-│  ├── Botones principales TITILAN            │
-│  ├── Sin texto explicativo                  │
-│  └── Todo visual/iconográfico               │
-│                                             │
-│  Fondo: GRADIENTE ÚNICO por sala            │
-│  Animación: ENTRAR = encender luces         │
-└─────────────────────────────────────────────┘
-```
+### SPRINT 7: "GAMIFICACION" (Lovable + Claude Code)
+- Sistema de XP visible en toda la app (barra de progreso en header)
+- Streaks con visual de fuego que crece
+- Niveles: Principiante → Aprendiz → Artista → Estrella → Leyenda
+- Badges desbloqueables en galeria 3D
+- Ligas semanales: Bronce → Plata → Oro → Diamante
+- **Claude Code:** Tabla `user_progress` (xp, streak, level). Edge function `gamification-engine`.
+
+### SPRINT 8: "LOOP STATION REAL" (Lovable solo)
+- Conectar `useMicrophone` + `useRecorder` a cada capa individual
+- Grabar capa 1 → reproducir capa 1 mientras grabas capa 2 → etc.
+- Mezcla en tiempo real con Web Audio API (GainNode por capa)
+- Exportar mezcla final como archivo de audio
+
+### SPRINT 9: "VOCAL FX REAL" (Lovable solo)
+- Implementar efectos de audio reales con Web Audio API:
+  - Reverb (ConvolverNode)
+  - Delay (DelayNode)
+  - Pitch shift (PitchShifterNode via worklet)
+  - Distortion (WaveShaperNode)
+- El usuario canta → escucha su voz con efecto en tiempo real
+
+### SPRINT 10: "COACH IA" (Lovable + Claude Code)
+- Despues de cada sesion de karaoke/entrenamiento, enviar grabacion al backend
+- Recibir feedback de IA: que hiciste bien, que mejorar, ejercicio recomendado
+- Mostrar metricas reales de progreso (no hardcodeadas)
+- **Claude Code:** Edge function `ai-coach-feedback` usando Lovable AI Gateway
+
+### SPRINT 11: "DUELOS 1v1" (Lovable + Claude Code)
+- Sistema ELO real con matchmaking
+- Ambos cantan la misma cancion → IA puntua → gana el mejor
+- Replays compartibles como share cards
+- **Claude Code:** Tabla `duels`. Edge function `duel-matchmaking`. Realtime.
+
+### SPRINT 12: "COLLAB ROOM REAL" (Lovable + Claude Code)
+- Sala con audio real usando WebRTC o Supabase Realtime
+- Cada participante graba su pista
+- Mezcla final de todas las pistas
+- **Claude Code:** Tabla `collab_rooms`. Edge function `collab-room-create`. Realtime channels.
+
+### SPRINT 13: "VOICE TRANSLATOR" (Lovable + Claude Code)
+- El modulo nuevo que propusiste: cantas en tu idioma, la IA traduce la letra y regenera el audio en otro idioma manteniendo tu voz
+- Selector de idioma destino (EN, FR, PT, IT, JP, KR, DE)
+- Hero: globo terraqueo con ondas de audio
+- **Claude Code:** Edge function `voice-translate` { recording_id, source_lang, target_lang } → { translated_audio_url, original_lyrics, translated_lyrics }
+
+### SPRINT 14: "MODULOS DE RETENCION" (Lovable + Claude Code)
+De las 50 propuestas originales, los mas impactantes:
+- **Daily Voice Check** — 30 seg de voz cada mañana, tracking automatico
+- **Nota del Dia** — Una nota que debes clavar, streak de dias
+- **Mood Singing** — "Como te sientes?" → sugiere cancion segun emocion
+- **Streak Rewards** — Cada 7 dias, desbloqueas algo
+- **Vocal Passport** — Sellos por cada genero dominado
+- **Share Card** — Tarjeta visual compartible con tu score
+
+### SPRINT 15: "SOCIAL AVANZADO"
+- Voice Chain viral: graba 10 seg, pasa al siguiente
+- Battle Royale: 8 cantantes, eliminacion por rondas
+- Community Choir: coro masivo
+- Vocal Gift: graba cancion personalizada como regalo
+- Hashtag Challenges tipo TikTok
+
+### SPRINT 16: "MONETIZACION"
+- Pro Recordings (exportar en alta calidad con masterizacion IA)
+- Vocal Skins (efectos premium)
+- Artist Profile Verified (portfolio publico)
+- Marketplace de Beats
+
+---
+
+## QUE NECESITA CLAUDE CODE (resumen para el master prompt)
+
+### Tablas nuevas:
+1. `vocal_fingerprints` — analisis persistente de voz
+2. `daily_challenges` — reto del dia
+3. `social_feed` — performances compartidas
+4. `user_progress` — XP, streaks, levels, badges
+5. `duels` — duelos 1v1 con ELO
+6. `collab_rooms` — salas colaborativas
+7. `voice_translations` — traducciones de voz
+
+### Edge Functions:
+1. `vocal-analysis` — analisis real de audio (pitch, timing, expression)
+2. `vocal-fingerprint` — perfil vocal profundo
+3. `daily-exercise` — genera ejercicio personalizado del dia
+4. `ai-coach-feedback` — feedback post-sesion
+5. `social-feed` — CRUD del feed social
+6. `duel-matchmaking` — matchmaking con ELO
+7. `collab-room-create` — crear sala colaborativa
+8. `voice-translate` — traduccion vocal
+9. `gamification-engine` — XP, streaks, badges, levels
+
+---
+
+## QUE PUEDO HACER YO SOLO SIN ESPERAR A CLAUDE CODE
+
+| Sprint | Depende de backend? |
+|--------|-------------------|
+| Sprint 1: Limpieza y navegacion | NO |
+| Sprint 2: Home con datos reales | NO (usa tablas existentes) |
+| Sprint 3: Karaoke perfecto | NO |
+| Sprint 4: Entrenamiento unificado | NO |
+| Sprint 5: Tu Voz | PARCIAL (UI sin backend, luego Claude conecta) |
+| Sprint 6: Arena Social | PARCIAL (mock primero, luego Claude conecta) |
+| Sprint 8: Loop Station real | NO (Web Audio API puro) |
+| Sprint 9: Vocal FX real | NO (Web Audio API puro) |
+
+**Propuesta: Empiezo con Sprint 1 ahora mismo.** Es la base de todo y no depende de nadie.
+
+---
+
+## DIRECTIVAS PARA CLAUDE CODE
+
+Cuando aprubes, genero un archivo descargable `claude-code-master-prompt.md` con:
+- Esquema completo de cada tabla con columnas, tipos y RLS
+- Especificacion de cada edge function con Input/Output exactos
+- Orden de prioridad de construccion
+- Como conectar con los `// BACKEND-REQUEST` que yo deje en el codigo
 
