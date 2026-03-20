@@ -1,201 +1,148 @@
 
 
-# Plan: MakeYourDream — Sprint Masivo de Frontend + Recomendaciones Backend
+# Plan: Conectar Frontend a Edge Functions + UI Fixes + Login Completo + Karaoke Real
 
-Este plan cubre TODO lo que puedo hacer desde el frontend (mi responsabilidad) y las recomendaciones para Claude Code (backend).
-
----
-
-## BLOQUE 1 — Activar Triggers + Seed Data (Backend en Supabase)
-
-Puedo ejecutar migraciones SQL directamente:
-
-**1.1 Activar triggers pendientes:**
-- `handle_new_user_progress` ON `auth.users` AFTER INSERT
-- `update_updated_at` ON `user_progress`, `duels`, `collab_rooms` BEFORE UPDATE
-
-**1.2 Seed 30 daily challenges** en la tabla `daily_challenges` (usando INSERT con service role, sin necesidad de admin role)
+Las 6 edge functions YA existen en el backend (construidas por Claude Code). Este plan conecta el frontend a ellas y arregla los bugs pendientes.
 
 ---
 
-## BLOQUE 2 — Home Dream Booth Mejorado
+## 1. SQL Migration — Realtime + Triggers
 
-**Problema**: El portal ovalado abstracto perdio identidad. No se entiende que es.
+Ejecutar migration para habilitar realtime y verificar triggers:
 
-**Solucion**: Agregar silueta de microfono sugerida dentro del portal SVG (no literal, sino una forma estilizada que insinue mic). Mas particulas, scan beam mas dramatico, halo mas intenso.
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE social_feed;
+ALTER PUBLICATION supabase_realtime ADD TABLE collab_rooms;
+ALTER PUBLICATION supabase_realtime ADD TABLE duels;
+```
 
-**Mood Capsules funcionales**: Conectar cada mood a una ruta real:
-- Soltar → `/karaoke` (freestyle directo)
-- Crear → `/song-sketch`
-- Entrenar → `/warmup`
-- Mostrar → `/portfolio`
-
-**Streak real**: Leer de `user_progress` en vez de hardcodear 3.
-**Reto real**: Leer de `daily_challenges` WHERE `active_date = today`.
+Los triggers ya se crearon en la migration anterior (`20260320191926`), pero la config muestra "no triggers" — puede que hayan fallado por el trigger en `auth.users` (schema reservado). Se reintentara con `DO $$ BEGIN ... END $$` safety wrapper.
 
 ---
 
-## BLOQUE 3 — Piano Premium + Multi-Instrumento
+## 2. Fix 3 Bugs de UI
 
-**Archivo**: `src/components/studio/HeroPiano.tsx` — REESCRIBIR completo
+### 2.1 PageTransition — quitar AnimatePresence duplicado
+`PageTransition.tsx` tiene `AnimatePresence` pero `App.tsx` ya tiene otro wrapping las Routes. Quitar el de `PageTransition` dejando solo el `motion.div`.
 
-**Cambios**:
-- Teclas 3x mas grandes, con profundidad real (inner-shadow, gradientes, hundimiento al click)
-- Glow por tecla cuando se pulsa (flash de color)
-- Feedback visual: tecla correcta brilla verde, incorrecta roja con shake
+### 2.2 Mood capsules mobile overflow
+`Index.tsx` linea 139: cambiar `className="flex gap-2 mt-6 z-10"` a `"flex gap-2 mt-6 z-10 overflow-x-auto max-w-full px-1 scrollbar-hide"` y agregar `shrink-0` a cada capsule.
 
-**Selector de instrumento** en `PitchTraining.tsx`:
-- Piano (triangle wave — ya existe)
-- Guitarra (sawtooth wave con filtro)
-- Saxo (square wave con envelope especial)
-- Bajo (sine wave octava baja)
-- Flauta (sine wave pura)
-- Cada instrumento cambia el `OscillatorType` + frecuencia base + ADSR envelope en `useAudioEngine`
-
-**Ampliar `useAudioEngine.ts`**: nueva funcion `playInstrument(freq, instrument)` que aplica timbre distinto por instrumento usando oscillator type + gain envelope + BiquadFilter.
+### 2.3 Piano keys mobile overflow  
+`HeroPiano.tsx` linea 76: agregar `scale-[0.7] sm:scale-90 md:scale-100 origin-bottom` al contenedor de teclas.
 
 ---
 
-## BLOQUE 4 — Botones Premium en TODA la App
+## 3. Conectar Frontend a Edge Functions Existentes
 
-Aplicar `StageButton` consistentemente en las 34 paginas. Reemplazar todo `<button>` y `<motion.button>` generico con la variante correcta:
-- CTAs principales → `monolith`
-- Acciones rapidas → `launchpad`
-- Filtros/seleccion → `capsule`
-- Diagnostico → `scan`
-- Toggles/FX → `lever`
-- Navegacion → `glass`
+### 3.1 FreestyleMode.tsx — invocar `vocal-analysis` + `save-training-session`
+Reemplazar el scoring manual y el `.insert()` directo con:
+```typescript
+const { data } = await supabase.functions.invoke("vocal-analysis", {
+  body: { user_id, pitch_samples, onset_times_ms, expected_beat_ms, expression_score, song_title, module: "karaoke" }
+});
+// data.analysis.{pitch, timing, expression, overall}, data.grade, data.xp_earned
+```
+Fallback: si la edge function falla, mantener el scoring local existente.
 
-**Paginas a actualizar**: Karaoke, PitchTraining, BreathTrainer, WarmUp, Exercises, Fingerprint, VocalFX, LoopStation, Coach, Challenges, Duelos, Portfolio, SongSketch, HarmonyLab, LyricsWriter, y todas las demas.
+### 3.2 Fingerprint.tsx — invocar `vocal-fingerprint`
+Reemplazar `saveToBackend` con:
+```typescript
+const { data } = await supabase.functions.invoke("vocal-fingerprint", {
+  body: { action: "save", user_id, dimensions, vocal_range_low, vocal_range_high, recording_id }
+});
+// data.fingerprint con classification + similar_artists reales
+```
 
----
+### 3.3 Coach.tsx — invocar `ai-coach-feedback`
+Reemplazar la logica local de observaciones con:
+```typescript
+const { data } = await supabase.functions.invoke("ai-coach-feedback", {
+  body: { user_id }
+});
+// data.metrics[], data.observations[], data.recommended_exercise
+```
+Fallback local si falla.
 
-## BLOQUE 5 — Karaoke Score Real (no random)
+### 3.4 Exercises.tsx — invocar `daily-exercise`
+Agregar fetch al montar para obtener ejercicio personalizado:
+```typescript
+const { data } = await supabase.functions.invoke("daily-exercise", {
+  body: { action: "get_recommended", user_id }
+});
+```
 
-**Problema**: `FreestyleMode` calcula pitch score basado en `cents < 25` pero es rudimentario.
-
-**Mejora**:
-- Pitch score: usar autocorrelation ya existente, pero ponderar por continuidad (notas sostenidas valen mas)
-- Timing score: medir ratio de canto vs silencio (ya existe pero mejorar ponderacion)
-- Expression: dynamic range + vibrato detection (varianza de cents)
-- Guardar sesion en `training_sessions` tabla al terminar
-- Actualizar `user_progress.xp` sumando score/10
-
----
-
-## BLOQUE 6 — Fingerprint Conectado al Backend
-
-**Archivo**: `src/pages/Fingerprint.tsx`
-
-- Al terminar analisis de 15s, guardar en `vocal_fingerprints` tabla:
-  - dimensions, global_score, vocal_range_low/high, classification
-- Guardar share card en `share_cards` tabla
-- Leer historial de fingerprints anteriores para mostrar evolucion
-
----
-
-## BLOQUE 7 — Modulos Placeholder → Funcionales Basicos
-
-Para los 18 placeholders, el minimo viable es:
-
-| Modulo | Accion Frontend |
-|--------|----------------|
-| LoopStation | Conectar `useRecorder` para grabar capas reales con playback |
-| VocalFX | Conectar Web Audio nodes reales: ConvolverNode (reverb), DelayNode, BiquadFilter |
-| Diagnostico | Fusionar con Fingerprint o redirigir |
-| Challenges | Leer de `daily_challenges` tabla, mostrar retos reales |
-| Portfolio | Leer de `recordings` + `user_progress` + `vocal_fingerprints` |
-| DreamCanvas | Leer de `user_progress` para metas reales |
-| Plan90 | Generar plan basado en datos de `training_sessions` |
-| Duelos | UI para crear duelo en `duels` tabla + esperar oponente |
-| Duetos | Redirigir a CollabRoom o crear modo dueto |
-| VocalStories | Leer de `social_feed` tabla |
-| CollabRoom | Crear sala en `collab_rooms` tabla |
-| Matching | Leer de `vocal_fingerprints` para buscar voces similares |
-| FanRadar | Leer de `social_feed` para descubrir cantantes |
-| EmotionMap | Usar mic real + pitch/volume para inferir emocion |
-| GenreGym | Ejercicios interactivos con mic (como Exercises) |
-| StageSimulator | Simular audiencia reactiva al volume del mic |
-| AutoMix | Procesar audio con Web Audio API (EQ, compression) |
-| HarmonyLab | Generar harmonias con Web Audio oscillators |
-
----
-
-## BLOQUE 8 — CSS y Estetica Global
-
-**Archivo**: `src/index.css` — agregar:
-```css
-.fog-layer { /* radial-gradients multicapa */ }
-.portal-glow { /* boxShadow multicapa */ }
-.pad-depth { /* inner-shadow para pads */ }
-.key-press { /* animacion de tecla de piano premium */ }
+### 3.5 Index.tsx — invocar `daily-challenge` + `gamification-engine`
+Reemplazar queries directas a tablas con:
+```typescript
+const { data: challenge } = await supabase.functions.invoke("daily-challenge", {
+  body: { action: "get_today", user_id }
+});
+const { data: progress } = await supabase.functions.invoke("gamification-engine", {
+  body: { action: "get_progress", user_id }
+});
 ```
 
 ---
 
-## RECOMENDACIONES PARA CLAUDE CODE (Backend)
+## 4. Karaoke Scoring Real (mejorado)
 
-Estas son las tareas que necesitas pasarle a Claude Code:
+Mejorar el algoritmo en FreestyleMode.tsx para que el scoring local sea mas preciso (como fallback y para feedback en tiempo real):
 
-### Edge Functions Prioritarias (de las 14 del otro repo):
-
-1. **`vocal-analysis`** — Analiza audio con Lovable AI Gateway, devuelve dimensions/classification/similar_artists. Es la mas critica porque Fingerprint y Karaoke dependen de ella.
-
-2. **`generate-exercise`** — Genera ejercicios personalizados via IA segun nivel del usuario.
-
-3. **`ai-coach-observation`** — Genera observaciones del coach basadas en historial de `training_sessions`.
-
-4. **`generate-challenge`** — Genera retos diarios automaticamente y los inserta en `daily_challenges`.
-
-5. **`match-voices`** — Compara `vocal_fingerprints` entre usuarios para matching.
-
-6. **`generate-share-image`** — Genera imagen de share card mas elaborada.
-
-### Funcionalidad Backend que Falta:
-
-- **Realtime**: Habilitar `ALTER PUBLICATION supabase_realtime ADD TABLE` para `social_feed`, `collab_rooms`, `duels` — necesario para chat, duelos en vivo, feed social.
-- **Storage policies**: El bucket `recordings` es publico — considerar si los audios deberian ser privados con signed URLs.
-- **Cron job**: Para generar `daily_challenges` automaticamente cada dia (pg_cron o edge function con cron trigger).
-- **XP calculation**: Edge function que calcule XP correctamente y actualice `user_progress` atomicamente (para evitar race conditions).
-
-### Formato de Comunicacion con Claude Code:
-
-Cada modulo tiene comentarios `// BACKEND-REQUEST:` en el codigo. Claude Code deberia:
-1. Buscar todos los `BACKEND-REQUEST` en el repo
-2. Implementar cada uno como edge function
-3. Deployar en este proyecto Supabase (`lgkgdpmcjdbnlqtbhxgk`)
+- **Pitch**: `score = max(0, 1 - |cents| / 50)` continuo, bonus 1.2x para notas sostenidas >1s
+- **Timing**: ventana deslizante de 10s en vez de acumulativo
+- **Expression**: deteccion de vibrato (varianza 15-50 cents a 4-7Hz) + dynamic range (p90/p10 de volume)
+- Post-grabacion: enviar a `vocal-analysis` edge function para score definitivo
 
 ---
 
-## ORDEN DE EJECUCION
+## 5. Login Flow Completo
 
-Dado el volumen, ejecutare en este orden dentro de un solo mensaje:
+### 5.1 Forgot Password en Login.tsx
+Agregar boton "¿Olvidaste tu contrasena?" que llama `supabase.auth.resetPasswordForEmail(email, { redirectTo: origin + '/reset-password' })`.
 
-1. **SQL Migration**: Activar triggers + seed 30 daily challenges
-2. **DreamBooth mejorado**: Silueta mic + mood capsules funcionales + streak/reto real
-3. **Piano Premium**: Teclas grandes + multi-instrumento + feedback visual
-4. **Karaoke real**: Score mejorado + guardar en training_sessions + XP
-5. **Fingerprint real**: Guardar en vocal_fingerprints + share_cards
-6. **Botones premium**: Aplicar StageButton en las paginas principales
-7. **Placeholders basicos**: LoopStation, VocalFX, Challenges, Portfolio con datos reales
+### 5.2 Nueva pagina ResetPassword.tsx
+- Detecta `type=recovery` en URL hash
+- Formulario nueva contrasena + confirmacion
+- Llama `supabase.auth.updateUser({ password })`
+- Redirige a `/` post-exito
 
-## Archivos que se crean/modifican
+### 5.3 Ruta en App.tsx
+Agregar `<Route path="/reset-password" element={<ResetPassword />} />` como ruta publica.
+
+---
+
+## 6. Scrollbar-hide CSS utility
+
+Agregar a `src/index.css`:
+```css
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+```
+
+---
+
+## Archivos modificados/creados
 
 | Archivo | Accion |
 |---------|--------|
-| Migration SQL | CREAR — triggers + seed data |
-| `src/components/DreamBooth.tsx` | MODIFICAR — silueta mic + mas drama |
-| `src/pages/Index.tsx` | MODIFICAR — mood capsules funcionales + datos reales |
-| `src/components/studio/HeroPiano.tsx` | REESCRIBIR — piano premium |
-| `src/pages/PitchTraining.tsx` | MODIFICAR — selector instrumentos |
-| `src/hooks/useAudioEngine.ts` | MODIFICAR — multi-instrumento |
-| `src/components/karaoke/FreestyleMode.tsx` | MODIFICAR — guardar sesion en DB |
-| `src/pages/Fingerprint.tsx` | MODIFICAR — guardar en vocal_fingerprints |
-| `src/pages/Challenges.tsx` | REESCRIBIR — leer de daily_challenges |
-| `src/pages/Portfolio.tsx` | REESCRIBIR — leer datos reales |
-| `src/pages/LoopStation.tsx` | MODIFICAR — grabacion real de capas |
-| `src/pages/VocalFX.tsx` | MODIFICAR — efectos Web Audio reales |
-| `src/components/ui/StageButton.tsx` | MANTENER (ya tiene las 6 variantes) |
-| `src/index.css` | AGREGAR utilidades |
-| + Actualizar botones en ~15 paginas mas |
+| Migration SQL | CREAR — realtime + retry triggers |
+| `src/components/layout/PageTransition.tsx` | MODIFICAR — quitar AnimatePresence |
+| `src/pages/Index.tsx` | MODIFICAR — edge functions + scroll fix |
+| `src/components/studio/HeroPiano.tsx` | MODIFICAR — scale mobile |
+| `src/components/karaoke/FreestyleMode.tsx` | MODIFICAR — edge function + scoring real |
+| `src/pages/Fingerprint.tsx` | MODIFICAR — edge function |
+| `src/pages/Coach.tsx` | MODIFICAR — edge function |
+| `src/pages/Exercises.tsx` | MODIFICAR — edge function |
+| `src/pages/Login.tsx` | MODIFICAR — forgot password |
+| `src/pages/ResetPassword.tsx` | CREAR |
+| `src/App.tsx` | MODIFICAR — ruta /reset-password |
+| `src/index.css` | MODIFICAR — scrollbar-hide |
+
+## Orden de ejecucion
+1. SQL migration (realtime)
+2. Fix 3 bugs UI
+3. Conectar 5 modulos a edge functions
+4. Scoring real en Karaoke
+5. Login flow completo
 
