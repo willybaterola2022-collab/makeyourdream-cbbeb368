@@ -11,6 +11,7 @@ import { PageTransition } from "@/components/layout/PageTransition";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
+import ResetPassword from "./pages/ResetPassword";
 import Index from "./pages/Index";
 import Karaoke from "./pages/Karaoke";
 import Fingerprint from "./pages/Fingerprint";
