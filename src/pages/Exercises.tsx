@@ -23,17 +23,33 @@ const weekDays = [
 ];
 
 const Exercises = () => {
+  const { user } = useAuth();
   const { isListening, volume, requestMic, stopMic, analyserNode } = useMicrophone(2048);
   const pitch = usePitchDetection(analyserNode);
   const currentFrequency = pitch?.frequency ?? 0;
   const audioEngine = useAudioEngine();
 
   const [phase, setPhase] = useState<"ready" | "demo" | "exercise" | "result">("ready");
+  const [exerciseName, setExerciseName] = useState("Escala Mayor C4");
+  const [exerciseDesc, setExerciseDesc] = useState("Canta las notas de la escala con afinación");
+  const [targetNotes, setTargetNotes] = useState(TARGET_NOTES);
   const [timeLeft, setTimeLeft] = useState(EXERCISE_DURATION);
   const [score, setScore] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const pitchHits = useRef(0);
   const pitchTotal = useRef(0);
+
+  // Fetch recommended exercise from edge function
+  useEffect(() => {
+    if (!user) return;
+    supabase.functions.invoke("daily-exercise", {
+      body: { action: "get_recommended", user_id: user.id },
+    }).then(({ data }) => {
+      if (data?.name) setExerciseName(data.name);
+      if (data?.description) setExerciseDesc(data.description);
+      if (data?.demo_notes?.length) setTargetNotes(data.demo_notes);
+    }).catch(() => {});
+  }, [user]);
 
   // Play demo scale
   const playDemo = useCallback(() => {
