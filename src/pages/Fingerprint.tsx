@@ -39,7 +39,9 @@ const SIMILAR_ARTISTS = [
 
 const Fingerprint = () => {
   const { isListening, volume, requestMic, stopMic, analyserNode } = useMicrophone(2048);
-  const { currentNote, currentFrequency } = usePitchDetection(analyserNode);
+  const pitch = usePitchDetection(analyserNode);
+  const currentFrequency = pitch?.frequency ?? 0;
+  const currentNote = pitch ? `${pitch.note}${pitch.octave}` : null;
 
   const [phase, setPhase] = useState<"idle" | "analyzing" | "result">("idle");
   const [timeLeft, setTimeLeft] = useState(ANALYSIS_DURATION);

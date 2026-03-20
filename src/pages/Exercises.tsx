@@ -22,7 +22,8 @@ const weekDays = [
 
 const Exercises = () => {
   const { isListening, volume, requestMic, stopMic, analyserNode } = useMicrophone(2048);
-  const { currentFrequency } = usePitchDetection(analyserNode);
+  const pitch = usePitchDetection(analyserNode);
+  const currentFrequency = pitch?.frequency ?? 0;
   const audioEngine = useAudioEngine();
 
   const [phase, setPhase] = useState<"ready" | "demo" | "exercise" | "result">("ready");
