@@ -15,7 +15,7 @@ export function AppLayout() {
 
         <div className="flex-1 flex flex-col min-w-0">
           {/* Desktop header */}
-          <header className="hidden md:flex h-12 items-center justify-between border-b border-border/40 px-4 shrink-0 bg-background/80 backdrop-blur-lg z-40 sticky top-0">
+          <header className="hidden md:flex h-10 items-center justify-between border-b border-border/20 px-4 shrink-0 bg-background/60 backdrop-blur-lg z-40 sticky top-0">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">MK</AvatarFallback>
