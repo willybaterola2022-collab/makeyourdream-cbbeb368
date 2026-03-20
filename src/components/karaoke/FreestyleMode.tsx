@@ -22,6 +22,7 @@ interface Props {
 }
 
 export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
+  const { user } = useAuth();
   const { isListening, volume, waveformData, requestMic, stream, analyserNode } = useMicrophone(2048);
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, isRecording);
