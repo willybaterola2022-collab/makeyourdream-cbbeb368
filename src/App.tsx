@@ -91,6 +91,7 @@ function AnimatedRoutes() {
           <Route path="/genre-gym" element={<PageTransition><GenreGym /></PageTransition>} />
           <Route path="/stage-simulator" element={<PageTransition><StageSimulator /></PageTransition>} />
           <Route path="/voice-journal" element={<PageTransition><VoiceJournal /></PageTransition>} />
+          <Route path="/skill-tree" element={<PageTransition><SkillTree /></PageTransition>} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

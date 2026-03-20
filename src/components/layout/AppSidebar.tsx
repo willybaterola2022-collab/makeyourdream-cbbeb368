@@ -34,6 +34,7 @@ const SIDEBAR_GROUPS: ModuleGroup[] = [
     label: "Escenario",
     items: [
       { title: "Tu Escenario", url: "/", icon: LayoutDashboard },
+      { title: "Soy Leyenda", url: "/skill-tree", icon: Star },
       { title: "Canta", url: "/karaoke", icon: Mic },
       { title: "Tu Voz", url: "/fingerprint", icon: Fingerprint },
     ],
