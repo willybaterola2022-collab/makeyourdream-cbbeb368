@@ -136,7 +136,7 @@ const Index = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="flex gap-2 mt-6 z-10"
+          className="flex gap-2 mt-6 z-10 overflow-x-auto max-w-full px-1 scrollbar-hide"
         >
           {MOODS.map((m) => (
             <StageButton
