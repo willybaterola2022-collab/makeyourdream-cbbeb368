@@ -14,6 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      challenge_completions: {
+        Row: {
+          challenge_id: string
+          created_at: string
+          id: string
+          recording_id: string | null
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          created_at?: string
+          id?: string
+          recording_id?: string | null
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          created_at?: string
+          id?: string
+          recording_id?: string | null
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_completions_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collab_rooms: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          max_participants: number
+          participants: Json | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          max_participants?: number
+          participants?: Json | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          max_participants?: number
+          participants?: Json | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      daily_challenges: {
+        Row: {
+          active_date: string
+          challenge_type: string
+          created_at: string
+          description: string | null
+          id: string
+          reward_xp: number
+          target_criteria: Json | null
+          title: string
+        }
+        Insert: {
+          active_date?: string
+          challenge_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reward_xp?: number
+          target_criteria?: Json | null
+          title: string
+        }
+        Update: {
+          active_date?: string
+          challenge_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reward_xp?: number
+          target_criteria?: Json | null
+          title?: string
+        }
+        Relationships: []
+      }
+      duels: {
+        Row: {
+          challenger_id: string
+          challenger_score: number | null
+          created_at: string
+          id: string
+          opponent_id: string | null
+          opponent_score: number | null
+          song_title: string | null
+          status: string
+          updated_at: string
+          winner_id: string | null
+        }
+        Insert: {
+          challenger_id: string
+          challenger_score?: number | null
+          created_at?: string
+          id?: string
+          opponent_id?: string | null
+          opponent_score?: number | null
+          song_title?: string | null
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Update: {
+          challenger_id?: string
+          challenger_score?: number | null
+          created_at?: string
+          id?: string
+          opponent_id?: string | null
+          opponent_score?: number | null
+          song_title?: string | null
+          status?: string
+          updated_at?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -46,6 +217,60 @@ export type Database = {
           xp?: number | null
         }
         Relationships: []
+      }
+      recording_comparisons: {
+        Row: {
+          created_at: string
+          delta_expression: number | null
+          delta_overall: number | null
+          delta_pitch: number | null
+          delta_timing: number | null
+          id: string
+          recording_a_id: string
+          recording_b_id: string
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta_expression?: number | null
+          delta_overall?: number | null
+          delta_pitch?: number | null
+          delta_timing?: number | null
+          id?: string
+          recording_a_id: string
+          recording_b_id: string
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta_expression?: number | null
+          delta_overall?: number | null
+          delta_pitch?: number | null
+          delta_timing?: number | null
+          id?: string
+          recording_a_id?: string
+          recording_b_id?: string
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recording_comparisons_recording_a_id_fkey"
+            columns: ["recording_a_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recording_comparisons_recording_b_id_fkey"
+            columns: ["recording_b_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recordings: {
         Row: {
@@ -82,6 +307,91 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      share_cards: {
+        Row: {
+          card_data: Json | null
+          card_type: string
+          created_at: string
+          fingerprint_id: string | null
+          id: string
+          image_url: string | null
+          share_count: number
+          user_id: string
+        }
+        Insert: {
+          card_data?: Json | null
+          card_type?: string
+          created_at?: string
+          fingerprint_id?: string | null
+          id?: string
+          image_url?: string | null
+          share_count?: number
+          user_id: string
+        }
+        Update: {
+          card_data?: Json | null
+          card_type?: string
+          created_at?: string
+          fingerprint_id?: string | null
+          id?: string
+          image_url?: string | null
+          share_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_cards_fingerprint_id_fkey"
+            columns: ["fingerprint_id"]
+            isOneToOne: false
+            referencedRelation: "vocal_fingerprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_feed: {
+        Row: {
+          caption: string | null
+          comments_count: number
+          created_at: string
+          id: string
+          likes_count: number
+          recording_id: string | null
+          score: number | null
+          song_title: string | null
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number
+          created_at?: string
+          id?: string
+          likes_count?: number
+          recording_id?: string | null
+          score?: number | null
+          song_title?: string | null
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number
+          created_at?: string
+          id?: string
+          likes_count?: number
+          recording_id?: string | null
+          score?: number | null
+          song_title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_feed_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       song_sketches: {
         Row: {
@@ -157,6 +467,45 @@ export type Database = {
           },
         ]
       }
+      user_progress: {
+        Row: {
+          badges: Json | null
+          created_at: string
+          id: string
+          last_active_date: string | null
+          level: number
+          longest_streak: number
+          streak_days: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          badges?: Json | null
+          created_at?: string
+          id?: string
+          last_active_date?: string | null
+          level?: number
+          longest_streak?: number
+          streak_days?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          badges?: Json | null
+          created_at?: string
+          id?: string
+          last_active_date?: string | null
+          level?: number
+          longest_streak?: number
+          streak_days?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -174,6 +523,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vocal_fingerprints: {
+        Row: {
+          classification: string | null
+          created_at: string
+          dimensions: Json | null
+          global_score: number | null
+          id: string
+          recording_id: string | null
+          similar_artists: Json | null
+          user_id: string
+          vocal_range_high: number | null
+          vocal_range_low: number | null
+        }
+        Insert: {
+          classification?: string | null
+          created_at?: string
+          dimensions?: Json | null
+          global_score?: number | null
+          id?: string
+          recording_id?: string | null
+          similar_artists?: Json | null
+          user_id: string
+          vocal_range_high?: number | null
+          vocal_range_low?: number | null
+        }
+        Update: {
+          classification?: string | null
+          created_at?: string
+          dimensions?: Json | null
+          global_score?: number | null
+          id?: string
+          recording_id?: string | null
+          similar_artists?: Json | null
+          user_id?: string
+          vocal_range_high?: number | null
+          vocal_range_low?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vocal_fingerprints_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "recordings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       voice_journal_entries: {
         Row: {
@@ -221,6 +617,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_was: { Args: { weeks_back?: number }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -228,6 +625,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_likes: { Args: { p_post_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
