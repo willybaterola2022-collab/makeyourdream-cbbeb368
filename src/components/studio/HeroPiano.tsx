@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 interface Props {
   targetNote?: string;
   onNoteClick: (note: string) => void;
   feedback?: "correct" | "wrong" | null;
+  instrument?: string;
 }
 
 const KEYS = [
@@ -16,7 +18,17 @@ const KEYS = [
   { note: "B", black: false },
 ];
 
-export function HeroPiano({ targetNote, onNoteClick, feedback }: Props) {
+export function HeroPiano({ targetNote, onNoteClick, feedback, instrument = "piano" }: Props) {
+  const [pressedKey, setPressedKey] = useState<string | null>(null);
+
+  const handleClick = (note: string) => {
+    setPressedKey(note);
+    onNoteClick(`${note}4`);
+    setTimeout(() => setPressedKey(null), 300);
+  };
+
+  const feedbackColor = feedback === "correct" ? "hsl(160 70% 50%)" : feedback === "wrong" ? "hsl(0 70% 55%)" : null;
+
   return (
     <motion.div
       className="relative z-10 flex flex-col items-center"
@@ -26,60 +38,106 @@ export function HeroPiano({ targetNote, onNoteClick, feedback }: Props) {
     >
       {/* Glow behind piano */}
       <motion.div
-        className="absolute rounded-full"
-        style={{ width: 350, height: 200, top: "20%" }}
+        className="absolute rounded-full pointer-events-none"
+        style={{ width: 400, height: 240, top: "10%" }}
         animate={{
           boxShadow: [
-            "0 0 50px 20px hsl(45 80% 50% / 0.15)",
-            "0 0 80px 35px hsl(45 80% 50% / 0.25)",
-            "0 0 50px 20px hsl(45 80% 50% / 0.15)",
+            "0 0 60px 25px hsl(45 80% 50% / 0.15)",
+            "0 0 100px 40px hsl(45 80% 50% / 0.28)",
+            "0 0 60px 25px hsl(45 80% 50% / 0.15)",
           ],
         }}
         transition={{ duration: 2.5, repeat: Infinity }}
       />
 
-      {/* Target note display */}
+      {/* Target note */}
       {targetNote && (
         <motion.div
           key={targetNote}
           initial={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className={`mb-6 text-5xl md:text-7xl font-serif font-bold ${
-            feedback === "correct" ? "text-emerald-400" : feedback === "wrong" ? "text-destructive" : ""
-          }`}
-          style={!feedback ? { color: "hsl(45 80% 60%)" } : undefined}
+          className="mb-8 text-center"
         >
-          🎵 {targetNote?.replace(/\d/, "")}
+          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground/60 mb-1">
+            {instrument === "piano" ? "🎹" : instrument === "guitar" ? "🎸" : instrument === "sax" ? "🎷" : instrument === "bass" ? "🎸" : "🪈"} Toca la nota
+          </p>
+          <motion.span
+            className="text-6xl md:text-8xl font-serif font-bold block"
+            style={{ color: feedbackColor || "hsl(45 80% 60%)" }}
+            animate={feedback === "wrong" ? { x: [-4, 4, -4, 4, 0] } : {}}
+            transition={{ duration: 0.3 }}
+          >
+            {targetNote?.replace(/\d/, "")}
+          </motion.span>
         </motion.div>
       )}
 
-      {/* Piano keyboard */}
+      {/* Piano keyboard — premium large keys */}
       <div className="relative flex z-10">
-        {KEYS.map((key, i) => (
-          <motion.button
-            key={`${key.note}-${i}`}
-            onClick={() => onNoteClick(`${key.note}4`)}
-            whileTap={{ scale: 0.95, y: 3 }}
-            className={
-              key.black
-                ? "relative -mx-3 z-20 w-8 h-24 md:w-10 md:h-28 rounded-b-lg flex items-end justify-center pb-2 text-[8px] font-bold"
-                : "relative w-12 h-36 md:w-14 md:h-44 rounded-b-xl border flex items-end justify-center pb-3 text-[10px] font-bold"
-            }
-            style={
-              key.black
-                ? { background: "hsl(0 0% 10%)", border: "1px solid hsl(0 0% 20%)", color: "hsl(0 0% 50%)" }
-                : { background: "linear-gradient(to bottom, hsl(0 0% 95%), hsl(0 0% 85%))", borderColor: "hsl(0 0% 70%)", color: "hsl(0 0% 40%)" }
-            }
-          >
-            {key.note}
-          </motion.button>
-        ))}
+        {KEYS.map((key, i) => {
+          const isPressed = pressedKey === key.note;
+          const isTarget = targetNote?.replace(/\d/, "") === key.note;
+          const isCorrect = isTarget && feedback === "correct";
+          const isWrong = isPressed && feedback === "wrong";
+
+          return key.black ? (
+            <motion.button
+              key={`${key.note}-${i}`}
+              onClick={() => handleClick(key.note)}
+              whileTap={{ scale: 0.96, y: 3 }}
+              animate={isWrong ? { x: [-2, 2, -2, 2, 0] } : {}}
+              className="relative -mx-3.5 z-20 w-10 h-28 md:w-12 md:h-36 rounded-b-xl flex items-end justify-center pb-3 text-[9px] font-bold transition-all"
+              style={{
+                background: isCorrect
+                  ? "linear-gradient(to bottom, hsl(160 70% 30%), hsl(160 70% 20%))"
+                  : isWrong
+                  ? "linear-gradient(to bottom, hsl(0 70% 30%), hsl(0 70% 20%))"
+                  : "linear-gradient(to bottom, hsl(0 0% 12%), hsl(0 0% 6%))",
+                border: "1px solid hsl(0 0% 20%)",
+                color: isCorrect ? "hsl(160 70% 70%)" : "hsl(0 0% 45%)",
+                boxShadow: isPressed
+                  ? "inset 0 2px 8px hsl(0 0% 0%/0.6)"
+                  : isCorrect
+                  ? "0 0 20px hsl(160 70% 50%/0.4), inset 0 -3px 6px hsl(0 0% 0%/0.3)"
+                  : "inset 0 -3px 6px hsl(0 0% 0%/0.3), 0 4px 8px hsl(0 0% 0%/0.4)",
+              }}
+            >
+              {key.note}
+            </motion.button>
+          ) : (
+            <motion.button
+              key={`${key.note}-${i}`}
+              onClick={() => handleClick(key.note)}
+              whileTap={{ scale: 0.97, y: 2 }}
+              animate={isWrong ? { x: [-2, 2, -2, 2, 0] } : {}}
+              className="relative w-14 h-40 md:w-16 md:h-52 rounded-b-2xl border flex items-end justify-center pb-4 text-[11px] font-bold transition-all"
+              style={{
+                background: isCorrect
+                  ? "linear-gradient(to bottom, hsl(160 70% 80%), hsl(160 70% 65%))"
+                  : isWrong
+                  ? "linear-gradient(to bottom, hsl(0 70% 80%), hsl(0 70% 65%))"
+                  : isPressed
+                  ? "linear-gradient(to bottom, hsl(0 0% 88%), hsl(0 0% 78%))"
+                  : "linear-gradient(to bottom, hsl(0 0% 96%), hsl(0 0% 86%))",
+                borderColor: isCorrect ? "hsl(160 70% 50%)" : "hsl(0 0% 72%)",
+                color: isCorrect ? "hsl(160 70% 30%)" : "hsl(0 0% 40%)",
+                boxShadow: isPressed
+                  ? "inset 0 3px 10px hsl(0 0% 0%/0.15)"
+                  : isCorrect
+                  ? "0 0 25px hsl(160 70% 50%/0.35), inset 0 -4px 8px hsl(0 0% 0%/0.08), 0 6px 12px hsl(0 0% 0%/0.15)"
+                  : "inset 0 -4px 8px hsl(0 0% 0%/0.08), 0 6px 12px hsl(0 0% 0%/0.15)",
+              }}
+            >
+              {key.note}
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Label */}
       {!targetNote && (
         <motion.p
-          className="mt-6 text-lg md:text-2xl font-bold uppercase tracking-[0.2em]"
+          className="mt-8 text-lg md:text-2xl font-bold uppercase tracking-[0.2em]"
           style={{ color: "hsl(45 80% 60%)" }}
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity }}

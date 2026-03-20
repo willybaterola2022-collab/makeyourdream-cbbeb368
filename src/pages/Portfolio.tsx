@@ -1,52 +1,82 @@
-import { Award, Users, Heart, Trophy, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Award, Users, Trophy, TrendingUp, Mic } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { StageButton } from "@/components/ui/StageButton";
+import { useNavigate } from "react-router-dom";
 
-const badges = [
-  { name: "Gold Voice", emoji: "🏆", earned: true },
-  { name: "Streak Master", emoji: "🔥", earned: true },
-  { name: "Rising Star", emoji: "⭐", earned: true },
-  { name: "Perfect Pitch", emoji: "🎯", earned: false },
-  { name: "Duet Legend", emoji: "👥", earned: false },
-];
-
-const performances = [
-  { song: "Bésame Mucho", score: 96.4, date: "Hace 2 días" },
-  { song: "Bohemian Rhapsody", score: 92.1, date: "Hace 5 días" },
-  { song: "Shallow", score: 94.7, date: "Hace 1 semana" },
-  { song: "Someone Like You", score: 91.3, date: "Hace 2 semanas" },
-];
-
-const evolutionData = [65, 68, 72, 70, 75, 78, 80, 83, 85, 88, 86, 91];
+interface Recording {
+  id: string;
+  title: string | null;
+  created_at: string;
+  module: string;
+  metadata: any;
+}
 
 const Portfolio = () => {
-  const maxEvo = Math.max(...evolutionData);
-  const minEvo = Math.min(...evolutionData);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [recordings, setRecordings] = useState<Recording[]>([]);
+  const [progress, setProgress] = useState<{ xp: number; level: number; streak_days: number; badges: any[] } | null>(null);
+  const [profile, setProfile] = useState<{ display_name: string | null; vocal_level: string | null } | null>(null);
 
-  const pathPoints = evolutionData
-    .map((v, i) => {
-      const x = (i / (evolutionData.length - 1)) * 280 + 10;
-      const y = 80 - ((v - minEvo) / (maxEvo - minEvo)) * 60;
-      return `${x},${y}`;
-    })
-    .join(" ");
+  useEffect(() => {
+    if (!user) return;
+    async function fetch() {
+      const [recRes, progRes, profRes] = await Promise.all([
+        supabase.from("recordings").select("id, title, created_at, module, metadata").eq("user_id", user!.id).order("created_at", { ascending: false }).limit(10),
+        supabase.from("user_progress").select("xp, level, streak_days, badges").eq("user_id", user!.id).maybeSingle(),
+        supabase.from("profiles").select("display_name, vocal_level").eq("user_id", user!.id).maybeSingle(),
+      ]);
+      setRecordings(recRes.data ?? []);
+      setProgress(progRes.data);
+      setProfile(profRes.data);
+    }
+    fetch();
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="p-8 text-center space-y-4">
+        <p className="text-muted-foreground">Inicia sesión para ver tu portfolio</p>
+        <StageButton variant="primary" onClick={() => navigate("/login")}>Iniciar sesión</StageButton>
+      </div>
+    );
+  }
+
+  const xp = progress?.xp ?? 0;
+  const level = progress?.level ?? 1;
+  const streak = progress?.streak_days ?? 0;
+  const badges = (progress?.badges as any[]) ?? [];
+  const displayName = profile?.display_name ?? user.email?.split("@")[0] ?? "Artista";
+  const vocalLevel = profile?.vocal_level ?? "principiante";
+
+  const formatDate = (d: string) => {
+    const diff = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+    if (diff === 0) return "Hoy";
+    if (diff === 1) return "Ayer";
+    return `Hace ${diff} días`;
+  };
 
   return (
     <div className="p-4 md:p-8 space-y-6 animate-fade-in">
       {/* Profile header */}
-      <div className="glass-card p-6 text-center">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 text-center">
         <Avatar className="h-20 w-20 mx-auto mb-3">
           <AvatarFallback className="bg-primary/20 text-primary text-2xl font-serif font-bold">
-            MK
+            {displayName.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        <h1 className="font-serif text-2xl font-bold text-foreground">MakeYourDream Artist</h1>
-        <p className="text-sm text-muted-foreground mt-1">Mezzosoprano Lírica · Bogotá</p>
+        <h1 className="font-serif text-2xl font-bold text-foreground">{displayName}</h1>
+        <p className="text-sm text-muted-foreground mt-1 capitalize">{vocalLevel}</p>
 
         <div className="flex justify-center gap-6 mt-4">
           {[
-            { label: "Seguidores", value: "1.2K", icon: Users },
-            { label: "Votos", value: "847", icon: Heart },
-            { label: "Liga", value: "Gold", icon: Trophy },
+            { label: "XP", value: xp.toLocaleString(), icon: Trophy },
+            { label: "Nivel", value: `${level}`, icon: TrendingUp },
+            { label: "Racha", value: `${streak}🔥`, icon: Award },
           ].map((s) => (
             <div key={s.label} className="text-center">
               <p className="text-lg font-serif font-bold neon-text">{s.value}</p>
@@ -54,88 +84,54 @@ const Portfolio = () => {
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Badges */}
-      <div>
-        <h3 className="font-serif text-lg font-semibold text-foreground mb-3">Badges</h3>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {badges.map((b) => (
-            <div
-              key={b.name}
-              className={`glass-card p-3 min-w-[80px] text-center shrink-0 ${
-                b.earned ? "border-primary/20" : "opacity-40"
-              }`}
-            >
-              <div className="text-2xl mb-1">{b.emoji}</div>
-              <p className="text-[10px] text-muted-foreground">{b.name}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Best performances */}
-      <div>
-        <h3 className="font-serif text-lg font-semibold text-foreground mb-3">Mejores performances</h3>
-        <div className="space-y-2">
-          {performances.map((p, i) => (
-            <div key={p.song} className="glass-card-hover p-4 flex items-center gap-3">
-              <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                i === 0 ? "stage-gradient" : "bg-muted"
-              }`}>
-                <span className={`text-xs font-bold ${
-                  i === 0 ? "text-primary-foreground" : "text-muted-foreground"
-                }`}>
-                  {i + 1}
-                </span>
+      {badges.length > 0 && (
+        <div>
+          <h3 className="font-serif text-lg font-semibold text-foreground mb-3">Badges</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {badges.map((b: any, i: number) => (
+              <div key={i} className="glass-card p-3 min-w-[80px] text-center shrink-0 border-primary/20">
+                <div className="text-2xl mb-1">{b.emoji || "🏅"}</div>
+                <p className="text-[10px] text-muted-foreground">{b.name || "Badge"}</p>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{p.song}</p>
-                <p className="text-[10px] text-muted-foreground">{p.date}</p>
-              </div>
-              <span className={`text-lg font-serif font-bold ${i === 0 ? "neon-text" : "text-foreground"}`}>
-                {p.score}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Evolution graph */}
-      <div className="glass-card p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="h-4 w-4 text-primary" />
-          <h3 className="font-serif text-lg font-semibold text-foreground">Evolución</h3>
-        </div>
-        <svg viewBox="0 0 300 100" className="w-full">
-          <defs>
-            <linearGradient id="evoGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <polygon
-            points={`10,90 ${pathPoints} 290,90`}
-            fill="url(#evoGrad)"
-          />
-          <polyline
-            points={pathPoints}
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {evolutionData.map((v, i) => {
-            const x = (i / (evolutionData.length - 1)) * 280 + 10;
-            const y = 80 - ((v - minEvo) / (maxEvo - minEvo)) * 60;
-            return i === evolutionData.length - 1 ? (
-              <circle key={i} cx={x} cy={y} r="4" fill="hsl(var(--primary))" />
-            ) : null;
-          })}
-          <text x="10" y="96" className="fill-muted-foreground text-[7px]">Ene</text>
-          <text x="280" y="96" className="fill-muted-foreground text-[7px]">Dic</text>
-        </svg>
+      {/* Recordings */}
+      <div>
+        <h3 className="font-serif text-lg font-semibold text-foreground mb-3">Grabaciones recientes</h3>
+        {recordings.length > 0 ? (
+          <div className="space-y-2">
+            {recordings.map((r, i) => (
+              <motion.div
+                key={r.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="glass-card p-4 flex items-center gap-3"
+              >
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${i === 0 ? "stage-gradient" : "bg-muted"}`}>
+                  <Mic className={`h-4 w-4 ${i === 0 ? "text-primary-foreground" : "text-muted-foreground"}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{r.title || r.module}</p>
+                  <p className="text-[10px] text-muted-foreground">{formatDate(r.created_at)}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="glass-card p-6 text-center">
+            <p className="text-sm text-muted-foreground mb-3">Aún no tienes grabaciones</p>
+            <StageButton variant="accent" icon={<Mic className="h-4 w-4" />} onClick={() => navigate("/karaoke")}>
+              Grabar ahora
+            </StageButton>
+          </div>
+        )}
       </div>
     </div>
   );

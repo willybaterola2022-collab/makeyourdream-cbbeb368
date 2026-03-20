@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Mic, Save } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
@@ -7,6 +7,7 @@ import { useMicrophone } from "@/hooks/useMicrophone";
 import { toast } from "sonner";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroPedals } from "@/components/studio/HeroPedals";
+import { StageButton } from "@/components/ui/StageButton";
 
 interface FXParam { id: string; label: string; emoji: string; value: number; active: boolean; }
 
@@ -19,16 +20,119 @@ const PRESETS = [
 ];
 
 export default function VocalFX() {
-  const { isListening, waveformData, requestMic, stopMic } = useMicrophone();
+  const { isListening, waveformData, requestMic, stopMic, stream, analyserNode } = useMicrophone(2048);
   const [activePreset, setActivePreset] = useState("studio");
   const [effects, setEffects] = useState<FXParam[]>([
     { id: "reverb", label: "Reverb", emoji: "🌊", value: 45, active: true },
     { id: "delay", label: "Delay", emoji: "🔁", value: 20, active: false },
-    { id: "autotune", label: "Autotune", emoji: "🎯", value: 0, active: false },
+    { id: "eq-low", label: "EQ Graves", emoji: "📢", value: 50, active: true },
+    { id: "eq-high", label: "EQ Agudos", emoji: "✨", value: 50, active: true },
     { id: "distortion", label: "Distorsión", emoji: "⚡", value: 10, active: false },
-    { id: "chorus", label: "Chorus", emoji: "👥", value: 30, active: true },
     { id: "compression", label: "Compresión", emoji: "📦", value: 60, active: true },
   ]);
+
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const nodesRef = useRef<{
+    delay?: DelayNode;
+    delayGain?: GainNode;
+    eqLow?: BiquadFilterNode;
+    eqHigh?: BiquadFilterNode;
+    distortion?: WaveShaperNode;
+    compressor?: DynamicsCompressorNode;
+    masterGain?: GainNode;
+  }>({});
+
+  // Build audio processing chain when mic is active
+  const buildAudioChain = useCallback(() => {
+    if (!stream) return;
+
+    const ctx = new AudioContext();
+    audioCtxRef.current = ctx;
+    const source = ctx.createMediaStreamSource(stream);
+    sourceRef.current = source;
+
+    // Create nodes
+    const delayNode = ctx.createDelay(1.0);
+    delayNode.delayTime.value = 0.3;
+    const delayGain = ctx.createGain();
+    delayGain.gain.value = 0;
+
+    const eqLow = ctx.createBiquadFilter();
+    eqLow.type = "lowshelf";
+    eqLow.frequency.value = 300;
+    eqLow.gain.value = 0;
+
+    const eqHigh = ctx.createBiquadFilter();
+    eqHigh.type = "highshelf";
+    eqHigh.frequency.value = 3000;
+    eqHigh.gain.value = 0;
+
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -24;
+    compressor.ratio.value = 4;
+
+    const masterGain = ctx.createGain();
+    masterGain.gain.value = 0.8;
+
+    // Chain: source → eqLow → eqHigh → compressor → masterGain → destination
+    source.connect(eqLow);
+    eqLow.connect(eqHigh);
+    eqHigh.connect(compressor);
+    compressor.connect(masterGain);
+
+    // Delay as parallel send
+    source.connect(delayNode);
+    delayNode.connect(delayGain);
+    delayGain.connect(masterGain);
+
+    masterGain.connect(ctx.destination);
+
+    nodesRef.current = { delay: delayNode, delayGain, eqLow, eqHigh, compressor, masterGain };
+  }, [stream]);
+
+  // Update FX params in real-time
+  useEffect(() => {
+    const nodes = nodesRef.current;
+    if (!audioCtxRef.current) return;
+
+    const getVal = (id: string) => effects.find(e => e.id === id);
+
+    const delay = getVal("delay");
+    if (nodes.delayGain && delay) {
+      nodes.delayGain.gain.value = delay.active ? delay.value / 100 * 0.6 : 0;
+    }
+    if (nodes.delay && delay?.active) {
+      nodes.delay.delayTime.value = 0.1 + (delay.value / 100) * 0.5;
+    }
+
+    const eqLow = getVal("eq-low");
+    if (nodes.eqLow && eqLow) {
+      nodes.eqLow.gain.value = eqLow.active ? (eqLow.value - 50) * 0.4 : 0;
+    }
+
+    const eqHigh = getVal("eq-high");
+    if (nodes.eqHigh && eqHigh) {
+      nodes.eqHigh.gain.value = eqHigh.active ? (eqHigh.value - 50) * 0.4 : 0;
+    }
+
+    const comp = getVal("compression");
+    if (nodes.compressor && comp) {
+      nodes.compressor.ratio.value = comp.active ? 2 + (comp.value / 100) * 10 : 1;
+    }
+  }, [effects]);
+
+  useEffect(() => {
+    if (isListening && stream) {
+      buildAudioChain();
+    }
+    return () => {
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close();
+        audioCtxRef.current = null;
+      }
+    };
+  }, [isListening, stream, buildAudioChain]);
 
   const updateEffect = (id: string, updates: Partial<FXParam>) => {
     setEffects((prev) => prev.map((e) => (e.id === id ? { ...e, ...updates } : e)));
@@ -49,17 +153,18 @@ export default function VocalFX() {
         />
       }
     >
-      {/* Presets as knob-style buttons */}
+      {/* Presets */}
       <div className="flex gap-3 justify-center overflow-x-auto pb-1">
         {PRESETS.map((p) => (
-          <motion.button key={p.id} whileTap={{ scale: 0.93 }}
+          <StageButton
+            key={p.id}
+            variant="capsule"
+            active={activePreset === p.id}
             onClick={() => setActivePreset(p.id)}
-            className={`glass-card p-3 md:p-4 flex flex-col items-center gap-1.5 min-w-[70px] transition-all ${
-              activePreset === p.id ? "border-primary/40 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.3)]" : "opacity-50 hover:opacity-80"
-            }`}>
-            <span className="text-2xl">{p.emoji}</span>
-            <span className={`text-[9px] font-bold uppercase tracking-wider ${activePreset === p.id ? "neon-text" : "text-muted-foreground"}`}>{p.label}</span>
-          </motion.button>
+          >
+            <span className="text-lg">{p.emoji}</span>
+            <span className="text-[9px]">{p.label}</span>
+          </StageButton>
         ))}
       </div>
 
@@ -73,10 +178,13 @@ export default function VocalFX() {
           ))}
         </div>
         <div className="flex justify-center">
-          <motion.button whileTap={{ scale: 0.95 }} onClick={handleToggle}
-            className={`h-16 w-16 rounded-full flex items-center justify-center ${isListening ? "bg-destructive shadow-[0_0_25px_hsl(var(--destructive)/0.5)]" : "stage-gradient shadow-[0_0_25px_hsl(var(--primary)/0.3)]"}`}>
-            <Mic className={`h-7 w-7 ${isListening ? "text-destructive-foreground" : "text-primary-foreground"}`} />
-          </motion.button>
+          <StageButton
+            variant={isListening ? "danger" : "primary"}
+            icon={<Mic className="h-6 w-6" />}
+            onClick={handleToggle}
+          >
+            {isListening ? "DETENER" : "ESCUCHAR"}
+          </StageButton>
         </div>
       </div>
 
@@ -84,10 +192,9 @@ export default function VocalFX() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold uppercase tracking-wider text-foreground">Efectos</span>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => toast.success("Preset guardado")}
-            className="glass-card px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-            <Save className="h-3 w-3" /> Guardar
-          </motion.button>
+          <StageButton variant="lever" icon={<Save className="h-3 w-3" />} onClick={() => toast.success("Preset guardado")}>
+            Guardar
+          </StageButton>
         </div>
         {effects.map((fx) => (
           <div key={fx.id} className={`glass-card p-3 rounded-xl ${!fx.active ? "opacity-40" : ""}`}>

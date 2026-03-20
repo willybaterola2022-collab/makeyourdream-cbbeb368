@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Trophy, Zap, RotateCcw, Volume2 } from "lucide-react";
-import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
+import { Trophy, Zap, RotateCcw, Volume2, Piano, Guitar } from "lucide-react";
+import { useAudioEngine, noteToFreq, type InstrumentType } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroPiano } from "@/components/studio/HeroPiano";
+import { StageButton } from "@/components/ui/StageButton";
 import MicroTutorial from "@/components/MicroTutorial";
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -18,9 +19,18 @@ const intervals = [
   { name: "8va", semitones: 12 },
 ];
 
+const INSTRUMENT_OPTIONS: { id: InstrumentType; label: string; emoji: string }[] = [
+  { id: "piano", label: "Piano", emoji: "🎹" },
+  { id: "guitar", label: "Guitarra", emoji: "🎸" },
+  { id: "sax", label: "Saxo", emoji: "🎷" },
+  { id: "bass", label: "Bajo", emoji: "🎸" },
+  { id: "flute", label: "Flauta", emoji: "🪈" },
+];
+
 const PitchTraining = () => {
-  const { playNote } = useAudioEngine();
+  const { playNote, playInstrument } = useAudioEngine();
   const [mode, setMode] = useState<"notes" | "intervals">("notes");
+  const [instrument, setInstrument] = useState<InstrumentType>("piano");
   const [target, setTarget] = useState(() => allNotes[Math.floor(Math.random() * 7)]);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -30,38 +40,33 @@ const PitchTraining = () => {
   const [baseNote] = useState("C4");
   const hasPlayedRef = useRef(false);
 
-  useEffect(() => {
-    if (hasPlayedRef.current) return;
-    hasPlayedRef.current = true;
+  const playCurrentNote = useCallback(() => {
     if (mode === "notes") {
-      playNote(noteToFreq(target), 1.2);
+      playInstrument(noteToFreq(target), instrument, 1.2);
     } else {
       const baseFreq = noteToFreq(baseNote);
       const targetFreq = baseFreq * Math.pow(2, targetInterval.semitones / 12);
-      playNote(baseFreq, 0.6);
-      setTimeout(() => playNote(targetFreq, 0.6), 700);
+      playInstrument(baseFreq, instrument, 0.6);
+      setTimeout(() => playInstrument(targetFreq, instrument, 0.6), 700);
     }
-  }, [target, targetInterval, mode, playNote, baseNote]);
+  }, [mode, target, targetInterval, instrument, playInstrument, baseNote]);
+
+  useEffect(() => {
+    if (hasPlayedRef.current) return;
+    hasPlayedRef.current = true;
+    playCurrentNote();
+  }, [target, targetInterval, mode, playCurrentNote]);
 
   const newRound = useCallback(() => {
     setFeedback(null);
     hasPlayedRef.current = false;
-    if (mode === "notes") setTarget(allNotes[Math.floor(Math.random() * (6 + level * 2))]);
+    if (mode === "notes") setTarget(allNotes[Math.floor(Math.random() * Math.min(6 + level * 2, 12))]);
     else setTargetInterval(intervals[Math.floor(Math.random() * Math.min(level + 1, intervals.length))]);
   }, [mode, level]);
 
-  const replaySound = () => {
-    if (mode === "notes") playNote(noteToFreq(target), 1.2);
-    else {
-      const baseFreq = noteToFreq(baseNote);
-      playNote(baseFreq, 0.6);
-      setTimeout(() => playNote(baseFreq * Math.pow(2, targetInterval.semitones / 12), 0.6), 700);
-    }
-  };
-
   const handleNoteClick = (note: string) => {
     if (feedback) return;
-    playNote(noteToFreq(note), 0.4);
+    playInstrument(noteToFreq(note), instrument, 0.4);
     if (note === target) {
       setScore((s) => s + 10 * (1 + streak)); setStreak((s) => s + 1); setFeedback("correct");
       if (streak > 0 && streak % 5 === 4) setLevel((l) => Math.min(l + 1, 5));
@@ -72,8 +77,8 @@ const PitchTraining = () => {
   const handleIntervalClick = (interval: typeof intervals[0]) => {
     if (feedback) return;
     const baseFreq = noteToFreq(baseNote);
-    playNote(baseFreq, 0.4);
-    setTimeout(() => playNote(baseFreq * Math.pow(2, interval.semitones / 12), 0.4), 500);
+    playInstrument(baseFreq, instrument, 0.4);
+    setTimeout(() => playInstrument(baseFreq * Math.pow(2, interval.semitones / 12), instrument, 0.4), 500);
     if (interval.name === targetInterval.name) {
       setScore((s) => s + 15 * (1 + streak)); setStreak((s) => s + 1); setFeedback("correct");
     } else { setStreak(0); setFeedback("wrong"); }
@@ -87,7 +92,7 @@ const PitchTraining = () => {
       roomId="pitch"
       heroContent={
         mode === "notes" ? (
-          <HeroPiano targetNote={target} onNoteClick={handleNoteClick} feedback={feedback} />
+          <HeroPiano targetNote={target} onNoteClick={handleNoteClick} feedback={feedback} instrument={instrument} />
         ) : (
           <div className="flex flex-col items-center z-10">
             <motion.div
@@ -99,14 +104,13 @@ const PitchTraining = () => {
             >
               🎵 {targetInterval.name}
             </motion.div>
-            <motion.button onClick={replaySound} whileTap={{ scale: 0.95 }} className="glass-card px-4 py-2 rounded-xl text-muted-foreground hover:text-foreground flex items-center gap-2">
-              <Volume2 className="h-4 w-4" /> Escuchar
-            </motion.button>
+            <StageButton variant="glass" icon={<Volume2 className="h-4 w-4" />} onClick={playCurrentNote}>
+              Escuchar
+            </StageButton>
           </div>
         )
       }
     >
-      {/* Micro-tutorial */}
       <MicroTutorial
         storageKey="pitch"
         steps={[
@@ -116,7 +120,22 @@ const PitchTraining = () => {
         ]}
       />
 
-      {/* Mode + stats */}
+      {/* Instrument selector */}
+      <div className="flex gap-2 justify-center overflow-x-auto pb-1">
+        {INSTRUMENT_OPTIONS.map((inst) => (
+          <StageButton
+            key={inst.id}
+            variant="capsule"
+            active={instrument === inst.id}
+            onClick={() => { setInstrument(inst.id); hasPlayedRef.current = false; }}
+            className="text-[10px]"
+          >
+            {inst.emoji} {inst.label}
+          </StageButton>
+        ))}
+      </div>
+
+      {/* Mode toggle */}
       <div className="flex flex-wrap items-center gap-3 justify-center">
         <div className="flex gap-1 glass-card rounded-xl p-1">
           {(["notes", "intervals"] as const).map((m) => (
@@ -145,31 +164,24 @@ const PitchTraining = () => {
         </div>
       </div>
 
-      {/* Interval buttons (when in interval mode) */}
+      {/* Interval buttons */}
       {mode === "intervals" && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {intervals.map((iv, i) => (
-            <motion.button
-              key={iv.name}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => handleIntervalClick(iv)}
-              className="glass-card p-4 text-center hover:border-primary/30 transition-all"
-            >
-              <p className="text-sm font-bold text-foreground">{iv.name}</p>
-              <p className="text-[10px] text-muted-foreground">{iv.semitones} semitonos</p>
-            </motion.button>
+            <StageButton key={iv.name} variant="glass" onClick={() => handleIntervalClick(iv)}>
+              <div className="text-center">
+                <p className="text-sm font-bold">{iv.name}</p>
+                <p className="text-[10px] text-muted-foreground">{iv.semitones} semitonos</p>
+              </div>
+            </StageButton>
           ))}
         </div>
       )}
 
       <div className="flex justify-center">
-        <motion.button whileTap={{ scale: 0.93 }} onClick={reset}
-          className="glass-card px-6 py-3 rounded-2xl flex items-center gap-2 text-muted-foreground hover:text-foreground">
-          <RotateCcw className="h-4 w-4" /> Reiniciar
-        </motion.button>
+        <StageButton variant="glass" icon={<RotateCcw className="h-4 w-4" />} onClick={reset}>
+          Reiniciar
+        </StageButton>
       </div>
     </StudioRoom>
   );
