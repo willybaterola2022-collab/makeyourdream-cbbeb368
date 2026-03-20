@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
+import { useAudioEngine } from "@/hooks/useAudioEngine";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
 import VintageMicrophone from "./VintageMicrophone";
+import SingingFeedback from "./SingingFeedback";
 
 interface Props {
   genre: string;
@@ -19,13 +21,16 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
   const [started, setStarted] = useState(false);
   const [finished, setFinished] = useState(false);
   const [isPlayingBack, setIsPlayingBack] = useState(false);
+  const [scores, setScores] = useState({ pitch: 0, timing: 0, expression: 0 });
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { isListening, volume, waveformData, requestMic, stream, analyserNode } = useMicrophone(2048);
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, started);
+  const { playSuccess } = useAudioEngine();
   const timerRef = useRef<ReturnType<typeof setInterval>>(0 as any);
   const [elapsed, setElapsed] = useState(0);
+  const samplesRef = useRef({ pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, prevVolumes: [] as number[] });
 
   const bars = waveformData.length > 0
     ? waveformData.slice(0, 50).map((v) => Math.max(v, 4))
@@ -38,6 +43,7 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
     setActiveLine(0);
     setElapsed(0);
     setFinished(false);
+    samplesRef.current = { pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, prevVolumes: [] };
     if (!isListening) {
       const ok = await requestMic();
       if (!ok) return;
@@ -61,6 +67,8 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
           stopRecording();
           setStarted(false);
           setFinished(true);
+          const global = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
+          if (global >= 60) setTimeout(() => playSuccess(), 300);
           return prev;
         }
         return next;
@@ -69,11 +77,36 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
     return () => clearInterval(timerRef.current);
   }, [started, lines, speed]);
 
+  // Score sampling
+  useEffect(() => {
+    if (!started) return;
+    const interval = setInterval(() => {
+      const s = samplesRef.current;
+      s.totalSamples++;
+      s.prevVolumes.push(volume);
+      if (s.prevVolumes.length > 40) s.prevVolumes.shift();
+      if (pitch) { s.pitchTotal++; if (Math.abs(pitch.cents) < 25) s.pitchHits++; }
+      if (volume < 8) s.silentSamples++;
+      s.volumeSum += volume;
+      s.volumeMax = Math.max(s.volumeMax, volume);
+      const avg = s.volumeSum / s.totalSamples;
+      const variance = s.prevVolumes.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / Math.max(s.prevVolumes.length, 1);
+      setScores({
+        pitch: s.pitchTotal > 0 ? Math.round((s.pitchHits / s.pitchTotal) * 100) : 0,
+        timing: Math.round((1 - (s.silentSamples / s.totalSamples)) * 100),
+        expression: Math.min(Math.round(Math.sqrt(variance) * 3 + (s.volumeMax > 40 ? 15 : 0)), 100),
+      });
+    }, 500);
+    return () => clearInterval(interval);
+  }, [started, volume, pitch]);
+
   const handleStop = () => {
     clearInterval(timerRef.current);
     stopRecording();
     setStarted(false);
     setFinished(true);
+    const global = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
+    if (global >= 60) setTimeout(() => playSuccess(), 300);
   };
 
   const handleReset = () => {
@@ -87,36 +120,13 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
     setElapsed(0);
     setStarted(false);
     setFinished(false);
+    setScores({ pitch: 0, timing: 0, expression: 0 });
   };
 
   const handleMicClick = () => {
     if (finished) return;
     if (started) { handleStop(); return; }
     handleStart();
-  };
-
-  const handlePlay = () => {
-    if (!audioUrl) return;
-    if (!audioRef.current) {
-      audioRef.current = new Audio(audioUrl);
-      audioRef.current.onended = () => setIsPlayingBack(false);
-    }
-    if (isPlayingBack) {
-      audioRef.current.pause();
-      setIsPlayingBack(false);
-    } else {
-      audioRef.current.play();
-      setIsPlayingBack(true);
-    }
-  };
-
-  const handleShare = async () => {
-    if (!audioUrl) return;
-    try {
-      const blob = await fetch(audioUrl).then(r => r.blob());
-      const file = new File([blob], "mi-cancion.webm", { type: "audio/webm" });
-      if (navigator.share) await navigator.share({ files: [file], title: "Mi Canción" });
-    } catch {}
   };
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -169,7 +179,7 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
-      {lines.length > 0 && (
+      {lines.length > 0 && !finished && (
         <div className="glass-card p-5 space-y-2 max-h-64 overflow-y-auto">
           {lines.map((line, i) => (
             <p key={i} className={`font-serif text-lg transition-all duration-300 ${
@@ -179,27 +189,23 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
-      <VintageMicrophone
+      {!finished && (
+        <VintageMicrophone
+          isActive={started}
+          volume={volume}
+          onClick={handleMicClick}
+          state={micState}
+        />
+      )}
+
+      <SingingFeedback
+        scores={scores}
         isActive={started}
-        volume={volume}
-        onClick={handleMicClick}
-        state={micState}
-        onPlay={finished && audioUrl ? handlePlay : undefined}
-        onSave={finished && audioUrl ? () => saveRecording(`Letra propia - ${genre}`) : undefined}
-        onShare={finished && audioUrl ? handleShare : undefined}
-        onRetry={finished ? handleReset : undefined}
-        isPlaying={isPlayingBack}
+        finished={finished}
+        onRetry={handleReset}
+        onSave={audioUrl ? () => saveRecording(`Letra propia - ${genre}`) : undefined}
+        songTitle="Tu Letra"
       />
-
-      <div className="glass-card p-3">
-        <div className="flex items-center gap-0.5 h-12">
-          {bars.map((h, i) => (
-            <div key={i} className={`flex-1 rounded-full transition-all duration-75 ${started && h > 15 ? "stage-gradient" : "bg-muted"}`}
-              style={{ height: `${Math.min(h, 100)}%` }} />
-          ))}
-        </div>
-      </div>
-
       <SaveAuthGate open={needsAuth} onOpenChange={dismissAuth} />
     </div>
   );

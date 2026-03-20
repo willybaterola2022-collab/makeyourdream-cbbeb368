@@ -2,10 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
+import { useAudioEngine } from "@/hooks/useAudioEngine";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
 import { useMetronome } from "@/hooks/useMetronome";
 import VintageMicrophone from "./VintageMicrophone";
 import SingingFeedback from "./SingingFeedback";
+
+// BACKEND-REQUEST: vocal-analysis
+// Input: { recording_id: string, audio_url: string }
+// Output: { dimensions: {name, value}[], classification: string, similar_artists: string[] }
+// Descripción: Análisis profundo post-grabación de la performance vocal
 
 interface Props {
   genre: string;
@@ -17,6 +23,7 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
   const { isListening, volume, waveformData, requestMic, stream, analyserNode } = useMicrophone(2048);
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, isRecording);
+  const { playSuccess } = useAudioEngine();
   const [elapsed, setElapsed] = useState(0);
   const [finished, setFinished] = useState(false);
   const [scores, setScores] = useState({ pitch: 0, timing: 0, expression: 0 });
@@ -70,6 +77,9 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
       metronome.stop();
       clearInterval(timerRef.current);
       setFinished(true);
+      // Play celebration if good score
+      const global = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
+      if (global >= 60) setTimeout(() => playSuccess(), 300);
       return;
     }
     if (!isListening) {
@@ -144,40 +154,49 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
-      <VintageMicrophone
+      {/* Mic only shown when NOT finished — results take over */}
+      {!finished && (
+        <VintageMicrophone
+          isActive={isRecording}
+          volume={volume}
+          onClick={handleMicClick}
+          state={micState}
+        />
+      )}
+
+      {/* Waveform — bigger during recording */}
+      {!finished && (
+        <div className={`glass-card p-4 ${isRecording ? "py-6" : ""}`}>
+          <div className={`flex items-center gap-0.5 ${isRecording ? "h-32 md:h-40" : "h-16"} transition-all duration-300`}>
+            {bars.map((h, i) => (
+              <div
+                key={i}
+                className={`flex-1 rounded-full transition-all duration-75 ${isRecording && h > 15 ? "stage-gradient" : "bg-muted"}`}
+                style={{ height: `${Math.min(h, 100)}%` }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between items-center text-sm mt-2">
+            <span className="font-mono text-foreground font-semibold">{formatTime(elapsed)}</span>
+            {isListening && (
+              <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                <span className={`inline-block h-2 w-2 rounded-full ${volume > 20 ? "bg-primary" : "bg-muted-foreground"}`} />
+                {Math.round(volume)}%
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <SingingFeedback
+        scores={scores}
         isActive={isRecording}
-        volume={volume}
-        onClick={handleMicClick}
-        state={micState}
-        onPlay={finished && audioUrl ? handlePlay : undefined}
-        onSave={finished && audioUrl ? () => saveRecording(`Freestyle ${genre}`, { genre, pitchRange, scores }) : undefined}
-        onShare={finished && audioUrl ? handleShare : undefined}
-        onRetry={finished ? handleRetry : undefined}
-        isPlaying={isPlayingBack}
+        finished={finished}
+        onRetry={handleRetry}
+        onSave={audioUrl ? () => saveRecording(`Freestyle ${genre}`, { genre, pitchRange, scores }) : undefined}
+        onShare={handleShare}
+        songTitle={`Freestyle ${genre}`}
       />
-
-      <div className="glass-card p-4">
-        <div className="flex items-center gap-0.5 h-16">
-          {bars.map((h, i) => (
-            <div
-              key={i}
-              className={`flex-1 rounded-full transition-all duration-75 ${isRecording && h > 15 ? "stage-gradient" : "bg-muted"}`}
-              style={{ height: `${Math.min(h, 100)}%` }}
-            />
-          ))}
-        </div>
-        <div className="flex justify-between items-center text-sm mt-2">
-          <span className="font-mono text-foreground font-semibold">{formatTime(elapsed)}</span>
-          {isListening && (
-            <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
-              <span className={`inline-block h-2 w-2 rounded-full ${volume > 20 ? "bg-primary" : "bg-muted-foreground"}`} />
-              {Math.round(volume)}%
-            </span>
-          )}
-        </div>
-      </div>
-
-      <SingingFeedback scores={scores} isActive={isRecording} finished={finished} />
       <SaveAuthGate open={needsAuth} onOpenChange={dismissAuth} />
     </div>
   );
