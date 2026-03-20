@@ -54,15 +54,15 @@ const Exercises = () => {
   // Play demo scale
   const playDemo = useCallback(() => {
     setPhase("demo");
-    TARGET_NOTES.forEach((freq, i) => {
+    targetNotes.forEach((freq, i) => {
       setTimeout(() => {
         audioEngine.playNote?.(freq, 0.4);
-        if (i === TARGET_NOTES.length - 1) {
+        if (i === targetNotes.length - 1) {
           setTimeout(() => setPhase("ready"), 500);
         }
       }, i * 500);
     });
-  }, [audioEngine]);
+  }, [audioEngine, targetNotes]);
 
   // Start exercise with mic
   const startExercise = useCallback(async () => {
