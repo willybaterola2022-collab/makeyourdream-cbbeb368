@@ -4,8 +4,7 @@ import { Play, CheckCircle2, RotateCcw, PartyPopper } from "lucide-react";
 import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroThermometer } from "@/components/studio/HeroThermometer";
-
-interface Exercise {
+import MicroTutorial from "@/components/MicroTutorial";
   name: string;
   duration: number;
   emoji: string;
