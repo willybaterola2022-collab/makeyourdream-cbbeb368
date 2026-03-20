@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Download, Play } from "lucide-react";
+import { Download, Play, Volume2, VolumeX } from "lucide-react";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
 import { useAudioEngine } from "@/hooks/useAudioEngine";
+import { useBackingTrack } from "@/hooks/useBackingTrack";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
 import VintageMicrophone from "./VintageMicrophone";
 import SingingFeedback from "./SingingFeedback";
@@ -181,12 +182,14 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
   const [finished, setFinished] = useState(false);
   const [scores, setScores] = useState({ pitch: 0, timing: 0, expression: 0 });
   const [isPlayingBack, setIsPlayingBack] = useState(false);
+  const [backingEnabled, setBackingEnabled] = useState(true);
   const audioPlayRef = useRef<HTMLAudioElement | null>(null);
 
   const { isListening, volume, waveformData, requestMic, stream, analyserNode } = useMicrophone(2048);
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, isPlaying);
   const { playSuccess } = useAudioEngine();
+  const backingTrack = useBackingTrack();
   const timerRef = useRef<ReturnType<typeof setInterval>>(0 as any);
   const scoreSamplesRef = useRef({ pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, prevVolumes: [] as number[] });
 
@@ -207,6 +210,10 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     setTimeout(() => {
       if (stream && !isRecording) startRecording(stream);
       setIsPlaying(true);
+      // Start backing track
+      if (backingEnabled && backingTrack.hasBacking(selectedSong.title)) {
+        backingTrack.start(selectedSong.title);
+      }
     }, 200);
   };
 
@@ -219,6 +226,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
             clearInterval(timerRef.current);
             setIsPlaying(false);
             setFinished(true);
+            backingTrack.stop();
             return selectedSong.duration;
           }
           return next;
@@ -254,6 +262,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
   useEffect(() => {
     if (finished) {
       stopRecording();
+      backingTrack.stop();
       const global = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
       if (global >= 60) setTimeout(() => playSuccess(), 300);
     }
@@ -266,6 +275,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     setFinished(false);
     stopRecording();
     clearRecording();
+    backingTrack.stop();
     audioPlayRef.current?.pause();
     audioPlayRef.current = null;
     setIsPlayingBack(false);
@@ -278,24 +288,28 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
       <div className="p-4 md:p-8 space-y-5">
         <div>
           <h2 className="font-serif text-2xl font-semibold text-foreground">Canciones</h2>
-          <p className="text-sm text-muted-foreground">{PRESET_SONGS.length} disponibles</p>
+          <p className="text-sm text-muted-foreground">{PRESET_SONGS.length} disponibles · con acompañamiento</p>
         </div>
         <div className="grid gap-3">
-          {PRESET_SONGS.map((song) => (
-            <button key={song.title} onClick={() => setSelectedSong(song)} className="glass-card p-4 flex items-center gap-4 text-left hover:border-primary/30 transition-all active:scale-[0.98]">
-              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                <Play className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-serif font-semibold text-foreground">{song.title}</p>
-                <p className="text-xs text-muted-foreground">{song.artist}</p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-[10px] text-muted-foreground">{song.genre}</p>
-                <p className={`text-[10px] font-medium ${difficultyColor[song.difficulty] || "text-muted-foreground"}`}>{song.difficulty}</p>
-              </div>
-            </button>
-          ))}
+          {PRESET_SONGS.map((song) => {
+            const hasBacking = backingTrack.hasBacking(song.title);
+            return (
+              <button key={song.title} onClick={() => setSelectedSong(song)} className="glass-card p-4 flex items-center gap-4 text-left hover:border-primary/30 transition-all active:scale-[0.98]">
+                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                  <Play className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-serif font-semibold text-foreground">{song.title}</p>
+                  <p className="text-xs text-muted-foreground">{song.artist}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] text-muted-foreground">{song.genre}</p>
+                  <p className={`text-[10px] font-medium ${difficultyColor[song.difficulty] || "text-muted-foreground"}`}>{song.difficulty}</p>
+                  {hasBacking && <p className="text-[9px] text-primary/60 mt-0.5">🎹 Backing</p>}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     );
@@ -307,6 +321,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
       setIsPlaying(false);
       clearInterval(timerRef.current);
       stopRecording();
+      backingTrack.stop();
       setFinished(true);
       return;
     }
@@ -322,7 +337,18 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
           <h2 className="font-serif text-xl font-semibold text-foreground">{selectedSong.title}</h2>
           <p className="text-xs text-muted-foreground">{selectedSong.artist}</p>
         </div>
-        <button onClick={() => { handleReset(); setSelectedSong(null); }} className="text-sm text-muted-foreground hover:text-foreground active:scale-95">← Cambiar</button>
+        <div className="flex items-center gap-2">
+          {backingTrack.hasBacking(selectedSong.title) && (
+            <button
+              onClick={() => setBackingEnabled(!backingEnabled)}
+              className={`p-2 rounded-lg transition-all ${backingEnabled ? "text-primary bg-primary/10" : "text-muted-foreground bg-muted/30"}`}
+              title={backingEnabled ? "Silenciar acompañamiento" : "Activar acompañamiento"}
+            >
+              {backingEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
+          )}
+          <button onClick={() => { handleReset(); setSelectedSong(null); }} className="text-sm text-muted-foreground hover:text-foreground active:scale-95">← Cambiar</button>
+        </div>
       </div>
 
       {isPlaying && pitch && (
