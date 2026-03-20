@@ -76,7 +76,7 @@ const Fingerprint = () => {
       const lowFreq = pitchSamples.current.length > 0 ? Math.min(...pitchSamples.current) : null;
       const highFreq = pitchSamples.current.length > 0 ? Math.max(...pitchSamples.current) : null;
       
-      await supabase.from("vocal_fingerprints").insert({
+      await supabase.from("vocal_fingerprints").insert([{
         user_id: user.id,
         dimensions: dims.reduce((acc, d) => ({ ...acc, [d.name]: d.value }), {}),
         global_score: score,
@@ -84,9 +84,9 @@ const Fingerprint = () => {
         vocal_range_high: highFreq,
         classification: `${range.low} → ${range.high}`,
         similar_artists: [artist],
-      });
+      }]);
 
-      await supabase.from("share_cards").insert({
+      await supabase.from("share_cards").insert([{
         user_id: user.id,
         card_type: "fingerprint",
         card_data: { dimensions: dims, globalScore: score, similarArtist: artist, vocalRange: range },
