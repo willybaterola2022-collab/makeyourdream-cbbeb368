@@ -104,7 +104,7 @@ export function AppSidebar() {
 
           return (
             <SidebarGroup key={group.label}>
-              {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/60 px-2">{group.label}</SidebarGroupLabel>}
+              {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/30 px-2">{group.label}</SidebarGroupLabel>}
               <SidebarGroupContent>
                 <SidebarMenu>
                   {group.items.map((item) => {
@@ -117,13 +117,13 @@ export function AppSidebar() {
                             end={item.url === "/"}
                             className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-all duration-200 ${
                               isActive
-                                ? "bg-primary/10 text-primary font-medium shadow-[0_0_15px_-5px_hsl(var(--primary)/0.3)]"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                ? "bg-primary/5 text-primary font-medium shadow-[0_0_15px_-5px_hsl(var(--primary)/0.2)]"
+                                : "text-muted-foreground/40 hover:text-foreground/70 hover:bg-muted/30"
                             }`}
                           >
                             <item.icon className={`h-4 w-4 shrink-0 ${collapsed ? "mx-auto" : ""}`} />
                             {!collapsed && (
-                              <span className="truncate flex-1 text-xs font-bold uppercase tracking-wider">{item.title}</span>
+                              <span className="truncate flex-1 text-xs font-normal uppercase tracking-wider">{item.title}</span>
                             )}
                           </NavLink>
                         </SidebarMenuButton>
