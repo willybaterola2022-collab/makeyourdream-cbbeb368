@@ -15,7 +15,7 @@ import {
 import {
   Mic, LayoutDashboard, Music, Fingerprint, Stethoscope, BrainCircuit,
   Dumbbell, Trophy, Wind, Ear, Thermometer, Sliders, Swords, UsersRound,
-  Layers, PenLine, Wand2, Sparkles, Theater, BookOpen, Calendar, UserCircle,
+  Layers, PenLine, Wand2, Sparkles, Theater, BookOpen, Calendar, UserCircle, Star,
 } from "lucide-react";
 
 interface ModuleItem {
