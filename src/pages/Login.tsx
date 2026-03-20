@@ -98,14 +98,30 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
             <button
               type="button"
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
             >
               {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿No tienes cuenta? Regístrate"}
             </button>
+            {!isSignUp && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!email) { toast.error("Ingresa tu email primero"); return; }
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/reset-password`,
+                  });
+                  if (error) toast.error(error.message);
+                  else toast.success("Revisa tu email para restablecer tu contraseña");
+                }}
+                className="text-xs text-muted-foreground/60 hover:text-primary transition-colors"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            )}
           </div>
         </Card>
       </motion.div>

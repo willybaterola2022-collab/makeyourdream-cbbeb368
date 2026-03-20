@@ -144,7 +144,7 @@ const Index = () => {
               variant="capsule"
               onClick={() => navigate(m.path)}
               icon={<m.icon className="h-3 w-3" />}
-              className="text-[10px]"
+              className="text-[10px] shrink-0"
             >
               {m.label}
             </StageButton>

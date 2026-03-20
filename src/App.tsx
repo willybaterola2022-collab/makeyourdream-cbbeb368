@@ -56,6 +56,7 @@ function AnimatedRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/landing" element={<Landing />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* App routes — public, login only needed to save */}
         <Route element={<AppLayout />}>

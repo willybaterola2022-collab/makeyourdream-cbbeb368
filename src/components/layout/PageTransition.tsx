@@ -1,24 +1,22 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { ReactNode } from "react";
 
 const pageVariants = {
-  initial: { opacity: 0, y: 16, scale: 0.98 },
+  initial: { opacity: 0, y: 16, filter: "blur(4px)" },
   animate: {
     opacity: 1,
     y: 0,
-    scale: 1,
+    filter: "blur(0px)",
     transition: {
-      type: "spring" as const,
-      stiffness: 260,
-      damping: 28,
-      mass: 0.8,
+      duration: 0.5,
+      ease: [0.16, 1, 0.3, 1],
     },
   },
   exit: {
     opacity: 0,
     y: -8,
-    scale: 0.98,
+    filter: "blur(4px)",
     transition: { duration: 0.2, ease: "easeIn" as const },
   },
 };
@@ -27,17 +25,15 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        className="w-full"
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={location.pathname}
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="w-full"
+    >
+      {children}
+    </motion.div>
   );
 }
