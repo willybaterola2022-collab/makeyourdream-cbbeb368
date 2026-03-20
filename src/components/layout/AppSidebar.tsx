@@ -7,53 +7,73 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Mic, LayoutDashboard, Music, Fingerprint, Stethoscope, BrainCircuit,
-  Dumbbell, Trophy, AudioWaveform, Users, UserCircle, Palette, Calendar,
-  Wind, Ear, Thermometer, GitCompareArrows, Wand2, PenLine, Layers,
-  Sparkles, Sliders, Swords, Radio, UsersRound, Radar, Heart, BookOpen, Theater,
+  Dumbbell, Trophy, Wind, Ear, Thermometer, Sliders, Swords, UsersRound,
+  Layers, PenLine, Wand2, Sparkles, Theater, BookOpen, Calendar, UserCircle,
 } from "lucide-react";
 
 interface ModuleItem {
   title: string;
   url: string;
   icon: React.ComponentType<{ className?: string }>;
-  emoji: string;
 }
 
-const ALL_MODULES: ModuleItem[] = [
-  { title: "The Stage", url: "/", icon: LayoutDashboard, emoji: "🎤" },
-  { title: "Karaoke", url: "/karaoke", icon: Mic, emoji: "🎙️" },
-  { title: "Song Sketch", url: "/song-sketch", icon: PenLine, emoji: "📓" },
-  { title: "Loop Station", url: "/loop-station", icon: Layers, emoji: "🎛️" },
-  { title: "Harmony Lab", url: "/harmony-lab", icon: Sparkles, emoji: "🎶" },
-  { title: "Lyrics Writer", url: "/lyrics-writer", icon: PenLine, emoji: "✍️" },
-  { title: "Vocal FX", url: "/vocal-fx", icon: Sliders, emoji: "🎸" },
-  { title: "Auto-Mix", url: "/automix", icon: Wand2, emoji: "🪄" },
-  { title: "AI Coach", url: "/coach", icon: BrainCircuit, emoji: "🧠" },
-  { title: "Ejercicios", url: "/exercises", icon: Dumbbell, emoji: "🔥" },
-  { title: "Warm-Up", url: "/warmup", icon: Thermometer, emoji: "🌡️" },
-  { title: "Breath", url: "/breath-trainer", icon: Wind, emoji: "🫁" },
-  { title: "Pitch", url: "/pitch-training", icon: Ear, emoji: "🎹" },
-  { title: "Genre Gym", url: "/genre-gym", icon: Dumbbell, emoji: "💪" },
-  { title: "Stage Sim", url: "/stage-simulator", icon: Theater, emoji: "🎭" },
-  { title: "Fingerprint", url: "/fingerprint", icon: Fingerprint, emoji: "🔬" },
-  { title: "Diagnóstico", url: "/diagnostico", icon: Stethoscope, emoji: "📊" },
-  { title: "Emotion", url: "/emotion-map", icon: Heart, emoji: "🪞" },
-  { title: "Before/After", url: "/comparator", icon: GitCompareArrows, emoji: "⚖️" },
-  { title: "Voice Journal", url: "/voice-journal", icon: BookOpen, emoji: "📖" },
-  { title: "Challenges", url: "/challenges", icon: Trophy, emoji: "🏆" },
-  { title: "Duelos", url: "/duelos", icon: Swords, emoji: "⚔️" },
-  { title: "Voice Match", url: "/matching", icon: AudioWaveform, emoji: "🎵" },
-  { title: "Duetos IA", url: "/duetos", icon: Users, emoji: "🎤" },
-  { title: "Collab", url: "/collab-room", icon: UsersRound, emoji: "🛋️" },
-  { title: "Stories", url: "/vocal-stories", icon: Radio, emoji: "📻" },
-  { title: "Dream Canvas", url: "/dream-canvas", icon: Palette, emoji: "🎨" },
-  { title: "Plan 90", url: "/plan-90", icon: Calendar, emoji: "📅" },
-  { title: "Portfolio", url: "/portfolio", icon: UserCircle, emoji: "👤" },
-  { title: "Fan Radar", url: "/fan-radar", icon: Radar, emoji: "📡" },
+interface ModuleGroup {
+  label: string;
+  items: ModuleItem[];
+}
+
+const SIDEBAR_GROUPS: ModuleGroup[] = [
+  {
+    label: "🎤 Escenario",
+    items: [
+      { title: "Tu Escenario", url: "/", icon: LayoutDashboard },
+      { title: "Canta", url: "/karaoke", icon: Mic },
+      { title: "Tu Voz", url: "/fingerprint", icon: Fingerprint },
+    ],
+  },
+  {
+    label: "🎛️ Estudio",
+    items: [
+      { title: "Loop Station", url: "/loop-station", icon: Layers },
+      { title: "Auto Mix", url: "/automix", icon: Wand2 },
+      { title: "Escribe Letras", url: "/lyrics-writer", icon: PenLine },
+      { title: "Laboratorio", url: "/harmony-lab", icon: Sparkles },
+      { title: "Efectos", url: "/vocal-fx", icon: Sliders },
+    ],
+  },
+  {
+    label: "💪 Entrena",
+    items: [
+      { title: "Calentamiento", url: "/warmup", icon: Thermometer },
+      { title: "Afina tu Oído", url: "/pitch-training", icon: Ear },
+      { title: "Respiración", url: "/breath-trainer", icon: Wind },
+      { title: "Tu Coach IA", url: "/coach", icon: BrainCircuit },
+      { title: "Reto Diario", url: "/exercises", icon: Dumbbell },
+    ],
+  },
+  {
+    label: "⚔️ Arena",
+    items: [
+      { title: "Duelos 1v1", url: "/duelos", icon: Swords },
+      { title: "Colabora", url: "/collab-room", icon: UsersRound },
+      { title: "El Escenario", url: "/stage-simulator", icon: Theater },
+    ],
+  },
+  {
+    label: "📈 Tu Carrera",
+    items: [
+      { title: "Portfolio", url: "/portfolio", icon: UserCircle },
+      { title: "Diario Vocal", url: "/voice-journal", icon: BookOpen },
+      { title: "Plan 90 Días", url: "/plan-90", icon: Calendar },
+    ],
+  },
 ];
 
 export function AppSidebar() {
@@ -77,31 +97,44 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-1.5">
-        <SidebarMenu>
-          {ALL_MODULES.map((item) => {
-            const isActive = item.url === "/" ? location.pathname === "/" : location.pathname.startsWith(item.url);
-            return (
-              <SidebarMenuItem key={item.url}>
-                <SidebarMenuButton asChild>
-                  <NavLink
-                    to={item.url}
-                    end={item.url === "/"}
-                    className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-all duration-200 ${
-                      isActive
-                        ? "bg-primary/10 text-primary font-medium shadow-[0_0_15px_-5px_hsl(var(--primary)/0.3)]"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    }`}
-                  >
-                    <span className={`text-lg ${collapsed ? "mx-auto" : ""}`}>{item.emoji}</span>
-                    {!collapsed && (
-                      <span className="truncate flex-1 text-xs font-bold uppercase tracking-wider">{item.title}</span>
-                    )}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
+        {SIDEBAR_GROUPS.map((group) => {
+          const groupHasActive = group.items.some((item) =>
+            item.url === "/" ? location.pathname === "/" : location.pathname.startsWith(item.url)
+          );
+
+          return (
+            <SidebarGroup key={group.label} defaultOpen={groupHasActive}>
+              {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/60 px-2">{group.label}</SidebarGroupLabel>}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => {
+                    const isActive = item.url === "/" ? location.pathname === "/" : location.pathname.startsWith(item.url);
+                    return (
+                      <SidebarMenuItem key={item.url}>
+                        <SidebarMenuButton asChild>
+                          <NavLink
+                            to={item.url}
+                            end={item.url === "/"}
+                            className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-all duration-200 ${
+                              isActive
+                                ? "bg-primary/10 text-primary font-medium shadow-[0_0_15px_-5px_hsl(var(--primary)/0.3)]"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            }`}
+                          >
+                            <item.icon className={`h-4 w-4 shrink-0 ${collapsed ? "mx-auto" : ""}`} />
+                            {!collapsed && (
+                              <span className="truncate flex-1 text-xs font-bold uppercase tracking-wider">{item.title}</span>
+                            )}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
     </Sidebar>
   );
