@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Download, Cloud, Play } from "lucide-react";
+import { Download, Play } from "lucide-react";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
+import { useAudioEngine } from "@/hooks/useAudioEngine";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
 import VintageMicrophone from "./VintageMicrophone";
 import SingingFeedback from "./SingingFeedback";
@@ -185,6 +186,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
   const { isListening, volume, waveformData, requestMic, stream, analyserNode } = useMicrophone(2048);
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, isPlaying);
+  const { playSuccess } = useAudioEngine();
   const timerRef = useRef<ReturnType<typeof setInterval>>(0 as any);
   const scoreSamplesRef = useRef({ pitchHits: 0, pitchTotal: 0, silentSamples: 0, totalSamples: 0, volumeSum: 0, volumeMax: 0, prevVolumes: [] as number[] });
 
@@ -249,7 +251,13 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     return () => clearInterval(interval);
   }, [isPlaying, volume, pitch]);
 
-  useEffect(() => { if (finished) stopRecording(); }, [finished]);
+  useEffect(() => {
+    if (finished) {
+      stopRecording();
+      const global = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
+      if (global >= 60) setTimeout(() => playSuccess(), 300);
+    }
+  }, [finished]);
 
   const handleReset = () => {
     clearInterval(timerRef.current);
@@ -265,25 +273,6 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
     setScores({ pitch: 0, timing: 0, expression: 0 });
   };
 
-  const handlePlayback = () => {
-    if (!audioUrl) return;
-    if (!audioPlayRef.current) {
-      audioPlayRef.current = new Audio(audioUrl);
-      audioPlayRef.current.onended = () => setIsPlayingBack(false);
-    }
-    if (isPlayingBack) { audioPlayRef.current.pause(); setIsPlayingBack(false); }
-    else { audioPlayRef.current.play(); setIsPlayingBack(true); }
-  };
-
-  const handleShare = async () => {
-    if (!audioUrl) return;
-    try {
-      const blob = await fetch(audioUrl).then(r => r.blob());
-      const file = new File([blob], `${selectedSong?.title || "song"}.webm`, { type: "audio/webm" });
-      if (navigator.share) await navigator.share({ files: [file], title: selectedSong?.title });
-    } catch {}
-  };
-
   if (!selectedSong) {
     return (
       <div className="p-4 md:p-8 space-y-5">
@@ -293,7 +282,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         </div>
         <div className="grid gap-3">
           {PRESET_SONGS.map((song) => (
-            <button key={song.title} onClick={() => setSelectedSong(song)} className="glass-card p-4 flex items-center gap-4 text-left hover:border-primary/30 transition-all">
+            <button key={song.title} onClick={() => setSelectedSong(song)} className="glass-card p-4 flex items-center gap-4 text-left hover:border-primary/30 transition-all active:scale-[0.98]">
               <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                 <Play className="h-4 w-4 text-primary" />
               </div>
@@ -333,7 +322,7 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
           <h2 className="font-serif text-xl font-semibold text-foreground">{selectedSong.title}</h2>
           <p className="text-xs text-muted-foreground">{selectedSong.artist}</p>
         </div>
-        <button onClick={() => { handleReset(); setSelectedSong(null); }} className="text-sm text-muted-foreground hover:text-foreground">← Cambiar</button>
+        <button onClick={() => { handleReset(); setSelectedSong(null); }} className="text-sm text-muted-foreground hover:text-foreground active:scale-95">← Cambiar</button>
       </div>
 
       {isPlaying && pitch && (
@@ -347,37 +336,45 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
         </div>
       )}
 
-      <div className="glass-card p-4 space-y-2 max-h-48 overflow-y-auto">
-        {selectedSong.lyrics.map((line, i) => (
-          <p key={i} className={`font-serif text-lg transition-all duration-300 ${
-            i === activeLine ? "text-primary font-semibold text-xl" : i < activeLine ? "text-muted-foreground/40" : "text-muted-foreground"
-          }`}>{line.text}</p>
-        ))}
-      </div>
+      {!finished && (
+        <div className="glass-card p-4 space-y-2 max-h-48 overflow-y-auto">
+          {selectedSong.lyrics.map((line, i) => (
+            <p key={i} className={`font-serif text-lg transition-all duration-300 ${
+              i === activeLine ? "text-primary font-semibold text-xl" : i < activeLine ? "text-muted-foreground/40" : "text-muted-foreground"
+            }`}>{line.text}</p>
+          ))}
+        </div>
+      )}
 
-      <VintageMicrophone
+      {!finished && (
+        <VintageMicrophone
+          isActive={isPlaying}
+          volume={volume}
+          onClick={handleMicClick}
+          state={micState}
+        />
+      )}
+
+      {!finished && (
+        <div className="glass-card p-3">
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
+            <div className="h-full stage-gradient rounded-full transition-all duration-200" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="flex justify-between text-[10px] text-muted-foreground">
+            <span>{formatTime(elapsed)}</span>
+            <span>{formatTime(selectedSong.duration)}</span>
+          </div>
+        </div>
+      )}
+
+      <SingingFeedback
+        scores={scores}
         isActive={isPlaying}
-        volume={volume}
-        onClick={handleMicClick}
-        state={micState}
-        onPlay={finished && audioUrl ? handlePlayback : undefined}
-        onSave={finished && audioUrl ? () => saveRecording(selectedSong.title, { scores, genre }) : undefined}
-        onShare={finished && audioUrl ? handleShare : undefined}
-        onRetry={finished ? handleReset : undefined}
-        isPlaying={isPlayingBack}
+        finished={finished}
+        onRetry={handleReset}
+        onSave={audioUrl ? () => saveRecording(selectedSong.title, { scores, genre }) : undefined}
+        songTitle={selectedSong.title}
       />
-
-      <div className="glass-card p-3">
-        <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-1">
-          <div className="h-full stage-gradient rounded-full transition-all duration-200" style={{ width: `${progress}%` }} />
-        </div>
-        <div className="flex justify-between text-[10px] text-muted-foreground">
-          <span>{formatTime(elapsed)}</span>
-          <span>{formatTime(selectedSong.duration)}</span>
-        </div>
-      </div>
-
-      <SingingFeedback scores={scores} isActive={isPlaying} finished={finished} />
       <SaveAuthGate open={needsAuth} onOpenChange={dismissAuth} />
     </div>
   );
