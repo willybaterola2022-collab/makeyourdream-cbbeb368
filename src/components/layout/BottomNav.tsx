@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { LayoutDashboard, Layers, Mic, Dumbbell, Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +16,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-      {/* Glass backdrop */}
-      <div className="bg-background/80 backdrop-blur-xl border-t border-border/40 px-2 pb-[env(safe-area-inset-bottom)]">
+      <div className="bg-background/85 backdrop-blur-2xl border-t border-border/30 px-2 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-end justify-around h-16">
           {TABS.map((tab) => {
             const isActive = tab.url === "/"
@@ -29,16 +28,25 @@ export function BottomNav() {
                 <NavLink
                   key={tab.url}
                   to={tab.url}
-                  className="relative -mt-5 flex flex-col items-center"
+                  className="relative -mt-6 flex flex-col items-center"
                 >
-                  <div
-                    className={cn(
-                      "w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 active:scale-95",
-                      "stage-gradient shadow-[0_0_20px_-4px_hsl(var(--primary)/0.5)]",
-                    )}
+                  <motion.div
+                    className="absolute w-20 h-20 rounded-full"
+                    animate={{
+                      boxShadow: [
+                        "0 0 20px 8px hsl(275 85% 60% / 0.2)",
+                        "0 0 35px 14px hsl(275 85% 60% / 0.45)",
+                        "0 0 20px 8px hsl(275 85% 60% / 0.2)",
+                      ],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <motion.div
+                    whileTap={{ scale: 0.9 }}
+                    className="relative w-16 h-16 rounded-full flex items-center justify-center stage-gradient shadow-lg"
                   >
-                    <tab.icon className="h-6 w-6 text-primary-foreground" />
-                  </div>
+                    <tab.icon className="h-7 w-7 text-primary-foreground" />
+                  </motion.div>
                   <span className="text-[10px] font-bold uppercase tracking-wider mt-1 text-primary">
                     {tab.label}
                   </span>
@@ -50,7 +58,7 @@ export function BottomNav() {
               <NavLink
                 key={tab.url}
                 to={tab.url}
-                className="flex flex-col items-center justify-center py-2 px-3 min-w-[56px]"
+                className="flex flex-col items-center justify-center py-2 px-3 min-w-[56px] active:scale-95 transition-transform"
               >
                 <tab.icon
                   className={cn(
