@@ -1,26 +1,103 @@
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Circle, Play, Flame, Target, TrendingUp, Award } from "lucide-react";
+import { CheckCircle2, Circle, Play, Flame, Mic, Volume2 } from "lucide-react";
 import { StudioRoom } from "@/components/studio/StudioRoom";
+import { StageButton } from "@/components/ui/StageButton";
+import { useMicrophone } from "@/hooks/useMicrophone";
+import { usePitchDetection } from "@/hooks/usePitchDetection";
+import { useAudioEngine } from "@/hooks/useAudioEngine";
+
+// BACKEND-REQUEST: daily-exercise
+// Input: { user_id: string }
+// Output: { exercise_id, name, demo_notes: number[], duration: number, difficulty: string, description: string }
+// Descripción: Genera un ejercicio diario personalizado basado en el nivel del usuario
+
+const TARGET_NOTES = [261.63, 293.66, 329.63, 349.23, 392.00, 349.23, 329.63, 293.66, 261.63]; // C4 scale
+const EXERCISE_DURATION = 20; // seconds
 
 const weekDays = [
   { day: "L", done: true }, { day: "M", done: true }, { day: "X", done: true },
   { day: "J", done: false, today: true }, { day: "V", done: false }, { day: "S", done: false }, { day: "D", done: false },
 ];
 
-const exercises = [
-  { name: "Warm-up: Lip Trills", duration: "3 min", status: "done", emoji: "💋" },
-  { name: "Escala Cromática", duration: "5 min", status: "active", emoji: "🎵" },
-  { name: "Notas Largas", duration: "4 min", status: "pending", emoji: "🎶" },
-];
-
 const Exercises = () => {
+  const { isListening, volume, requestMic, stopMic, analyserNode } = useMicrophone(2048);
+  const { currentFrequency } = usePitchDetection(analyserNode);
+  const audioEngine = useAudioEngine();
+
+  const [phase, setPhase] = useState<"ready" | "demo" | "exercise" | "result">("ready");
+  const [timeLeft, setTimeLeft] = useState(EXERCISE_DURATION);
+  const [score, setScore] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const pitchHits = useRef(0);
+  const pitchTotal = useRef(0);
+
+  // Play demo scale
+  const playDemo = useCallback(() => {
+    setPhase("demo");
+    TARGET_NOTES.forEach((freq, i) => {
+      setTimeout(() => {
+        audioEngine.playNote?.(freq, 0.4);
+        if (i === TARGET_NOTES.length - 1) {
+          setTimeout(() => setPhase("ready"), 500);
+        }
+      }, i * 500);
+    });
+  }, [audioEngine]);
+
+  // Start exercise with mic
+  const startExercise = useCallback(async () => {
+    const ok = await requestMic();
+    if (!ok) return;
+    pitchHits.current = 0;
+    pitchTotal.current = 0;
+    setPhase("exercise");
+    setTimeLeft(EXERCISE_DURATION);
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timerRef.current);
+          finishExercise();
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+  }, [requestMic]);
+
+  // Check pitch accuracy during exercise
+  useEffect(() => {
+    if (phase !== "exercise" || !currentFrequency) return;
+    pitchTotal.current++;
+    // Check if current frequency is close to any target note
+    const closest = TARGET_NOTES.reduce((a, b) =>
+      Math.abs(b - currentFrequency) < Math.abs(a - currentFrequency) ? b : a
+    );
+    const cents = 1200 * Math.log2(currentFrequency / closest);
+    if (Math.abs(cents) < 50) pitchHits.current++;
+  }, [currentFrequency, phase]);
+
+  const finishExercise = useCallback(() => {
+    stopMic();
+    const accuracy = pitchTotal.current > 0
+      ? Math.round((pitchHits.current / pitchTotal.current) * 100)
+      : 0;
+    setScore(accuracy);
+    setPhase("result");
+    if (accuracy >= 70) {
+      audioEngine.playNote?.(523.25, 0.3); // C5 celebration
+      setTimeout(() => audioEngine.playNote?.(659.25, 0.3), 150);
+      setTimeout(() => audioEngine.playNote?.(783.99, 0.3), 300);
+    }
+  }, [stopMic, audioEngine]);
+
   return (
     <StudioRoom
       roomId="exercises"
       heroContent={
         <motion.div className="flex flex-col items-center z-10"
           initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-          {/* Streak flame hero */}
           <motion.div
             className="text-8xl md:text-[140px]"
             animate={{ scale: [1, 1.08, 1], y: [-3, 3, -3] }}
@@ -28,10 +105,7 @@ const Exercises = () => {
           >
             🔥
           </motion.div>
-          <motion.p
-            className="mt-4 text-3xl md:text-4xl font-bold"
-            style={{ color: "hsl(15 80% 55%)" }}
-          >
+          <motion.p className="mt-4 text-3xl md:text-4xl font-bold" style={{ color: "hsl(15 80% 55%)" }}>
             3 DÍAS
           </motion.p>
           <motion.p
@@ -65,41 +139,85 @@ const Exercises = () => {
         </div>
       </div>
 
-      {/* Today's routine */}
-      <div className="space-y-2">
-        {exercises.map((ex, i) => (
-          <motion.div key={ex.name}
-            initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
-            className={`glass-card p-4 flex items-center gap-4 ${
-              ex.status === "active" ? "border-orange-500/30 shadow-[0_0_20px_-8px_hsl(15_80%_55%/0.3)]" : ""
-            }`}>
-            <span className="text-2xl">{ex.emoji}</span>
-            <div className="flex-1 min-w-0">
-              <p className={`text-sm font-bold ${ex.status === "done" ? "text-muted-foreground line-through" : "text-foreground"}`}>{ex.name}</p>
-              <p className="text-xs text-muted-foreground">{ex.duration}</p>
+      {/* Today's exercise card */}
+      <div className="glass-card p-5 border-primary/20 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl stage-gradient flex items-center justify-center">
+            <Mic className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <div>
+            <h3 className="font-serif text-lg font-bold text-foreground">Escala Mayor C4</h3>
+            <p className="text-xs text-muted-foreground">Canta las notas de la escala con afinación</p>
+          </div>
+        </div>
+
+        {/* Demo / exercise / result */}
+        {phase === "ready" && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              1. Escuchá el ejemplo → 2. Repetí con tu voz → 3. Mirá tu score
+            </p>
+            <div className="flex gap-3">
+              <StageButton variant="glass" icon={<Volume2 className="h-5 w-5" />} onClick={playDemo} className="flex-1">
+                ESCUCHAR DEMO
+              </StageButton>
+              <StageButton variant="primary" icon={<Play className="h-5 w-5" />} onClick={startExercise} className="flex-1" pulse>
+                EMPEZAR
+              </StageButton>
             </div>
-            {ex.status === "active" && (
-              <motion.button whileTap={{ scale: 0.93 }}
-                className="h-10 w-10 rounded-full stage-gradient flex items-center justify-center text-primary-foreground shadow-[0_0_15px_hsl(var(--primary)/0.3)]"
-                animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
-                <Play className="h-4 w-4 ml-0.5" />
-              </motion.button>
-            )}
-            {ex.status === "done" && <CheckCircle2 className="h-5 w-5 text-emerald-400" />}
+          </div>
+        )}
+
+        {phase === "demo" && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-4">
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 0.5, repeat: Infinity }}
+            >
+              <Volume2 className="h-10 w-10 text-primary mx-auto" />
+            </motion.div>
+            <p className="text-sm text-muted-foreground mt-2">Escuchando demo...</p>
           </motion.div>
-        ))}
+        )}
+
+        {phase === "exercise" && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-3">
+            <p className="text-3xl font-bold text-foreground">{timeLeft}s</p>
+            <div className="mx-auto max-w-xs h-4 rounded-full bg-muted overflow-hidden">
+              <motion.div className="h-full rounded-full stage-gradient" animate={{ width: `${volume}%` }} transition={{ duration: 0.05 }} />
+            </div>
+            {currentFrequency > 0 && (
+              <p className="text-lg font-mono text-primary">{Math.round(currentFrequency)}Hz</p>
+            )}
+            <p className="text-xs text-muted-foreground">Cantá la escala que escuchaste</p>
+          </motion.div>
+        )}
+
+        {phase === "result" && (
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center space-y-3">
+            <p className="text-5xl font-bold neon-text">{score}%</p>
+            <p className="text-sm text-muted-foreground">
+              {score >= 80 ? "¡Excelente afinación!" : score >= 60 ? "Buen intento, seguí practicando" : "Necesitás más práctica — no te rindas"}
+            </p>
+            <div className="flex gap-3 justify-center">
+              <StageButton variant="glass" onClick={() => setPhase("ready")}>
+                REPETIR
+              </StageButton>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { value: "5", label: "Sesiones", emoji: "🎯" },
-          { value: "+14%", label: "Mejora", emoji: "📈" },
-          { value: "21d", label: "Racha max", emoji: "🔥" },
-          { value: "Gold", label: "Próximo badge", emoji: "🏅" },
+          { value: "5", label: "Sesiones", icon: "🎯" },
+          { value: "+14%", label: "Mejora", icon: "📈" },
+          { value: "21d", label: "Racha max", icon: "🔥" },
+          { value: "Gold", label: "Próximo badge", icon: "🏅" },
         ].map((m) => (
           <div key={m.label} className="glass-card p-4 text-center">
-            <span className="text-2xl">{m.emoji}</span>
+            <span className="text-2xl">{m.icon}</span>
             <p className="text-xl font-bold text-foreground mt-1">{m.value}</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{m.label}</p>
           </div>
