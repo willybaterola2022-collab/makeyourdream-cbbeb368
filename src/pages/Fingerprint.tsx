@@ -89,7 +89,7 @@ const Fingerprint = () => {
       await supabase.from("share_cards").insert([{
         user_id: user.id,
         card_type: "fingerprint",
-        card_data: { dimensions: dims, globalScore: score, similarArtist: artist, vocalRange: range },
+        card_data: { dimensions: dims.map(d => ({ name: d.name, value: d.value })), globalScore: score, similarArtist: artist, vocalRange: { low: range.low, high: range.high } } as any,
       }]);
 
       toast.success("Fingerprint guardado");
