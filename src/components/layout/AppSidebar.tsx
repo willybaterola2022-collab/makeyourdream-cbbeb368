@@ -31,7 +31,7 @@ interface ModuleGroup {
 
 const SIDEBAR_GROUPS: ModuleGroup[] = [
   {
-    label: "🎤 Escenario",
+    label: "Escenario",
     items: [
       { title: "Tu Escenario", url: "/", icon: LayoutDashboard },
       { title: "Canta", url: "/karaoke", icon: Mic },
@@ -39,7 +39,7 @@ const SIDEBAR_GROUPS: ModuleGroup[] = [
     ],
   },
   {
-    label: "🎛️ Estudio",
+    label: "Estudio",
     items: [
       { title: "Loop Station", url: "/loop-station", icon: Layers },
       { title: "Auto Mix", url: "/automix", icon: Wand2 },
@@ -49,7 +49,7 @@ const SIDEBAR_GROUPS: ModuleGroup[] = [
     ],
   },
   {
-    label: "💪 Entrena",
+    label: "Entrena",
     items: [
       { title: "Calentamiento", url: "/warmup", icon: Thermometer },
       { title: "Afina tu Oído", url: "/pitch-training", icon: Ear },
@@ -59,7 +59,7 @@ const SIDEBAR_GROUPS: ModuleGroup[] = [
     ],
   },
   {
-    label: "⚔️ Arena",
+    label: "Arena",
     items: [
       { title: "Duelos 1v1", url: "/duelos", icon: Swords },
       { title: "Colabora", url: "/collab-room", icon: UsersRound },
@@ -67,7 +67,7 @@ const SIDEBAR_GROUPS: ModuleGroup[] = [
     ],
   },
   {
-    label: "📈 Tu Carrera",
+    label: "Tu Carrera",
     items: [
       { title: "Portfolio", url: "/portfolio", icon: UserCircle },
       { title: "Diario Vocal", url: "/voice-journal", icon: BookOpen },
