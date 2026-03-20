@@ -45,11 +45,48 @@ const Index = () => {
     return () => clearInterval(t);
   }, []);
 
-  /* Fetch real life signal data */
+  /* Fetch real life signal data — try edge functions first */
   useEffect(() => {
     if (!user) return;
     async function fetchData() {
-      // Last recording
+      let lastRecording: string | null = null;
+      let streak = 0;
+      let challengeTitle: string | null = null;
+
+      // Try gamification-engine for progress
+      try {
+        const { data } = await supabase.functions.invoke("gamification-engine", {
+          body: { action: "get_progress", user_id: user!.id },
+        });
+        if (data?.streak_days != null) streak = data.streak_days;
+      } catch {
+        // Fallback
+        const { data: progressData } = await supabase
+          .from("user_progress")
+          .select("streak_days")
+          .eq("user_id", user!.id)
+          .maybeSingle();
+        streak = progressData?.streak_days ?? 0;
+      }
+
+      // Try daily-challenge for today's challenge
+      try {
+        const { data } = await supabase.functions.invoke("daily-challenge", {
+          body: { action: "get_today", user_id: user!.id },
+        });
+        if (data?.challenge?.title) challengeTitle = data.challenge.title;
+      } catch {
+        const today = new Date().toISOString().split("T")[0];
+        const { data: challengeData } = await supabase
+          .from("daily_challenges")
+          .select("title")
+          .eq("active_date", today)
+          .limit(1)
+          .maybeSingle();
+        challengeTitle = challengeData?.title ?? null;
+      }
+
+      // Last recording (always direct query — simple)
       const { data: recData } = await supabase
         .from("recordings")
         .select("created_at")
@@ -58,33 +95,12 @@ const Index = () => {
         .limit(1);
 
       const lastDate = recData?.[0]?.created_at;
-      let lastRecording: string | null = null;
       if (lastDate) {
         const diff = Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000);
         lastRecording = diff === 0 ? "hoy" : diff === 1 ? "ayer" : `hace ${diff} días`;
       }
 
-      // Real streak from user_progress
-      const { data: progressData } = await supabase
-        .from("user_progress")
-        .select("streak_days")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-
-      // Today's challenge
-      const today = new Date().toISOString().split("T")[0];
-      const { data: challengeData } = await supabase
-        .from("daily_challenges")
-        .select("title")
-        .eq("active_date", today)
-        .limit(1)
-        .maybeSingle();
-
-      setLifeSignal({
-        lastRecording,
-        streak: progressData?.streak_days ?? 0,
-        challengeTitle: challengeData?.title ?? null,
-      });
+      setLifeSignal({ lastRecording, streak, challengeTitle });
     }
     fetchData();
   }, [user]);
@@ -136,7 +152,7 @@ const Index = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="flex gap-2 mt-6 z-10"
+          className="flex gap-2 mt-6 z-10 overflow-x-auto max-w-full px-1 scrollbar-hide"
         >
           {MOODS.map((m) => (
             <StageButton
@@ -144,7 +160,7 @@ const Index = () => {
               variant="capsule"
               onClick={() => navigate(m.path)}
               icon={<m.icon className="h-3 w-3" />}
-              className="text-[10px]"
+              className="text-[10px] shrink-0"
             >
               {m.label}
             </StageButton>

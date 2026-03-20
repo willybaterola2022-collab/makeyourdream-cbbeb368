@@ -1,11 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Circle, Play, Flame, Mic, Volume2 } from "lucide-react";
+import { CheckCircle2, Circle, Play, Mic, Volume2 } from "lucide-react";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { StageButton } from "@/components/ui/StageButton";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
 import { useAudioEngine } from "@/hooks/useAudioEngine";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // BACKEND-REQUEST: daily-exercise
 // Input: { user_id: string }
@@ -21,30 +23,46 @@ const weekDays = [
 ];
 
 const Exercises = () => {
+  const { user } = useAuth();
   const { isListening, volume, requestMic, stopMic, analyserNode } = useMicrophone(2048);
   const pitch = usePitchDetection(analyserNode);
   const currentFrequency = pitch?.frequency ?? 0;
   const audioEngine = useAudioEngine();
 
   const [phase, setPhase] = useState<"ready" | "demo" | "exercise" | "result">("ready");
+  const [exerciseName, setExerciseName] = useState("Escala Mayor C4");
+  const [exerciseDesc, setExerciseDesc] = useState("Canta las notas de la escala con afinación");
+  const [targetNotes, setTargetNotes] = useState(TARGET_NOTES);
   const [timeLeft, setTimeLeft] = useState(EXERCISE_DURATION);
   const [score, setScore] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const pitchHits = useRef(0);
   const pitchTotal = useRef(0);
 
+  // Fetch recommended exercise from edge function
+  useEffect(() => {
+    if (!user) return;
+    supabase.functions.invoke("daily-exercise", {
+      body: { action: "get_recommended", user_id: user.id },
+    }).then(({ data }) => {
+      if (data?.name) setExerciseName(data.name);
+      if (data?.description) setExerciseDesc(data.description);
+      if (data?.demo_notes?.length) setTargetNotes(data.demo_notes);
+    }).catch(() => {});
+  }, [user]);
+
   // Play demo scale
   const playDemo = useCallback(() => {
     setPhase("demo");
-    TARGET_NOTES.forEach((freq, i) => {
+    targetNotes.forEach((freq, i) => {
       setTimeout(() => {
         audioEngine.playNote?.(freq, 0.4);
-        if (i === TARGET_NOTES.length - 1) {
+        if (i === targetNotes.length - 1) {
           setTimeout(() => setPhase("ready"), 500);
         }
       }, i * 500);
     });
-  }, [audioEngine]);
+  }, [audioEngine, targetNotes]);
 
   // Start exercise with mic
   const startExercise = useCallback(async () => {
@@ -72,7 +90,7 @@ const Exercises = () => {
     if (phase !== "exercise" || !currentFrequency) return;
     pitchTotal.current++;
     // Check if current frequency is close to any target note
-    const closest = TARGET_NOTES.reduce((a, b) =>
+    const closest = targetNotes.reduce((a, b) =>
       Math.abs(b - currentFrequency) < Math.abs(a - currentFrequency) ? b : a
     );
     const cents = 1200 * Math.log2(currentFrequency / closest);
@@ -147,8 +165,8 @@ const Exercises = () => {
             <Mic className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h3 className="font-serif text-lg font-bold text-foreground">Escala Mayor C4</h3>
-            <p className="text-xs text-muted-foreground">Canta las notas de la escala con afinación</p>
+            <h3 className="font-serif text-lg font-bold text-foreground">{exerciseName}</h3>
+            <p className="text-xs text-muted-foreground">{exerciseDesc}</p>
           </div>
         </div>
 

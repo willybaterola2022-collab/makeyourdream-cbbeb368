@@ -21,11 +21,6 @@ function freqToNote(freq: number): string {
 
 interface Dimensions { name: string; value: number; }
 
-const SIMILAR_ARTISTS = [
-  "Adele", "Sam Smith", "Freddie Mercury", "Whitney Houston", "Ed Sheeran",
-  "Billie Eilish", "Bruno Mars", "Sia", "John Legend", "Amy Winehouse",
-];
-
 const Fingerprint = () => {
   const { isListening, volume, requestMic, stopMic, analyserNode } = useMicrophone(2048);
   const pitch = usePitchDetection(analyserNode);
@@ -70,40 +65,93 @@ const Fingerprint = () => {
     volumeSamples.current.push(volume);
   }, [currentFrequency, volume, phase]);
 
-  const saveToBackend = useCallback(async (dims: Dimensions[], score: number, range: { low: string; high: string }, artist: string) => {
-    if (!user) return;
-    try {
-      const lowFreq = pitchSamples.current.length > 0 ? Math.min(...pitchSamples.current) : null;
-      const highFreq = pitchSamples.current.length > 0 ? Math.max(...pitchSamples.current) : null;
-      
-      await supabase.from("vocal_fingerprints").insert([{
-        user_id: user.id,
-        dimensions: dims.reduce((acc, d) => ({ ...acc, [d.name]: d.value }), {}),
-        global_score: score,
-        vocal_range_low: lowFreq,
-        vocal_range_high: highFreq,
-        classification: `${range.low} → ${range.high}`,
-        similar_artists: [artist],
-      }]);
-
-      await supabase.from("share_cards").insert([{
-        user_id: user.id,
-        card_type: "fingerprint",
-        card_data: { dimensions: dims.map(d => ({ name: d.name, value: d.value })), globalScore: score, similarArtist: artist, vocalRange: { low: range.low, high: range.high } } as any,
-      }]);
-
-      toast.success("Fingerprint guardado");
-    } catch (e) {
-      console.error("Error saving fingerprint:", e);
-    }
-  }, [user]);
-
-  const finishAnalysis = useCallback(() => {
+  const finishAnalysis = useCallback(async () => {
     stopMic();
     setPhase("result");
 
     const pitches = pitchSamples.current;
     const volumes = volumeSamples.current;
+
+    // Try edge function first
+    if (user && pitches.length > 5) {
+      try {
+        const lowFreq = Math.min(...pitches);
+        const highFreq = Math.max(...pitches);
+        const dims = computeLocalDimensions(pitches, volumes);
+        const { data, error } = await supabase.functions.invoke("vocal-fingerprint", {
+          body: {
+            action: "save",
+            user_id: user.id,
+            dimensions: dims.reduce((acc, d) => ({ ...acc, [d.name]: d.value }), {}),
+            vocal_range_low: lowFreq,
+            vocal_range_high: highFreq,
+          },
+        });
+        if (!error && data?.fingerprint) {
+          const fp = data.fingerprint;
+          if (fp.dimensions) {
+            const newDims = Object.entries(fp.dimensions).map(([name, value]) => ({
+              name,
+              value: value as number,
+            }));
+            if (newDims.length > 0) setDimensions(newDims);
+          }
+          if (fp.classification) {
+            const parts = fp.classification.split(" → ");
+            if (parts.length === 2) setVocalRange({ low: parts[0], high: parts[1] });
+          }
+          if (fp.similar_artists?.length > 0) setSimilarArtist(fp.similar_artists[0]);
+          if (fp.global_score) setGlobalScore(fp.global_score);
+          toast.success("Fingerprint guardado");
+          return;
+        }
+      } catch {}
+    }
+
+    // Fallback: local analysis
+    const localDims = computeLocalDimensions(pitches, volumes);
+    const global = Math.round(localDims.reduce((a, b) => a + b.value, 0) / localDims.length);
+    const SIMILAR_ARTISTS = ["Adele", "Sam Smith", "Freddie Mercury", "Whitney Houston", "Ed Sheeran", "Billie Eilish", "Bruno Mars", "Sia", "John Legend", "Amy Winehouse"];
+    const artist = SIMILAR_ARTISTS[Math.floor(Math.random() * SIMILAR_ARTISTS.length)];
+
+    let lowNote = "", highNote = "";
+    if (pitches.length > 0) {
+      lowNote = freqToNote(Math.min(...pitches));
+      highNote = freqToNote(Math.max(...pitches));
+    }
+
+    setDimensions(localDims);
+    setGlobalScore(global);
+    setVocalRange({ low: lowNote, high: highNote });
+    setSimilarArtist(artist);
+
+    // Save locally
+    if (user) {
+      try {
+        const lowFreq = pitches.length > 0 ? Math.min(...pitches) : null;
+        const highFreq = pitches.length > 0 ? Math.max(...pitches) : null;
+        await supabase.from("vocal_fingerprints").insert([{
+          user_id: user.id,
+          dimensions: localDims.reduce((acc, d) => ({ ...acc, [d.name]: d.value }), {}),
+          global_score: global,
+          vocal_range_low: lowFreq,
+          vocal_range_high: highFreq,
+          classification: `${lowNote} → ${highNote}`,
+          similar_artists: [artist],
+        }]);
+        await supabase.from("share_cards").insert([{
+          user_id: user.id,
+          card_type: "fingerprint",
+          card_data: { dimensions: localDims.map(d => ({ name: d.name, value: d.value })), globalScore: global, similarArtist: artist, vocalRange: { low: lowNote, high: highNote } } as any,
+        }]);
+        toast.success("Fingerprint guardado");
+      } catch (e) {
+        console.error("Error saving fingerprint:", e);
+      }
+    }
+  }, [stopMic, user]);
+
+  function computeLocalDimensions(pitches: number[], volumes: number[]): Dimensions[] {
     const avgVol = volumes.length ? volumes.reduce((a, b) => a + b, 0) / volumes.length : 0;
 
     let pitchAccuracy = 75;
@@ -132,18 +180,16 @@ const Fingerprint = () => {
     }
 
     let rangeScore = 65;
-    let lowNote = "", highNote = "";
     if (pitches.length > 0) {
       const minFreq = Math.min(...pitches);
       const maxFreq = Math.max(...pitches);
-      lowNote = freqToNote(minFreq);
-      highNote = freqToNote(maxFreq);
       const semitones = 12 * Math.log2(maxFreq / minFreq);
       rangeScore = Math.min(98, Math.max(30, 40 + semitones * 3));
     }
 
-    const timingScore = Math.min(95, Math.max(45, pitchAccuracy * 0.8 + Math.random() * 15));
-    const newDims: Dimensions[] = [
+    const timingScore = Math.min(95, Math.max(45, pitchAccuracy * 0.8 + 10));
+
+    return [
       { name: "Afinación", value: Math.round(pitchAccuracy) },
       { name: "Timing", value: Math.round(timingScore) },
       { name: "Vibrato", value: Math.round(vibratoScore) },
@@ -151,17 +197,7 @@ const Fingerprint = () => {
       { name: "Control", value: Math.round(controlScore) },
       { name: "Registro", value: Math.round(rangeScore) },
     ];
-    const global = Math.round(newDims.reduce((a, b) => a + b.value, 0) / newDims.length);
-    const artist = SIMILAR_ARTISTS[Math.floor(Math.random() * SIMILAR_ARTISTS.length)];
-
-    setDimensions(newDims);
-    setGlobalScore(global);
-    setVocalRange({ low: lowNote, high: highNote });
-    setSimilarArtist(artist);
-
-    // Save to backend
-    saveToBackend(newDims, global, { low: lowNote, high: highNote }, artist);
-  }, [stopMic, saveToBackend]);
+  }
 
   const reset = () => { setPhase("idle"); setTimeLeft(ANALYSIS_DURATION); clearInterval(timerRef.current); };
 

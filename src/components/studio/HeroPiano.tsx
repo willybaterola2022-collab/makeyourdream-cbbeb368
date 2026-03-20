@@ -73,7 +73,7 @@ export function HeroPiano({ targetNote, onNoteClick, feedback, instrument = "pia
       )}
 
       {/* Piano keyboard — premium large keys */}
-      <div className="relative flex z-10">
+      <div className="relative flex z-10 scale-[0.7] sm:scale-90 md:scale-100 origin-bottom">
         {KEYS.map((key, i) => {
           const isPressed = pressedKey === key.note;
           const isTarget = targetNote?.replace(/\d/, "") === key.note;
