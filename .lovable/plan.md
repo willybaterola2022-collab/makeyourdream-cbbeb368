@@ -1,99 +1,201 @@
 
 
-# Plan: DREAM BOOTH — De Dashboard a Ritual Vocal
+# Plan: MakeYourDream — Sprint Masivo de Frontend + Recomendaciones Backend
 
-## El problema exacto
+Este plan cubre TODO lo que puedo hacer desde el frontend (mi responsabilidad) y las recomendaciones para Claude Code (backend).
 
-La home actual tiene 5 secciones compitiendo: mic hero → 3 CTAs → stats → reto del día → SongBrowser. Transmite "dashboard musical ordenado". El informe pide exactamente lo contrario: una sola acción, una sola promesa, feedback inmediato.
+---
 
-## Lo que voy a construir
+## BLOQUE 1 — Activar Triggers + Seed Data (Backend en Supabase)
 
-### 1. NUEVO: `src/components/DreamBooth.tsx` — La escena central
+Puedo ejecutar migraciones SQL directamente:
 
-Reemplaza el VintageMicrophone en la Home (el mic se mantiene intacto para Karaoke).
+**1.1 Activar triggers pendientes:**
+- `handle_new_user_progress` ON `auth.users` AFTER INSERT
+- `update_updated_at` ON `user_progress`, `duels`, `collab_rooms` BEFORE UPDATE
 
-**Estructura visual** (SVG + framer-motion, sin dependencias 3D):
-- **Portal ovalado vertical** (~55% del viewport height): arco con gradiente violet→cyan como borde, interior oscuro profundo con niebla radial
-- **Scan beam**: línea horizontal luminosa que sube y baja lentamente dentro del portal
-- **Barras de frecuencia radiales**: 24 barras distribuidas en semicírculo dentro del arco, animación de ecualizador fantasma en idle
-- **Partículas convergentes**: 15-20 puntos que flotan hacia el interior del portal, como si te "absorbiera"
-- **Doble halo**: corona exterior de glow breathing violet + cyan en lados opuestos
+**1.2 Seed 30 daily challenges** en la tabla `daily_challenges` (usando INSERT con service role, sin necesidad de admin role)
 
-**Estados**:
-- `idle`: breathing 4s, partículas lentas, scan beam visible, barras titilando suave
-- `ready` (hover/touch): luz se intensifica, partículas aceleran
-- Click → navega a `/karaoke`
+---
 
-### 2. NUEVO: Sistema de botones de marca (expandir `StageButton.tsx`)
+## BLOQUE 2 — Home Dream Booth Mejorado
 
-El `StageButton` actual es genérico. Lo convierto en un sistema con 6 variantes reales:
+**Problema**: El portal ovalado abstracto perdio identidad. No se entiende que es.
 
-| Variante | Uso | Visual |
-|----------|-----|--------|
-| `monolith` | CTA principal único | Alto, oscuro, borde iridiscente rotante, glow interior, hundimiento al tap |
-| `launchpad` | Acciones rápidas (3 pads) | Cuadrado, volumen real (inner-shadow), borde iluminado, vibración hover |
-| `capsule` | Mood/intención | Pastilla pequeña, semitransparente, glow puntual al seleccionar |
-| `glass` | Navegación secundaria | Ya existe, refinarlo |
-| `scan` | Diagnóstico/análisis | Textura de fingerprint interna, scan line animada |
-| `lever` | Toggles/FX | Switch con chasquido visual, movimiento mecánico |
+**Solucion**: Agregar silueta de microfono sugerida dentro del portal SVG (no literal, sino una forma estilizada que insinue mic). Mas particulas, scan beam mas dramatico, halo mas intenso.
 
-### 3. REESCRIBIR: `src/pages/Index.tsx` — Dream Booth Home
+**Mood Capsules funcionales**: Conectar cada mood a una ruta real:
+- Soltar → `/karaoke` (freestyle directo)
+- Crear → `/song-sketch`
+- Entrenar → `/warmup`
+- Mostrar → `/portfolio`
 
-**Estructura radical — 3 pantallas, no 5 secciones:**
+**Streak real**: Leer de `user_progress` en vez de hardcodear 3.
+**Reto real**: Leer de `daily_challenges` WHERE `active_date = today`.
 
-**Pantalla 1 (100vh)** — La escena inmersiva:
-- Fondo: 3 capas de radial-gradient superpuestas (niebla volumétrica)
-- DreamBooth centrado (55% alto)
-- Frase viva arriba: rota entre "Tu estudio está encendido", "Descubre cómo suena tu voz", "Haz una toma antes de pensarlo" (cada 6s, fade transition)
-- **4 Mood Capsules** debajo del portal: `Soltar` / `Crear` / `Entrenar` / `Mostrar` — pastillas semitransparentes con glow al seleccionar
-- **1 CTA monolith** dominante: "GRABAR AHORA" — alto, oscuro, borde iridiscente, hundimiento al tap
+---
 
-**Pantalla 2 (scroll)** — 3 Quick Actions como Launch Pads:
-- `Hacer una toma` → /karaoke (pad violet)
-- `Escuchar mi voz` → /fingerprint (pad cyan)
-- `Entrenar 2 min` → /warmup (pad amber)
-- Cada pad: cuadrado, inner-shadow, borde iluminado, icono grande, línea viva breathing
+## BLOQUE 3 — Piano Premium + Multi-Instrumento
 
-**Pantalla 3 (scroll)** — Señal de vida (minimalista):
-- Si logueado: una línea: "Tu última toma fue hace 2 días" + "Racha: 3 🔥" + reto del día en una sola card
-- Si no logueado: "Inicia sesión para que tu estudio te recuerde"
-- **Eliminar**: SongBrowser de la home, stats grid de 4 columnas, sección de canciones
+**Archivo**: `src/components/studio/HeroPiano.tsx` — REESCRIBIR completo
 
-### 4. MODIFICAR: `src/components/layout/AppSidebar.tsx` — Más tenue
+**Cambios**:
+- Teclas 3x mas grandes, con profundidad real (inner-shadow, gradientes, hundimiento al click)
+- Glow por tecla cuando se pulsa (flash de color)
+- Feedback visual: tecla correcta brilla verde, incorrecta roja con shake
 
-- Group labels: quitar emojis, reemplazar por separadores de línea fina
-- Items inactivos: `text-muted-foreground/40` (ahora es /60), font-weight normal (ahora es bold)
-- Items activos: mantener glow pero reducir el bg a `bg-primary/5`
-- Background sidebar: `--sidebar-background: 0 0% 4%` (más oscuro, se funde con el fondo)
+**Selector de instrumento** en `PitchTraining.tsx`:
+- Piano (triangle wave — ya existe)
+- Guitarra (sawtooth wave con filtro)
+- Saxo (square wave con envelope especial)
+- Bajo (sine wave octava baja)
+- Flauta (sine wave pura)
+- Cada instrumento cambia el `OscillatorType` + frecuencia base + ADSR envelope en `useAudioEngine`
 
-### 5. MODIFICAR: `src/components/layout/AppLayout.tsx` — Header invisible
+**Ampliar `useAudioEngine.ts`**: nueva funcion `playInstrument(freq, instrument)` que aplica timbre distinto por instrumento usando oscillator type + gain envelope + BiquadFilter.
 
-- Desktop header: `h-10` (era h-12), borde `border-border/20` (era /40)
-- Background más transparente: `bg-background/60`
+---
 
-### 6. AGREGAR CSS: `src/index.css` — Utilidades de escena
+## BLOQUE 4 — Botones Premium en TODA la App
 
+Aplicar `StageButton` consistentemente en las 34 paginas. Reemplazar todo `<button>` y `<motion.button>` generico con la variante correcta:
+- CTAs principales → `monolith`
+- Acciones rapidas → `launchpad`
+- Filtros/seleccion → `capsule`
+- Diagnostico → `scan`
+- Toggles/FX → `lever`
+- Navegacion → `glass`
+
+**Paginas a actualizar**: Karaoke, PitchTraining, BreathTrainer, WarmUp, Exercises, Fingerprint, VocalFX, LoopStation, Coach, Challenges, Duelos, Portfolio, SongSketch, HarmonyLab, LyricsWriter, y todas las demas.
+
+---
+
+## BLOQUE 5 — Karaoke Score Real (no random)
+
+**Problema**: `FreestyleMode` calcula pitch score basado en `cents < 25` pero es rudimentario.
+
+**Mejora**:
+- Pitch score: usar autocorrelation ya existente, pero ponderar por continuidad (notas sostenidas valen mas)
+- Timing score: medir ratio de canto vs silencio (ya existe pero mejorar ponderacion)
+- Expression: dynamic range + vibrato detection (varianza de cents)
+- Guardar sesion en `training_sessions` tabla al terminar
+- Actualizar `user_progress.xp` sumando score/10
+
+---
+
+## BLOQUE 6 — Fingerprint Conectado al Backend
+
+**Archivo**: `src/pages/Fingerprint.tsx`
+
+- Al terminar analisis de 15s, guardar en `vocal_fingerprints` tabla:
+  - dimensions, global_score, vocal_range_low/high, classification
+- Guardar share card en `share_cards` tabla
+- Leer historial de fingerprints anteriores para mostrar evolucion
+
+---
+
+## BLOQUE 7 — Modulos Placeholder → Funcionales Basicos
+
+Para los 18 placeholders, el minimo viable es:
+
+| Modulo | Accion Frontend |
+|--------|----------------|
+| LoopStation | Conectar `useRecorder` para grabar capas reales con playback |
+| VocalFX | Conectar Web Audio nodes reales: ConvolverNode (reverb), DelayNode, BiquadFilter |
+| Diagnostico | Fusionar con Fingerprint o redirigir |
+| Challenges | Leer de `daily_challenges` tabla, mostrar retos reales |
+| Portfolio | Leer de `recordings` + `user_progress` + `vocal_fingerprints` |
+| DreamCanvas | Leer de `user_progress` para metas reales |
+| Plan90 | Generar plan basado en datos de `training_sessions` |
+| Duelos | UI para crear duelo en `duels` tabla + esperar oponente |
+| Duetos | Redirigir a CollabRoom o crear modo dueto |
+| VocalStories | Leer de `social_feed` tabla |
+| CollabRoom | Crear sala en `collab_rooms` tabla |
+| Matching | Leer de `vocal_fingerprints` para buscar voces similares |
+| FanRadar | Leer de `social_feed` para descubrir cantantes |
+| EmotionMap | Usar mic real + pitch/volume para inferir emocion |
+| GenreGym | Ejercicios interactivos con mic (como Exercises) |
+| StageSimulator | Simular audiencia reactiva al volume del mic |
+| AutoMix | Procesar audio con Web Audio API (EQ, compression) |
+| HarmonyLab | Generar harmonias con Web Audio oscillators |
+
+---
+
+## BLOQUE 8 — CSS y Estetica Global
+
+**Archivo**: `src/index.css` — agregar:
 ```css
-.fog-layer { /* radial-gradients multicapa para niebla */ }
-.portal-glow { /* boxShadow multicapa para el booth */ }
-.scan-line { /* animación de línea de escaneo */ }
-.pad-depth { /* inner-shadow + borde para launch pads */ }
+.fog-layer { /* radial-gradients multicapa */ }
+.portal-glow { /* boxShadow multicapa */ }
+.pad-depth { /* inner-shadow para pads */ }
+.key-press { /* animacion de tecla de piano premium */ }
 ```
 
-## Lo que NO se toca
-- `VintageMicrophone.tsx` — intacto, se usa en Karaoke
-- `BottomNav.tsx` — ya funciona bien
-- Supabase, auth, backend — nada
-- Todas las demás páginas funcionales
+---
 
-## Archivos
+## RECOMENDACIONES PARA CLAUDE CODE (Backend)
 
-| Archivo | Acción |
+Estas son las tareas que necesitas pasarle a Claude Code:
+
+### Edge Functions Prioritarias (de las 14 del otro repo):
+
+1. **`vocal-analysis`** — Analiza audio con Lovable AI Gateway, devuelve dimensions/classification/similar_artists. Es la mas critica porque Fingerprint y Karaoke dependen de ella.
+
+2. **`generate-exercise`** — Genera ejercicios personalizados via IA segun nivel del usuario.
+
+3. **`ai-coach-observation`** — Genera observaciones del coach basadas en historial de `training_sessions`.
+
+4. **`generate-challenge`** — Genera retos diarios automaticamente y los inserta en `daily_challenges`.
+
+5. **`match-voices`** — Compara `vocal_fingerprints` entre usuarios para matching.
+
+6. **`generate-share-image`** — Genera imagen de share card mas elaborada.
+
+### Funcionalidad Backend que Falta:
+
+- **Realtime**: Habilitar `ALTER PUBLICATION supabase_realtime ADD TABLE` para `social_feed`, `collab_rooms`, `duels` — necesario para chat, duelos en vivo, feed social.
+- **Storage policies**: El bucket `recordings` es publico — considerar si los audios deberian ser privados con signed URLs.
+- **Cron job**: Para generar `daily_challenges` automaticamente cada dia (pg_cron o edge function con cron trigger).
+- **XP calculation**: Edge function que calcule XP correctamente y actualice `user_progress` atomicamente (para evitar race conditions).
+
+### Formato de Comunicacion con Claude Code:
+
+Cada modulo tiene comentarios `// BACKEND-REQUEST:` en el codigo. Claude Code deberia:
+1. Buscar todos los `BACKEND-REQUEST` en el repo
+2. Implementar cada uno como edge function
+3. Deployar en este proyecto Supabase (`lgkgdpmcjdbnlqtbhxgk`)
+
+---
+
+## ORDEN DE EJECUCION
+
+Dado el volumen, ejecutare en este orden dentro de un solo mensaje:
+
+1. **SQL Migration**: Activar triggers + seed 30 daily challenges
+2. **DreamBooth mejorado**: Silueta mic + mood capsules funcionales + streak/reto real
+3. **Piano Premium**: Teclas grandes + multi-instrumento + feedback visual
+4. **Karaoke real**: Score mejorado + guardar en training_sessions + XP
+5. **Fingerprint real**: Guardar en vocal_fingerprints + share_cards
+6. **Botones premium**: Aplicar StageButton en las paginas principales
+7. **Placeholders basicos**: LoopStation, VocalFX, Challenges, Portfolio con datos reales
+
+## Archivos que se crean/modifican
+
+| Archivo | Accion |
 |---------|--------|
-| `src/components/DreamBooth.tsx` | CREAR — escena portal pseudo-3D |
-| `src/components/ui/StageButton.tsx` | REESCRIBIR — 6 variantes de marca |
-| `src/pages/Index.tsx` | REESCRIBIR — 3 pantallas ritual |
-| `src/components/layout/AppSidebar.tsx` | MODIFICAR — más tenue |
-| `src/components/layout/AppLayout.tsx` | MODIFICAR — header invisible |
-| `src/index.css` | AGREGAR — utilidades de escena |
+| Migration SQL | CREAR — triggers + seed data |
+| `src/components/DreamBooth.tsx` | MODIFICAR — silueta mic + mas drama |
+| `src/pages/Index.tsx` | MODIFICAR — mood capsules funcionales + datos reales |
+| `src/components/studio/HeroPiano.tsx` | REESCRIBIR — piano premium |
+| `src/pages/PitchTraining.tsx` | MODIFICAR — selector instrumentos |
+| `src/hooks/useAudioEngine.ts` | MODIFICAR — multi-instrumento |
+| `src/components/karaoke/FreestyleMode.tsx` | MODIFICAR — guardar sesion en DB |
+| `src/pages/Fingerprint.tsx` | MODIFICAR — guardar en vocal_fingerprints |
+| `src/pages/Challenges.tsx` | REESCRIBIR — leer de daily_challenges |
+| `src/pages/Portfolio.tsx` | REESCRIBIR — leer datos reales |
+| `src/pages/LoopStation.tsx` | MODIFICAR — grabacion real de capas |
+| `src/pages/VocalFX.tsx` | MODIFICAR — efectos Web Audio reales |
+| `src/components/ui/StageButton.tsx` | MANTENER (ya tiene las 6 variantes) |
+| `src/index.css` | AGREGAR utilidades |
+| + Actualizar botones en ~15 paginas mas |
 
