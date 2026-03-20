@@ -19,7 +19,7 @@ const Portfolio = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [recordings, setRecordings] = useState<Recording[]>([]);
-  const [progress, setProgress] = useState<{ xp: number; level: number; streak_days: number; badges: any[] } | null>(null);
+  const [progress, setProgress] = useState<{ xp: number; level: number; streak_days: number; badges: any } | null>(null);
   const [profile, setProfile] = useState<{ display_name: string | null; vocal_level: string | null } | null>(null);
 
   useEffect(() => {

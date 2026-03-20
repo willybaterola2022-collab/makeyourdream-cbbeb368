@@ -90,7 +90,7 @@ const Fingerprint = () => {
         user_id: user.id,
         card_type: "fingerprint",
         card_data: { dimensions: dims, globalScore: score, similarArtist: artist, vocalRange: range },
-      });
+      }]);
 
       toast.success("Fingerprint guardado");
     } catch (e) {
