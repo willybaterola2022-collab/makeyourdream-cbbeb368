@@ -103,7 +103,7 @@ export function AppSidebar() {
           );
 
           return (
-            <SidebarGroup key={group.label} defaultOpen={groupHasActive}>
+            <SidebarGroup key={group.label}>
               {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/60 px-2">{group.label}</SidebarGroupLabel>}
               <SidebarGroupContent>
                 <SidebarMenu>
