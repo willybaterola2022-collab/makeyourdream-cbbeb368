@@ -43,6 +43,7 @@ import EmotionMap from "./pages/EmotionMap";
 import GenreGym from "./pages/GenreGym";
 import StageSimulator from "./pages/StageSimulator";
 import VoiceJournal from "./pages/VoiceJournal";
+import SkillTree from "./pages/SkillTree";
 
 const queryClient = new QueryClient();
 
