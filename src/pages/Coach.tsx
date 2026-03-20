@@ -6,11 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { StageButton } from "@/components/ui/StageButton";
 
-// BACKEND-REQUEST: ai-coach-feedback
-// Input: { user_id: string, recent_sessions: {module, pitch_score, timing_score, expression_score, created_at}[] }
-// Output: { metrics: {label, value, delta}[], observations: string[], recommended_exercise: {name, duration, description} }
-// Descripción: Genera feedback personalizado y recomendación de ejercicio basado en historial
-
 interface MetricData {
   label: string;
   value: number;
@@ -22,12 +17,28 @@ const Coach = () => {
   const navigate = useNavigate();
   const [metrics, setMetrics] = useState<MetricData[]>([]);
   const [observations, setObservations] = useState<string[]>([]);
+  const [recommendedExercise, setRecommendedExercise] = useState<{ name: string; duration: number; description: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
 
     async function loadCoachData() {
+      // Try edge function first
+      try {
+        const { data, error } = await supabase.functions.invoke("ai-coach-feedback", {
+          body: { user_id: user!.id },
+        });
+        if (!error && data?.metrics) {
+          setMetrics(data.metrics);
+          setObservations(data.observations || []);
+          setRecommendedExercise(data.recommended_exercise || null);
+          setLoading(false);
+          return;
+        }
+      } catch {}
+
+      // Fallback: local logic
       const { data: sessions } = await supabase
         .from("training_sessions")
         .select("*")
@@ -46,11 +57,9 @@ const Coach = () => {
         return;
       }
 
-      // Split into this week vs last week
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-
       const thisWeek = sessions.filter((s) => new Date(s.created_at) >= weekAgo);
       const lastWeek = sessions.filter((s) => new Date(s.created_at) >= twoWeeksAgo && new Date(s.created_at) < weekAgo);
 
@@ -72,13 +81,12 @@ const Coach = () => {
         { label: "Expresión", value: exprThis || avg(sessions.map((s) => s.expression_score)), delta: exprThis - exprLast },
       ]);
 
-      // Generate observations from data
       const obs: string[] = [];
-      const lowest = [...[
+      const lowest = [
         { name: "pitch", val: pitchThis },
         { name: "timing", val: timingThis },
         { name: "expresión", val: exprThis },
-      ]].sort((a, b) => a.val - b.val)[0];
+      ].sort((a, b) => a.val - b.val)[0];
 
       if (pitchThis > pitchLast && pitchLast > 0) obs.push(`Tu afinación mejoró ${pitchThis - pitchLast}% esta semana — ¡sigue así!`);
       if (timingThis > timingLast && timingLast > 0) obs.push(`Tu timing subió ${timingThis - timingLast}% — el ritmo va mejor.`);
@@ -109,6 +117,16 @@ const Coach = () => {
     );
   }
 
+  const exerciseName = recommendedExercise?.name || (
+    metrics.length > 0 && metrics[0].value > 0
+      ? metrics.reduce((a, b) => a.value < b.value ? a : b).label === "Afinación"
+        ? "Escala Cromática con Feedback"
+        : metrics.reduce((a, b) => a.value < b.value ? a : b).label === "Timing"
+        ? "Ejercicio de Ritmo con Metrónomo"
+        : "Lip Trill con Variación Dinámica"
+      : "Lip Trill con Escala Mayor"
+  );
+
   return (
     <div className="p-4 md:p-8 space-y-6 animate-fade-in">
       <div>
@@ -116,7 +134,6 @@ const Coach = () => {
         <p className="text-muted-foreground text-sm mt-1">Análisis basado en tus sesiones reales</p>
       </div>
 
-      {/* Metrics */}
       <div className="grid grid-cols-3 gap-3">
         {metrics.map((m) => {
           const DeltaIcon = m.delta > 0 ? TrendingUp : m.delta < 0 ? TrendingDown : Minus;
@@ -140,7 +157,6 @@ const Coach = () => {
         })}
       </div>
 
-      {/* AI Observations */}
       <div className="glass-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <BrainCircuit className="h-5 w-5 text-secondary" />
@@ -148,13 +164,7 @@ const Coach = () => {
         </div>
         <div className="space-y-3">
           {observations.map((obs, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="flex gap-3"
-            >
+            <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex gap-3">
               <div className="h-6 w-6 rounded-full bg-secondary/20 flex items-center justify-center shrink-0 mt-0.5">
                 <span className="text-[10px] font-bold text-secondary">{i + 1}</span>
               </div>
@@ -164,7 +174,6 @@ const Coach = () => {
         </div>
       </div>
 
-      {/* Recommended Exercise */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -172,22 +181,14 @@ const Coach = () => {
         className="glass-card p-5 border-primary/20 glow-stage"
       >
         <p className="text-[11px] text-primary uppercase tracking-widest mb-2">Ejercicio recomendado</p>
-        <h3 className="font-serif text-xl font-semibold text-foreground">
-          {metrics.length > 0 && metrics[0].value > 0
-            ? metrics.reduce((a, b) => a.value < b.value ? a : b).label === "Afinación"
-              ? "Escala Cromática con Feedback"
-              : metrics.reduce((a, b) => a.value < b.value ? a : b).label === "Timing"
-              ? "Ejercicio de Ritmo con Metrónomo"
-              : "Lip Trill con Variación Dinámica"
-            : "Lip Trill con Escala Mayor"}
-        </h3>
+        <h3 className="font-serif text-xl font-semibold text-foreground">{exerciseName}</h3>
         <p className="text-sm text-muted-foreground mt-1 mb-4">
-          Fortalece tu punto más débil con este ejercicio personalizado
+          {recommendedExercise?.description || "Fortalece tu punto más débil con este ejercicio personalizado"}
         </p>
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            <span>5 min</span>
+            <span>{recommendedExercise?.duration || 5} min</span>
           </div>
         </div>
         <StageButton variant="primary" icon={<Play className="h-5 w-5" />} onClick={() => navigate("/warmup")} className="w-full">
