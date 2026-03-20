@@ -87,6 +87,16 @@ const WarmUp = () => {
         />
       }
     >
+      {/* Micro-tutorial */}
+      <MicroTutorial
+        storageKey="warmup"
+        steps={[
+          { icon: "🔊", title: "Escuchá", description: "Toca Play" },
+          { icon: "🎤", title: "Repetí", description: "Con tu voz" },
+          { icon: "✅", title: "Resultado", description: "Ve tu avance" },
+        ]}
+      />
+
       {/* Duration selector */}
       <div className="flex gap-2 justify-center">
         {[3, 5, 10].map((d) => (

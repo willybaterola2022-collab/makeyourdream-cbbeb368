@@ -105,6 +105,16 @@ const PitchTraining = () => {
         )
       }
     >
+      {/* Micro-tutorial */}
+      <MicroTutorial
+        storageKey="pitch"
+        steps={[
+          { icon: "🔊", title: "Escuchá", description: "La nota suena" },
+          { icon: "🎹", title: "Elegí", description: "Tocá la correcta" },
+          { icon: "🏆", title: "Sumá", description: "Puntos y racha" },
+        ]}
+      />
+
       {/* Mode + stats */}
       <div className="flex flex-wrap items-center gap-3 justify-center">
         <div className="flex gap-1 glass-card rounded-xl p-1">

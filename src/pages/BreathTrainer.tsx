@@ -84,6 +84,16 @@ const BreathTrainer = () => {
         />
       }
     >
+      {/* Micro-tutorial */}
+      <MicroTutorial
+        storageKey="breath"
+        steps={[
+          { icon: "🫁", title: "Inhala", description: "Seguí el ritmo" },
+          { icon: "⏸️", title: "Mantené", description: "Aguantá el aire" },
+          { icon: "💨", title: "Exhala", description: "Controlá la salida" },
+        ]}
+      />
+
       {/* Exercise selector */}
       <div className="flex gap-3 justify-center">
         {exercises.map((ex) => (
