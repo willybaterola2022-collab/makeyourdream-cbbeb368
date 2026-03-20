@@ -4,6 +4,7 @@ import { Trophy, Zap, RotateCcw, Volume2 } from "lucide-react";
 import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroPiano } from "@/components/studio/HeroPiano";
+import MicroTutorial from "@/components/MicroTutorial";
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const allNotes = notes.map((n) => `${n}4`);
