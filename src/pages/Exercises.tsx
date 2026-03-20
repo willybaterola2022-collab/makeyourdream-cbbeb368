@@ -165,8 +165,8 @@ const Exercises = () => {
             <Mic className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h3 className="font-serif text-lg font-bold text-foreground">Escala Mayor C4</h3>
-            <p className="text-xs text-muted-foreground">Canta las notas de la escala con afinación</p>
+            <h3 className="font-serif text-lg font-bold text-foreground">{exerciseName}</h3>
+            <p className="text-xs text-muted-foreground">{exerciseDesc}</p>
           </div>
         </div>
 
