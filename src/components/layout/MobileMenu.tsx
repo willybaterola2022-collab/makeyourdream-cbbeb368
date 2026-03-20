@@ -37,9 +37,7 @@ const MODULE_GROUPS: ModuleGroup[] = [
     label: "Estudio", emoji: "🎛️",
     items: [
       { title: "Loop Station", url: "/loop-station", icon: Layers, color: "from-indigo-500 to-blue-600", glow: "shadow-indigo-500/20" },
-      { title: "Auto Mix", url: "/automix", icon: Wand2, color: "from-purple-500 to-violet-600", glow: "shadow-purple-500/20" },
       { title: "Escribe Letras", url: "/lyrics-writer", icon: PenLine, color: "from-emerald-400 to-green-500", glow: "shadow-emerald-400/20" },
-      { title: "Laboratorio", url: "/harmony-lab", icon: Sparkles, color: "from-yellow-400 to-amber-500", glow: "shadow-yellow-400/20" },
       { title: "Vocal FX", url: "/vocal-fx", icon: SlidersIcon, color: "from-fuchsia-500 to-pink-600", glow: "shadow-fuchsia-500/20" },
       { title: "Song Sketch", url: "/song-sketch", icon: Music, color: "from-sky-400 to-blue-500", glow: "shadow-sky-400/20" },
     ],
@@ -58,21 +56,10 @@ const MODULE_GROUPS: ModuleGroup[] = [
     ],
   },
   {
-    label: "Arena", emoji: "⚔️",
-    items: [
-      { title: "Duelos 1v1", url: "/duelos", icon: Swords, color: "from-red-600 to-orange-600", glow: "shadow-red-600/20" },
-      { title: "Colabora", url: "/collab-room", icon: UsersRound, color: "from-blue-500 to-purple-500", glow: "shadow-blue-500/20" },
-      { title: "Escenario", url: "/stage-simulator", icon: Theater, color: "from-amber-500 to-orange-500", glow: "shadow-amber-500/20" },
-      { title: "Genre Gym", url: "/genre-gym", icon: Radio, color: "from-green-500 to-emerald-500", glow: "shadow-green-500/20" },
-      { title: "Fan Radar", url: "/fan-radar", icon: TrendingUp, color: "from-pink-500 to-fuchsia-500", glow: "shadow-pink-500/20" },
-    ],
-  },
-  {
     label: "Tu Carrera", emoji: "🚀",
     items: [
       { title: "Portfolio", url: "/portfolio", icon: UserCircle, color: "from-purple-500 to-violet-600", glow: "shadow-purple-500/20" },
       { title: "Diario Vocal", url: "/voice-journal", icon: BookOpen, color: "from-teal-500 to-emerald-500", glow: "shadow-teal-500/20" },
-      { title: "Plan 90 Días", url: "/plan-90", icon: Calendar, color: "from-sky-500 to-blue-600", glow: "shadow-sky-500/20" },
       { title: "Diagnóstico", url: "/diagnostico", icon: Monitor, color: "from-indigo-500 to-violet-500", glow: "shadow-indigo-500/20" },
     ],
   },
@@ -94,6 +81,7 @@ export function MobileMenu() {
       <button
         onClick={() => setOpen(true)}
         className="fixed top-3 right-3 z-50 md:hidden w-10 h-10 rounded-xl bg-background/80 backdrop-blur-xl border border-border/30 flex items-center justify-center shadow-lg active:scale-90 transition-transform"
+        aria-label="Abrir menú"
       >
         <Menu className="h-5 w-5 text-foreground" />
       </button>
@@ -133,6 +121,7 @@ export function MobileMenu() {
                 <button
                   onClick={() => setOpen(false)}
                   className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center active:scale-90 transition-transform"
+                  aria-label="Cerrar menú"
                 >
                   <X className="h-5 w-5 text-white/70" />
                 </button>
