@@ -1,11 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Circle, Play, Flame, Mic, Volume2 } from "lucide-react";
+import { CheckCircle2, Circle, Play, Mic, Volume2 } from "lucide-react";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { StageButton } from "@/components/ui/StageButton";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { usePitchDetection } from "@/hooks/usePitchDetection";
 import { useAudioEngine } from "@/hooks/useAudioEngine";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // BACKEND-REQUEST: daily-exercise
 // Input: { user_id: string }
