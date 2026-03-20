@@ -4,6 +4,7 @@ import { Play, Pause, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroLungs } from "@/components/studio/HeroLungs";
+import MicroTutorial from "@/components/MicroTutorial";
 
 const exercises = [
   { id: "basic", name: "Diafragma", inhale: 4, hold: 2, exhale: 4, pause: 2, emoji: "🫁" },
@@ -83,6 +84,16 @@ const BreathTrainer = () => {
         />
       }
     >
+      {/* Micro-tutorial */}
+      <MicroTutorial
+        storageKey="breath"
+        steps={[
+          { icon: "🫁", title: "Inhala", description: "Seguí el ritmo" },
+          { icon: "⏸️", title: "Mantené", description: "Aguantá el aire" },
+          { icon: "💨", title: "Exhala", description: "Controlá la salida" },
+        ]}
+      />
+
       {/* Exercise selector */}
       <div className="flex gap-3 justify-center">
         {exercises.map((ex) => (

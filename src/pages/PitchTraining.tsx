@@ -4,6 +4,7 @@ import { Trophy, Zap, RotateCcw, Volume2 } from "lucide-react";
 import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroPiano } from "@/components/studio/HeroPiano";
+import MicroTutorial from "@/components/MicroTutorial";
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const allNotes = notes.map((n) => `${n}4`);
@@ -105,6 +106,16 @@ const PitchTraining = () => {
         )
       }
     >
+      {/* Micro-tutorial */}
+      <MicroTutorial
+        storageKey="pitch"
+        steps={[
+          { icon: "🔊", title: "Escuchá", description: "La nota suena" },
+          { icon: "🎹", title: "Elegí", description: "Tocá la correcta" },
+          { icon: "🏆", title: "Sumá", description: "Puntos y racha" },
+        ]}
+      />
+
       {/* Mode + stats */}
       <div className="flex flex-wrap items-center gap-3 justify-center">
         <div className="flex gap-1 glass-card rounded-xl p-1">

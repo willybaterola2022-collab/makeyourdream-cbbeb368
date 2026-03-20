@@ -4,6 +4,7 @@ import { Play, CheckCircle2, RotateCcw, PartyPopper } from "lucide-react";
 import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroThermometer } from "@/components/studio/HeroThermometer";
+import MicroTutorial from "@/components/MicroTutorial";
 
 interface Exercise {
   name: string;
@@ -88,6 +89,16 @@ const WarmUp = () => {
         />
       }
     >
+      {/* Micro-tutorial */}
+      <MicroTutorial
+        storageKey="warmup"
+        steps={[
+          { icon: "🔊", title: "Escuchá", description: "Toca Play" },
+          { icon: "🎤", title: "Repetí", description: "Con tu voz" },
+          { icon: "✅", title: "Resultado", description: "Ve tu avance" },
+        ]}
+      />
+
       {/* Duration selector */}
       <div className="flex gap-2 justify-center">
         {[3, 5, 10].map((d) => (
