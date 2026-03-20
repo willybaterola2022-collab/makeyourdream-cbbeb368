@@ -5,6 +5,8 @@ import { usePitchDetection } from "@/hooks/usePitchDetection";
 import { useAudioEngine } from "@/hooks/useAudioEngine";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
 import { useMetronome } from "@/hooks/useMetronome";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import VintageMicrophone from "./VintageMicrophone";
 import SingingFeedback from "./SingingFeedback";
 
@@ -20,6 +22,7 @@ interface Props {
 }
 
 export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
+  const { user } = useAuth();
   const { isListening, volume, waveformData, requestMic, stream, analyserNode } = useMicrophone(2048);
   const { isRecording, audioUrl, startRecording, stopRecording, clearRecording, saveRecording, isUploading, needsAuth, dismissAuth } = useSupabaseRecorder("karaoke");
   const pitch = usePitchDetection(analyserNode, isRecording);
@@ -77,9 +80,38 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
       metronome.stop();
       clearInterval(timerRef.current);
       setFinished(true);
-      // Play celebration if good score
       const global = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
       if (global >= 60) setTimeout(() => playSuccess(), 300);
+      
+      // Save session to training_sessions
+      if (user) {
+        supabase.from("training_sessions").insert([{
+          user_id: user.id,
+          module: "karaoke",
+          song_title: `Freestyle ${genre}`,
+          pitch_score: scores.pitch,
+          timing_score: scores.timing,
+          expression_score: scores.expression,
+          overall_score: global,
+        }]).then(() => {
+          // Update XP
+          supabase.from("user_progress")
+            .select("xp, streak_days, last_active_date")
+            .eq("user_id", user.id)
+            .maybeSingle()
+            .then(({ data }) => {
+              if (data) {
+                const today = new Date().toISOString().split("T")[0];
+                const isNewDay = data.last_active_date !== today;
+                supabase.from("user_progress").update({
+                  xp: (data.xp || 0) + Math.round(global / 10),
+                  streak_days: isNewDay ? (data.streak_days || 0) + 1 : data.streak_days,
+                  last_active_date: today,
+                }).eq("user_id", user.id).then(() => {});
+              }
+            });
+        });
+      }
       return;
     }
     if (!isListening) {

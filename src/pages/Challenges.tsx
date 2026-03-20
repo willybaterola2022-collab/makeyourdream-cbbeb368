@@ -1,82 +1,160 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, Music, MapPin, Send } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Clock, Mic, Trophy, Zap, CheckCircle2 } from "lucide-react";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroTrophy } from "@/components/studio/HeroTrophy";
+import { StageButton } from "@/components/ui/StageButton";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
-const leaderboard = [
-  { rank: 1, name: "Valentina R.", score: 96.4, city: "CDMX", initials: "VR" },
-  { rank: 2, name: "Carlos M.", score: 94.8, city: "Madrid", initials: "CM" },
-  { rank: 3, name: "Ana P.", score: 93.1, city: "Buenos Aires", initials: "AP" },
-  { rank: 4, name: "Tu", score: 91.7, city: "Bogotá", initials: "MK", isUser: true },
-  { rank: 5, name: "Diego L.", score: 90.2, city: "Lima", initials: "DL" },
-];
+interface Challenge {
+  id: string;
+  title: string;
+  description: string | null;
+  challenge_type: string;
+  reward_xp: number;
+  active_date: string;
+}
+
+const TYPE_EMOJI: Record<string, string> = {
+  sing: "🎤",
+  technique: "🎯",
+  create: "🎨",
+  expression: "💫",
+  pitch: "🎹",
+  warmup: "🔥",
+};
 
 const Challenges = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetch() {
+      // Get upcoming 7 challenges
+      const today = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("daily_challenges")
+        .select("*")
+        .gte("active_date", today)
+        .order("active_date", { ascending: true })
+        .limit(7);
+
+      setChallenges(data ?? []);
+
+      // Get completions
+      if (user) {
+        const { data: completions } = await supabase
+          .from("challenge_completions")
+          .select("challenge_id")
+          .eq("user_id", user.id);
+        setCompletedIds(new Set(completions?.map((c) => c.challenge_id) ?? []));
+      }
+      setLoading(false);
+    }
+    fetch();
+  }, [user]);
+
+  const today = new Date().toISOString().split("T")[0];
+  const todayChallenge = challenges.find((c) => c.active_date === today);
+  const upcomingChallenges = challenges.filter((c) => c.active_date !== today);
+
+  const completeChallenge = async (challengeId: string) => {
+    if (!user) { navigate("/login"); return; }
+    const { error } = await supabase.from("challenge_completions").insert({
+      user_id: user.id,
+      challenge_id: challengeId,
+      score: Math.floor(Math.random() * 30 + 70), // placeholder until real scoring
+    });
+    if (!error) {
+      setCompletedIds((prev) => new Set([...prev, challengeId]));
+      toast.success("¡Reto completado! +XP");
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("es", { weekday: "short", day: "numeric" });
+  };
+
   return (
     <StudioRoom
       roomId="challenges"
-      heroContent={<HeroTrophy rank={4} onClick={() => {}} />}
+      heroContent={<HeroTrophy rank={completedIds.size + 1} onClick={() => {}} />}
     >
-      {/* Active challenge */}
-      <div className="glass-card p-5 border-yellow-500/20 shadow-[0_0_25px_-8px_hsl(45_90%_55%/0.3)]">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(45 90% 55%)" }}>
-            ⚡ CHALLENGE SEMANAL
-          </span>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="h-3 w-3" /> 3d 14h
+      {/* Today's challenge */}
+      {todayChallenge && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-5 border-primary/20 shadow-[0_0_25px_-8px_hsl(var(--primary)/0.3)]"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+              ⚡ RETO DE HOY
+            </span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Zap className="h-3 w-3" /> +{todayChallenge.reward_xp} XP
+            </span>
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center text-2xl">
-            <Music className="h-7 w-7 text-primary" />
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center text-2xl">
+              {TYPE_EMOJI[todayChallenge.challenge_type] || "🎵"}
+            </div>
+            <div className="flex-1">
+              <h3 className="font-serif text-lg font-bold text-foreground">{todayChallenge.title}</h3>
+              {todayChallenge.description && (
+                <p className="text-sm text-muted-foreground">{todayChallenge.description}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <h3 className="font-serif text-lg font-bold text-foreground">Bohemian Rhapsody</h3>
-            <p className="text-sm text-muted-foreground">Queen · ⭐⭐⭐</p>
+          <div className="mt-4">
+            {completedIds.has(todayChallenge.id) ? (
+              <div className="flex items-center gap-2 text-sm text-emerald-400 font-bold">
+                <CheckCircle2 className="h-5 w-5" /> Completado
+              </div>
+            ) : (
+              <StageButton
+                variant="primary"
+                icon={<Mic className="h-5 w-5" />}
+                onClick={() => completeChallenge(todayChallenge.id)}
+                className="w-full"
+              >
+                ACEPTAR RETO
+              </StageButton>
+            )}
           </div>
-        </div>
-      </div>
+        </motion.div>
+      )}
 
-      {/* Leaderboard as coliseum */}
+      {/* Upcoming challenges */}
       <div className="space-y-2">
-        {leaderboard.map((u, i) => (
+        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Próximos retos</span>
+        {upcomingChallenges.map((c, i) => (
           <motion.div
-            key={u.rank}
+            key={c.id}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.08 }}
-            className={`glass-card p-3 flex items-center gap-3 ${
-              u.isUser ? "border-yellow-500/30 shadow-[0_0_20px_-8px_hsl(45_90%_55%/0.3)]" : ""
-            }`}
+            className={`glass-card p-4 flex items-center gap-3 ${completedIds.has(c.id) ? "opacity-50" : ""}`}
           >
-            <span className={`text-xl font-serif font-bold w-8 text-center ${
-              u.rank <= 3 ? "" : "text-muted-foreground"
-            }`} style={u.rank <= 3 ? { color: "hsl(45 90% 55%)" } : undefined}>
-              {u.rank <= 3 ? ["🥇", "🥈", "🥉"][u.rank - 1] : `#${u.rank}`}
-            </span>
-            <Avatar className="h-10 w-10">
-              <AvatarFallback className={`text-xs font-bold ${u.isUser ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
-                {u.initials}
-              </AvatarFallback>
-            </Avatar>
+            <span className="text-2xl">{TYPE_EMOJI[c.challenge_type] || "🎵"}</span>
             <div className="flex-1 min-w-0">
-              <p className={`text-sm font-bold truncate ${u.isUser ? "text-primary" : "text-foreground"}`}>{u.name}</p>
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <MapPin className="h-2.5 w-2.5" /> {u.city}
-              </div>
+              <p className="text-sm font-bold text-foreground truncate">{c.title}</p>
+              <p className="text-[10px] text-muted-foreground">{formatDate(c.active_date)} · +{c.reward_xp} XP</p>
             </div>
-            <span className="text-lg font-serif font-bold text-foreground">{u.score}</span>
+            {completedIds.has(c.id) && <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />}
           </motion.div>
         ))}
+        {challenges.length === 0 && !loading && (
+          <p className="text-sm text-muted-foreground text-center py-4">No hay retos disponibles</p>
+        )}
       </div>
-
-      {/* Submit */}
-      <motion.button whileTap={{ scale: 0.95 }}
-        className="w-full h-14 rounded-2xl stage-gradient text-primary-foreground font-bold flex items-center justify-center gap-2 text-lg shadow-[0_0_25px_-5px_hsl(var(--primary)/0.4)]">
-        <Send className="h-5 w-5" /> ENVIAR PERFORMANCE
-      </motion.button>
     </StudioRoom>
   );
 };
