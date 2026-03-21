@@ -237,7 +237,47 @@ export default function SkillTree() {
             className="overflow-hidden px-4 pb-4"
           >
             <div className="p-4 rounded-2xl border border-white/10" style={{ background: "#1E1E2E" }}>
-              <TalentRadar dimensions={MOCK_TALENT} vocalDNA={68} />
+              <TalentRadar dimensions={talentDims.length > 0 ? talentDims : [
+                { label: "Pitch", value: 50, percentile: 50 },
+                { label: "Rango", value: 45, percentile: 55 },
+                { label: "Potencia", value: 50, percentile: 50 },
+                { label: "Control", value: 48, percentile: 52 },
+                { label: "Expresión", value: 42, percentile: 58 },
+                { label: "Creatividad", value: 40, percentile: 60 },
+              ]} vocalDNA={vocalDNA || 46} />
+              {aiReport && (
+                <div className="mt-3 p-3 rounded-xl bg-[#FFA502]/5 border border-[#FFA502]/20">
+                  <p className="text-[10px] font-bold text-[#FFA502] uppercase tracking-widest mb-1">🧠 AI Talent Report</p>
+                  <p className="text-xs text-[#A0A0B0] leading-relaxed">{aiReport}</p>
+                </div>
+              )}
+              {/* Talent alerts */}
+              {talentAlerts.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {talentAlerts.slice(0, 3).map((alert, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FF3CAC]/5 border border-[#FF3CAC]/15"
+                    >
+                      <span className="text-sm">🔥</span>
+                      <span className="text-[10px] text-white/70">
+                        Tu <span className="font-bold text-white">{alert.dimension}</span> está en el{" "}
+                        <span className="text-[#FFA502] font-bold">TOP {alert.percentile}%</span>
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={() => navigate("/talent-feed")}
+                className="w-full mt-3 py-2.5 rounded-xl bg-gradient-to-r from-[#FF3CAC]/10 to-[#2B86C5]/10 border border-[#FF3CAC]/20 text-[#FF3CAC] text-xs font-bold flex items-center justify-center gap-2"
+              >
+                <Sparkles className="h-3 w-3" />
+                Ver Talent Feed
+              </button>
             </div>
           </motion.div>
         )}
