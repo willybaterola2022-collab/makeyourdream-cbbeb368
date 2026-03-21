@@ -160,7 +160,12 @@ const WarmUp = () => {
 
       {/* Controls */}
       {allDone ? (
-        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center py-6">
+        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center py-6"
+          onAnimationComplete={async () => {
+            const session = await saveSession({ module: "warmup", overall_score: 100, song_title: `Warmup ${duration}min` });
+            if (session) toast.success(`+${Math.round(100/5)} XP 🎉`);
+          }}
+        >
           <PartyPopper className="h-12 w-12 text-orange-400 mx-auto mb-3" />
           <p className="text-2xl font-bold text-orange-400">🔥 ¡LISTO PARA CANTAR!</p>
           <motion.button

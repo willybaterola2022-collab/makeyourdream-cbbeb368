@@ -73,7 +73,16 @@ const PitchTraining = () => {
     playInstrument(noteToFreq(note), instrument, 0.4);
     if (note === target) {
       setScore((s) => s + 10 * (1 + streak)); setStreak((s) => s + 1); setFeedback("correct");
-      if (streak > 0 && streak % 5 === 4) setLevel((l) => Math.min(l + 1, 5));
+      if (streak > 0 && streak % 5 === 4) {
+        setLevel((l) => Math.min(l + 1, 5));
+        if (!savedRef.current) {
+          savedRef.current = true;
+          saveSession({ module: "pitch", overall_score: Math.min(100, score + 50), pitch_score: 85, song_title: `Pitch Lvl ${level}` }).then((s) => {
+            if (s) toast.success(`+XP 🎯 Level up!`);
+            savedRef.current = false;
+          });
+        }
+      }
     } else { setStreak(0); setFeedback("wrong"); }
     setTimeout(newRound, 1200);
   };

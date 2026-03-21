@@ -46,7 +46,18 @@ const BreathTrainer = () => {
       if (p === "inhale") next = "hold";
       else if (p === "hold") next = "exhale";
       else if (p === "exhale") { next = "pause"; }
-      else { setReps((r) => r + 1); next = "inhale"; }
+      else {
+        setReps((r) => {
+          const newReps = r + 1;
+          if (newReps >= 5) {
+            saveSession({ module: "breath", overall_score: 90, song_title: selected.name }).then((s) => {
+              if (s) toast.success(`+${Math.round(90/5)} XP 🫁`);
+            });
+          }
+          return newReps;
+        });
+        next = "inhale";
+      }
       playPhaseSound(next);
       return next;
     });
