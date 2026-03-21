@@ -146,6 +146,39 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_reels: {
+        Row: {
+          bio: string | null
+          created_at: string
+          featured: boolean | null
+          id: string
+          recordings: Json
+          talent_score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          featured?: boolean | null
+          id?: string
+          recordings?: Json
+          talent_score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          featured?: boolean | null
+          id?: string
+          recordings?: Json
+          talent_score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       duels: {
         Row: {
           challenger_id: string
@@ -416,6 +449,42 @@ export type Database = {
           id?: string
           title?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      talent_alerts: {
+        Row: {
+          ai_report: string | null
+          alert_type: string
+          created_at: string
+          dimension: string | null
+          id: string
+          percentile: number | null
+          score: number | null
+          seen: boolean | null
+          user_id: string
+        }
+        Insert: {
+          ai_report?: string | null
+          alert_type?: string
+          created_at?: string
+          dimension?: string | null
+          id?: string
+          percentile?: number | null
+          score?: number | null
+          seen?: boolean | null
+          user_id: string
+        }
+        Update: {
+          ai_report?: string | null
+          alert_type?: string
+          created_at?: string
+          dimension?: string | null
+          id?: string
+          percentile?: number | null
+          score?: number | null
+          seen?: boolean | null
           user_id?: string
         }
         Relationships: []
