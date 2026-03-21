@@ -33,7 +33,7 @@ export function SkillBranchComponent({ branch, nodes, onNodeClick }: SkillBranch
                   </defs>
                   <line x1="2" y1="0" x2="2" y2="32" stroke={`url(#line-${node.id})`} strokeWidth="2" />
                   {/* Particle dot */}
-                  <circle r="2" fill="#FF3CAC">
+                  <circle cx="2" cy="0" r="2" fill="#FF3CAC">
                     <animateMotion dur="2s" repeatCount="indefinite" path="M2,0 L2,32" />
                   </circle>
                 </>

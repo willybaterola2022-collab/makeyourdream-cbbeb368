@@ -5,6 +5,8 @@ import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroLungs } from "@/components/studio/HeroLungs";
 import MicroTutorial from "@/components/MicroTutorial";
+import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { toast } from "sonner";
 
 const exercises = [
   { id: "basic", name: "Diafragma", inhale: 4, hold: 2, exhale: 4, pause: 2, emoji: "🫁" },
@@ -16,6 +18,7 @@ type Phase = "inhale" | "hold" | "exhale" | "pause";
 
 const BreathTrainer = () => {
   const { playSweep, playTone, stopTone } = useAudioEngine();
+  const { saveSession } = useTrainingSession();
   const [selected, setSelected] = useState(exercises[0]);
   const [running, setRunning] = useState(false);
   const [phase, setPhase] = useState<Phase>("inhale");
@@ -43,7 +46,18 @@ const BreathTrainer = () => {
       if (p === "inhale") next = "hold";
       else if (p === "hold") next = "exhale";
       else if (p === "exhale") { next = "pause"; }
-      else { setReps((r) => r + 1); next = "inhale"; }
+      else {
+        setReps((r) => {
+          const newReps = r + 1;
+          if (newReps >= 5) {
+            saveSession({ module: "breath", overall_score: 90, song_title: selected.name }).then((s) => {
+              if (s) toast.success(`+${Math.round(90/5)} XP 🫁`);
+            });
+          }
+          return newReps;
+        });
+        next = "inhale";
+      }
       playPhaseSound(next);
       return next;
     });

@@ -5,6 +5,8 @@ import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroThermometer } from "@/components/studio/HeroThermometer";
 import MicroTutorial from "@/components/MicroTutorial";
+import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { toast } from "sonner";
 
 interface Exercise {
   name: string;
@@ -41,6 +43,7 @@ const routines: Record<number, Exercise[]> = {
 
 const WarmUp = () => {
   const { playNote, playSuccess } = useAudioEngine();
+  const { saveSession } = useTrainingSession();
   const [duration, setDuration] = useState(5);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [timer, setTimer] = useState(0);
@@ -157,7 +160,12 @@ const WarmUp = () => {
 
       {/* Controls */}
       {allDone ? (
-        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center py-6">
+        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="text-center py-6"
+          onAnimationComplete={async () => {
+            const session = await saveSession({ module: "warmup", overall_score: 100, song_title: `Warmup ${duration}min` });
+            if (session) toast.success(`+${Math.round(100/5)} XP 🎉`);
+          }}
+        >
           <PartyPopper className="h-12 w-12 text-orange-400 mx-auto mb-3" />
           <p className="text-2xl font-bold text-orange-400">🔥 ¡LISTO PARA CANTAR!</p>
           <motion.button

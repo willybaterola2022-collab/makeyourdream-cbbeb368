@@ -6,6 +6,8 @@ import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroPiano } from "@/components/studio/HeroPiano";
 import { StageButton } from "@/components/ui/StageButton";
 import MicroTutorial from "@/components/MicroTutorial";
+import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { toast } from "sonner";
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const allNotes = notes.map((n) => `${n}4`);
@@ -29,6 +31,8 @@ const INSTRUMENT_OPTIONS: { id: InstrumentType; label: string; emoji: string }[]
 
 const PitchTraining = () => {
   const { playNote, playInstrument } = useAudioEngine();
+  const { saveSession } = useTrainingSession();
+  const savedRef = useRef(false);
   const [mode, setMode] = useState<"notes" | "intervals">("notes");
   const [instrument, setInstrument] = useState<InstrumentType>("piano");
   const [target, setTarget] = useState(() => allNotes[Math.floor(Math.random() * 7)]);
@@ -69,7 +73,16 @@ const PitchTraining = () => {
     playInstrument(noteToFreq(note), instrument, 0.4);
     if (note === target) {
       setScore((s) => s + 10 * (1 + streak)); setStreak((s) => s + 1); setFeedback("correct");
-      if (streak > 0 && streak % 5 === 4) setLevel((l) => Math.min(l + 1, 5));
+      if (streak > 0 && streak % 5 === 4) {
+        setLevel((l) => Math.min(l + 1, 5));
+        if (!savedRef.current) {
+          savedRef.current = true;
+          saveSession({ module: "pitch", overall_score: Math.min(100, score + 50), pitch_score: 85, song_title: `Pitch Lvl ${level}` }).then((s) => {
+            if (s) toast.success(`+XP 🎯 Level up!`);
+            savedRef.current = false;
+          });
+        }
+      }
     } else { setStreak(0); setFeedback("wrong"); }
     setTimeout(newRound, 1200);
   };
