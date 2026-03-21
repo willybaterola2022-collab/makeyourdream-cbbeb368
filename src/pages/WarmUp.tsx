@@ -43,6 +43,7 @@ const routines: Record<number, Exercise[]> = {
 
 const WarmUp = () => {
   const { playNote, playSuccess } = useAudioEngine();
+  const { saveSession } = useTrainingSession();
   const [duration, setDuration] = useState(5);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [timer, setTimer] = useState(0);
