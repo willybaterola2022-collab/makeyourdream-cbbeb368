@@ -44,6 +44,7 @@ import GenreGym from "./pages/GenreGym";
 import StageSimulator from "./pages/StageSimulator";
 import VoiceJournal from "./pages/VoiceJournal";
 import SkillTree from "./pages/SkillTree";
+import TalentFeed from "./pages/TalentFeed";
 
 const queryClient = new QueryClient();
 
