@@ -18,6 +18,7 @@ type Phase = "inhale" | "hold" | "exhale" | "pause";
 
 const BreathTrainer = () => {
   const { playSweep, playTone, stopTone } = useAudioEngine();
+  const { saveSession } = useTrainingSession();
   const [selected, setSelected] = useState(exercises[0]);
   const [running, setRunning] = useState(false);
   const [phase, setPhase] = useState<Phase>("inhale");
