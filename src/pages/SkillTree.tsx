@@ -20,7 +20,10 @@ import { useNavigate } from "react-router-dom";
 const BRANCHES: SkillBranch[] = ["tecnica", "artistica", "performance"];
 
 export default function SkillTree() {
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { dimensions: talentDims, vocalDNA, alerts: talentAlerts, aiReport } = useTalentData(user?.id);
+  const sounds = useSkillTreeSounds();
   const [activeBranch, setActiveBranch] = useState<SkillBranch>("tecnica");
   const [selectedNode, setSelectedNode] = useState<SkillNodeData | null>(null);
   const [rewardNode, setRewardNode] = useState<SkillNodeData | null>(null);
