@@ -126,6 +126,9 @@ export default function SkillTree() {
   const handleNodeClick = (node: SkillNodeData) => {
     const computed = computedNodes.find((n) => n.id === node.id) || node;
     if (computed.status === "unlocked" || computed.status === "completed") {
+      if (computed.status === "unlocked") sounds.playUnlock();
+      else if (computed.isBoss) sounds.playBossVictory();
+      else sounds.playComplete();
       setSelectedNode(computed);
     } else if (computed.status === "locked") {
       toast(`Necesitas ${computed.requiredXP} XP y ${computed.requiredSessions} sesiones para desbloquear`, { icon: "🔒" });
