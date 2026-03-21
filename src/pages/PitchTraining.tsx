@@ -31,6 +31,8 @@ const INSTRUMENT_OPTIONS: { id: InstrumentType; label: string; emoji: string }[]
 
 const PitchTraining = () => {
   const { playNote, playInstrument } = useAudioEngine();
+  const { saveSession } = useTrainingSession();
+  const savedRef = useRef(false);
   const [mode, setMode] = useState<"notes" | "intervals">("notes");
   const [instrument, setInstrument] = useState<InstrumentType>("piano");
   const [target, setTarget] = useState(() => allNotes[Math.floor(Math.random() * 7)]);
