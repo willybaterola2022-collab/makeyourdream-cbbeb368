@@ -44,6 +44,7 @@ import GenreGym from "./pages/GenreGym";
 import StageSimulator from "./pages/StageSimulator";
 import VoiceJournal from "./pages/VoiceJournal";
 import SkillTree from "./pages/SkillTree";
+import TalentFeed from "./pages/TalentFeed";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ function AnimatedRoutes() {
           <Route path="/stage-simulator" element={<PageTransition><StageSimulator /></PageTransition>} />
           <Route path="/voice-journal" element={<PageTransition><VoiceJournal /></PageTransition>} />
           <Route path="/skill-tree" element={<PageTransition><SkillTree /></PageTransition>} />
+          <Route path="/talent-feed" element={<PageTransition><TalentFeed /></PageTransition>} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

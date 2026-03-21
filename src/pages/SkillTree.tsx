@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Zap, Trophy } from "lucide-react";
+import { Mic, Zap, Trophy, Sparkles } from "lucide-react";
 import { SKILL_TREE_DATA, BRANCH_META, SkillBranch, SkillNodeData, SkillStatus, getLevelForXP } from "@/components/skilltree/skillTreeData";
 import { SkillBranchComponent } from "@/components/skilltree/SkillBranch";
 import { SkillDrawer } from "@/components/skilltree/SkillDrawer";
@@ -13,21 +13,17 @@ import { WeeklyWrap } from "@/components/skilltree/WeeklyWrap";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useTalentData } from "@/hooks/useTalentData";
+import { useSkillTreeSounds } from "@/hooks/useSkillTreeSounds";
+import { useNavigate } from "react-router-dom";
 
 const BRANCHES: SkillBranch[] = ["tecnica", "artistica", "performance"];
 
-// Mock talent radar data
-const MOCK_TALENT = [
-  { label: "Pitch", value: 72, percentile: 15 },
-  { label: "Rango", value: 58, percentile: 30 },
-  { label: "Potencia", value: 65, percentile: 22 },
-  { label: "Control", value: 70, percentile: 18 },
-  { label: "Expresión", value: 88, percentile: 4 },
-  { label: "Creatividad", value: 55, percentile: 35 },
-];
-
 export default function SkillTree() {
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { dimensions: talentDims, vocalDNA, alerts: talentAlerts, aiReport } = useTalentData(user?.id);
+  const sounds = useSkillTreeSounds();
   const [activeBranch, setActiveBranch] = useState<SkillBranch>("tecnica");
   const [selectedNode, setSelectedNode] = useState<SkillNodeData | null>(null);
   const [rewardNode, setRewardNode] = useState<SkillNodeData | null>(null);
@@ -130,6 +126,9 @@ export default function SkillTree() {
   const handleNodeClick = (node: SkillNodeData) => {
     const computed = computedNodes.find((n) => n.id === node.id) || node;
     if (computed.status === "unlocked" || computed.status === "completed") {
+      if (computed.status === "unlocked") sounds.playUnlock();
+      else if (computed.isBoss) sounds.playBossVictory();
+      else sounds.playComplete();
       setSelectedNode(computed);
     } else if (computed.status === "locked") {
       toast(`Necesitas ${computed.requiredXP} XP y ${computed.requiredSessions} sesiones para desbloquear`, { icon: "🔒" });
@@ -241,7 +240,47 @@ export default function SkillTree() {
             className="overflow-hidden px-4 pb-4"
           >
             <div className="p-4 rounded-2xl border border-white/10" style={{ background: "#1E1E2E" }}>
-              <TalentRadar dimensions={MOCK_TALENT} vocalDNA={68} />
+              <TalentRadar dimensions={talentDims.length > 0 ? talentDims : [
+                { label: "Pitch", value: 50, percentile: 50 },
+                { label: "Rango", value: 45, percentile: 55 },
+                { label: "Potencia", value: 50, percentile: 50 },
+                { label: "Control", value: 48, percentile: 52 },
+                { label: "Expresión", value: 42, percentile: 58 },
+                { label: "Creatividad", value: 40, percentile: 60 },
+              ]} vocalDNA={vocalDNA || 46} />
+              {aiReport && (
+                <div className="mt-3 p-3 rounded-xl bg-[#FFA502]/5 border border-[#FFA502]/20">
+                  <p className="text-[10px] font-bold text-[#FFA502] uppercase tracking-widest mb-1">🧠 AI Talent Report</p>
+                  <p className="text-xs text-[#A0A0B0] leading-relaxed">{aiReport}</p>
+                </div>
+              )}
+              {/* Talent alerts */}
+              {talentAlerts.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {talentAlerts.slice(0, 3).map((alert, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#FF3CAC]/5 border border-[#FF3CAC]/15"
+                    >
+                      <span className="text-sm">🔥</span>
+                      <span className="text-[10px] text-white/70">
+                        Tu <span className="font-bold text-white">{alert.dimension}</span> está en el{" "}
+                        <span className="text-[#FFA502] font-bold">TOP {alert.percentile}%</span>
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={() => navigate("/talent-feed")}
+                className="w-full mt-3 py-2.5 rounded-xl bg-gradient-to-r from-[#FF3CAC]/10 to-[#2B86C5]/10 border border-[#FF3CAC]/20 text-[#FF3CAC] text-xs font-bold flex items-center justify-center gap-2"
+              >
+                <Sparkles className="h-3 w-3" />
+                Ver Talent Feed
+              </button>
             </div>
           </motion.div>
         )}
