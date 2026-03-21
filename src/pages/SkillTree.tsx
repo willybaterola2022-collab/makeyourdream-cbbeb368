@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Zap, Trophy } from "lucide-react";
+import { Mic, Zap, Trophy, Sparkles } from "lucide-react";
 import { SKILL_TREE_DATA, BRANCH_META, SkillBranch, SkillNodeData, SkillStatus, getLevelForXP } from "@/components/skilltree/skillTreeData";
 import { SkillBranchComponent } from "@/components/skilltree/SkillBranch";
 import { SkillDrawer } from "@/components/skilltree/SkillDrawer";
@@ -13,18 +13,11 @@ import { WeeklyWrap } from "@/components/skilltree/WeeklyWrap";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useTalentData } from "@/hooks/useTalentData";
+import { useSkillTreeSounds } from "@/hooks/useSkillTreeSounds";
+import { useNavigate } from "react-router-dom";
 
 const BRANCHES: SkillBranch[] = ["tecnica", "artistica", "performance"];
-
-// Mock talent radar data
-const MOCK_TALENT = [
-  { label: "Pitch", value: 72, percentile: 15 },
-  { label: "Rango", value: 58, percentile: 30 },
-  { label: "Potencia", value: 65, percentile: 22 },
-  { label: "Control", value: 70, percentile: 18 },
-  { label: "Expresión", value: 88, percentile: 4 },
-  { label: "Creatividad", value: 55, percentile: 35 },
-];
 
 export default function SkillTree() {
   const { user } = useAuth();
