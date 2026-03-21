@@ -5,6 +5,8 @@ import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroLungs } from "@/components/studio/HeroLungs";
 import MicroTutorial from "@/components/MicroTutorial";
+import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { toast } from "sonner";
 
 const exercises = [
   { id: "basic", name: "Diafragma", inhale: 4, hold: 2, exhale: 4, pause: 2, emoji: "🫁" },

@@ -5,6 +5,8 @@ import { useAudioEngine, noteToFreq } from "@/hooks/useAudioEngine";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroThermometer } from "@/components/studio/HeroThermometer";
 import MicroTutorial from "@/components/MicroTutorial";
+import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { toast } from "sonner";
 
 interface Exercise {
   name: string;
