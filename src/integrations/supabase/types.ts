@@ -612,6 +612,36 @@ export type Database = {
           },
         ]
       }
+      weekly_leaderboard: {
+        Row: {
+          created_at: string
+          id: string
+          league: string
+          rank: number | null
+          user_id: string
+          week_start: string
+          xp_earned: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          league?: string
+          rank?: number | null
+          user_id: string
+          week_start: string
+          xp_earned?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          league?: string
+          rank?: number | null
+          user_id?: string
+          week_start?: string
+          xp_earned?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
