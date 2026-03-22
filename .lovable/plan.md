@@ -1,7 +1,6 @@
+# Brief v1.2 — Luxury Íntimo Sprint A ✅
 
-# Sprint 7 — Soy Leyenda ULTIMATE ✅
-
-## Changes Made
+## Completado: Paleta, Home, Nav, Components, VocalDNA, Lazy Loading
 
 ### 1. DB Migration — weekly_leaderboard table
 - Created `weekly_leaderboard` with RLS policies (public SELECT, owner INSERT/UPDATE)
