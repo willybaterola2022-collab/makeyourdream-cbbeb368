@@ -13,21 +13,21 @@ const modes = [
     label: "CANTA LIBRE",
     sub: "Sin reglas, solo tu voz",
     icon: Mic,
-    gradient: "from-[hsl(275_85%_50%)] to-[hsl(285_80%_60%)]",
+    gradient: "from-primary/80 to-primary",
   },
   {
     id: "custom" as const,
     label: "TU LETRA",
     sub: "Pegá tu letra y cantá",
     icon: FileText,
-    gradient: "from-[hsl(185_90%_40%)] to-[hsl(195_85%_50%)]",
+    gradient: "from-secondary/80 to-secondary",
   },
   {
     id: "preset" as const,
     label: "ELIGE CANCIÓN",
     sub: "200+ canciones disponibles",
     icon: ListMusic,
-    gradient: "from-[hsl(275_70%_45%)] to-[hsl(185_80%_50%)]",
+    gradient: "from-primary/70 to-secondary/80",
   },
 ];
 
@@ -84,7 +84,7 @@ const Karaoke = () => {
               onClick={() => setGenre(g)}
               className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
                 genre === g
-                  ? "stage-gradient text-primary-foreground shadow-[0_0_16px_-4px_hsl(275_85%_60%/0.4)]"
+                  ? "bg-primary text-primary-foreground shadow-[0_0_16px_-4px_hsl(var(--primary)/0.4)]"
                   : "glass-card text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -101,7 +101,7 @@ const Karaoke = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => setBpm(b)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                bpm === b ? "stage-gradient text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                bpm === b ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {b === 0 ? "∅ BPM" : `${b}`}
@@ -122,7 +122,7 @@ const Karaoke = () => {
             onClick={() => setMode(m.id)}
             className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
               mode === m.id
-                ? "stage-gradient text-primary-foreground"
+                ? "bg-primary text-primary-foreground"
                 : "glass-card text-muted-foreground hover:text-foreground"
             }`}
           >

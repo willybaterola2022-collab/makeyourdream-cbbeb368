@@ -24,11 +24,11 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
     canvas.width = w;
     canvas.height = h;
 
-    // Background gradient
+    // Background gradient — Luxury Íntimo
     const bg = ctx.createLinearGradient(0, 0, w, h);
-    bg.addColorStop(0, "#0a0a0a");
-    bg.addColorStop(0.5, "#1a0a2e");
-    bg.addColorStop(1, "#0a1a2e");
+    bg.addColorStop(0, "#0a0a0f");
+    bg.addColorStop(0.5, "#1a1208");
+    bg.addColorStop(1, "#0a0a0f");
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
@@ -61,8 +61,8 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
     }
 
     // Data polygon
-    ctx.fillStyle = "rgba(168, 85, 247, 0.2)";
-    ctx.strokeStyle = "rgba(168, 85, 247, 0.9)";
+    ctx.fillStyle = "rgba(212, 168, 83, 0.2)";
+    ctx.strokeStyle = "rgba(212, 168, 83, 0.9)";
     ctx.lineWidth = 3;
     ctx.beginPath();
     dimensions.forEach((d, i) => {
@@ -76,7 +76,7 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
     // Dots and labels
     dimensions.forEach((d, i) => {
       const p = getPoint(i, d.value);
-      ctx.fillStyle = "rgba(168, 85, 247, 1)";
+      ctx.fillStyle = "rgba(212, 168, 83, 1)";
       ctx.beginPath();
       ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
       ctx.fill();
@@ -99,19 +99,19 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
 
     // Similar artist
     ctx.font = "bold 36px sans-serif";
-    ctx.fillStyle = "#a855f7";
+    ctx.fillStyle = "#D4A853";
     ctx.fillText(`🎤 Similar a ${similarArtist}`, w / 2, 960);
 
     // Range
     if (vocalRange.low) {
       ctx.font = "28px sans-serif";
-      ctx.fillStyle = "#06b6d4";
+      ctx.fillStyle = "#C47D4E";
       ctx.fillText(`Rango: ${vocalRange.low} → ${vocalRange.high}`, w / 2, 1020);
     }
 
     // Watermark
     ctx.font = "bold 32px sans-serif";
-    ctx.fillStyle = "rgba(168, 85, 247, 0.5)";
+    ctx.fillStyle = "rgba(212, 168, 83, 0.5)";
     ctx.fillText("MakeYourDream", w / 2, 1250);
     ctx.font = "18px sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.3)";

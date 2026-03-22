@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Clock, Mic, Trophy, Zap, CheckCircle2 } from "lucide-react";
+import { Clock, Mic, Zap, CheckCircle2 } from "lucide-react";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroTrophy } from "@/components/studio/HeroTrophy";
 import { StageButton } from "@/components/ui/StageButton";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/trackEvent";
 
 interface Challenge {
   id: string;
@@ -19,33 +20,46 @@ interface Challenge {
 }
 
 const TYPE_EMOJI: Record<string, string> = {
-  sing: "🎤",
-  technique: "🎯",
-  create: "🎨",
-  expression: "💫",
-  pitch: "🎹",
-  warmup: "🔥",
+  sing: "🎤", technique: "🎯", create: "🎨", expression: "💫", pitch: "🎹", warmup: "🔥",
 };
 
 const Challenges = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [todayChallenge, setTodayChallenge] = useState<any>(null);
+  const [todayCompleted, setTodayCompleted] = useState(false);
+  const [hoursRemaining, setHoursRemaining] = useState(0);
+  const [upcomingChallenges, setUpcomingChallenges] = useState<Challenge[]>([]);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetch() {
-      // Get upcoming 7 challenges
+    if (user) trackEvent(user.id, "module_visited", { module: "challenges" });
+
+    async function fetchChallenges() {
+      // Try edge function for today's challenge
+      if (user) {
+        try {
+          const { data } = await supabase.functions.invoke("daily-challenge", {
+            body: { action: "get_today", user_id: user.id },
+          });
+          if (data?.challenge) {
+            setTodayChallenge(data.challenge);
+            setTodayCompleted(data.completed ?? false);
+            setHoursRemaining(data.hours_remaining ?? 0);
+          }
+        } catch {}
+      }
+
+      // Fetch upcoming challenges (direct query)
       const today = new Date().toISOString().split("T")[0];
-      const { data } = await supabase
+      const { data: upcoming } = await supabase
         .from("daily_challenges")
         .select("*")
-        .gte("active_date", today)
+        .gt("active_date", today)
         .order("active_date", { ascending: true })
         .limit(7);
-
-      setChallenges(data ?? []);
+      setUpcomingChallenges(upcoming ?? []);
 
       // Get completions
       if (user) {
@@ -57,24 +71,32 @@ const Challenges = () => {
       }
       setLoading(false);
     }
-    fetch();
+    fetchChallenges();
   }, [user]);
-
-  const today = new Date().toISOString().split("T")[0];
-  const todayChallenge = challenges.find((c) => c.active_date === today);
-  const upcomingChallenges = challenges.filter((c) => c.active_date !== today);
 
   const completeChallenge = async (challengeId: string) => {
     if (!user) { navigate("/login"); return; }
-    const { error } = await supabase.from("challenge_completions").insert({
-      user_id: user.id,
-      challenge_id: challengeId,
-      score: Math.floor(Math.random() * 30 + 70), // placeholder until real scoring
-    });
-    if (!error) {
-      setCompletedIds((prev) => new Set([...prev, challengeId]));
+    try {
+      const { data } = await supabase.functions.invoke("daily-challenge", {
+        body: { action: "complete", user_id: user.id, challenge_id: challengeId },
+      });
+      if (data?.xp_earned) {
+        toast.success(`¡Reto completado! +${data.xp_earned} XP`);
+      } else {
+        toast.success("¡Reto completado! +XP");
+      }
+    } catch {
+      // Fallback: direct insert
+      await supabase.from("challenge_completions").insert({
+        user_id: user.id,
+        challenge_id: challengeId,
+        score: Math.floor(Math.random() * 30 + 70),
+      });
       toast.success("¡Reto completado! +XP");
     }
+    setCompletedIds((prev) => new Set([...prev, challengeId]));
+    if (todayChallenge?.id === challengeId) setTodayCompleted(true);
+    trackEvent(user.id, "challenge_completed", { challenge_id: challengeId });
   };
 
   const formatDate = (dateStr: string) => {
@@ -95,9 +117,7 @@ const Challenges = () => {
           className="glass-card p-5 border-primary/20 shadow-[0_0_25px_-8px_hsl(var(--primary)/0.3)]"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-              ⚡ RETO DE HOY
-            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">⚡ RETO DE HOY</span>
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Zap className="h-3 w-3" /> +{todayChallenge.reward_xp} XP
             </span>
@@ -107,15 +127,20 @@ const Challenges = () => {
               {TYPE_EMOJI[todayChallenge.challenge_type] || "🎵"}
             </div>
             <div className="flex-1">
-              <h3 className="font-serif text-lg font-bold text-foreground">{todayChallenge.title}</h3>
+              <h3 className="font-display text-lg font-bold text-foreground">{todayChallenge.title}</h3>
               {todayChallenge.description && (
                 <p className="text-sm text-muted-foreground">{todayChallenge.description}</p>
               )}
             </div>
           </div>
+          {hoursRemaining > 0 && !todayCompleted && (
+            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+              <Clock className="h-3 w-3" /> {Math.round(hoursRemaining)}h restantes
+            </p>
+          )}
           <div className="mt-4">
-            {completedIds.has(todayChallenge.id) ? (
-              <div className="flex items-center gap-2 text-sm text-emerald-400 font-bold">
+            {todayCompleted || completedIds.has(todayChallenge.id) ? (
+              <div className="flex items-center gap-2 text-sm text-primary font-bold">
                 <CheckCircle2 className="h-5 w-5" /> Completado
               </div>
             ) : (
@@ -148,10 +173,10 @@ const Challenges = () => {
               <p className="text-sm font-bold text-foreground truncate">{c.title}</p>
               <p className="text-[10px] text-muted-foreground">{formatDate(c.active_date)} · +{c.reward_xp} XP</p>
             </div>
-            {completedIds.has(c.id) && <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />}
+            {completedIds.has(c.id) && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
           </motion.div>
         ))}
-        {challenges.length === 0 && !loading && (
+        {upcomingChallenges.length === 0 && !todayChallenge && !loading && (
           <p className="text-sm text-muted-foreground text-center py-4">No hay retos disponibles</p>
         )}
       </div>
