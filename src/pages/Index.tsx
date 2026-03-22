@@ -5,8 +5,9 @@ import { Mic } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { VocalRadar } from "@/components/VocalRadar";
-import { PhaseProgress, getLevelPhase } from "@/components/PhaseProgress";
+import { PhaseProgress } from "@/components/PhaseProgress";
 import { StreakFlame } from "@/components/StreakFlame";
+import { trackEvent } from "@/lib/trackEvent";
 
 interface HomeData {
   streak: number;
@@ -17,6 +18,7 @@ interface HomeData {
   radarValues: number[];
   hasFingerprint: boolean;
   displayName: string | null;
+  unseenBadge: boolean;
 }
 
 function getGreeting(): string {
@@ -28,15 +30,23 @@ function getGreeting(): string {
 }
 
 function getTension(data: HomeData): string {
+  // P1: Racha en riesgo
   if (data.streak > 3 && !data.sessionToday) {
     return `Tu racha de ${data.streak} noches está a punto de enfriarse.`;
   }
+  // P2: Badge no visto
+  if (data.unseenBadge) {
+    return "Desbloqueaste algo nuevo. Abrilo.";
+  }
+  // P3: Reto del día
   if (data.challengeTitle) {
     return `El reto de hoy: ${data.challengeTitle}.`;
   }
+  // P4: Mejora vs ayer
   if (data.lastRecording) {
     return `Tu última toma fue ${data.lastRecording}. Tu voz te está esperando.`;
   }
+  // P5: Fallback
   return "Tu voz te está esperando.";
 }
 
@@ -45,6 +55,11 @@ const Index = () => {
   const { user } = useAuth();
   const [homeData, setHomeData] = useState<HomeData | null>(null);
   const [voiceCount, setVoiceCount] = useState<number>(847);
+
+  // Track app_opened
+  useEffect(() => {
+    if (user) trackEvent(user.id, "app_opened");
+  }, [user]);
 
   // Fetch social proof count
   useEffect(() => {
@@ -66,6 +81,7 @@ const Index = () => {
       let radarValues = [0, 0, 0, 0, 0, 0];
       let hasFingerprint = false;
       let displayName: string | null = null;
+      let unseenBadge = false;
 
       try {
         const { data } = await supabase.functions.invoke("gamification-engine", {
@@ -74,15 +90,20 @@ const Index = () => {
         if (data) {
           streak = data.streak_days ?? 0;
           xp = data.xp ?? 0;
+          // Check unseen badges
+          const badges = data.badges as any[] ?? [];
+          unseenBadge = badges.some((b: any) => b.seen === false);
         }
       } catch {
         const { data: p } = await supabase
           .from("user_progress")
-          .select("streak_days, xp")
+          .select("streak_days, xp, badges")
           .eq("user_id", user!.id)
           .maybeSingle();
         streak = p?.streak_days ?? 0;
         xp = p?.xp ?? 0;
+        const badges = (p?.badges as any[]) ?? [];
+        unseenBadge = badges.some((b: any) => b.seen === false);
       }
 
       // Check session today
@@ -135,10 +156,7 @@ const Index = () => {
       if (fp?.dimensions) {
         hasFingerprint = true;
         const d = fp.dimensions as any;
-        radarValues = [
-          d.pitch ?? 0, d.rhythm ?? 0, d.vibrato ?? 0,
-          d.sustain ?? 0, d.control ?? 0, d.range ?? 0,
-        ];
+        radarValues = [d.pitch ?? 0, d.rhythm ?? 0, d.vibrato ?? 0, d.sustain ?? 0, d.control ?? 0, d.range ?? 0];
       }
 
       // Profile name
@@ -149,10 +167,15 @@ const Index = () => {
         .maybeSingle();
       displayName = profile?.display_name ?? null;
 
-      setHomeData({ streak, sessionToday, challengeTitle, lastRecording, xp, radarValues, hasFingerprint, displayName });
+      setHomeData({ streak, sessionToday, challengeTitle, lastRecording, xp, radarValues, hasFingerprint, displayName, unseenBadge });
+
+      // Onboarding redirect: if no fingerprint, go to vocal DNA test
+      if (!hasFingerprint) {
+        navigate("/vocal-dna-test", { replace: true });
+      }
     }
     fetchData();
-  }, [user]);
+  }, [user, navigate]);
 
   // ══ NON-AUTH HOME ══
   if (!user) {
@@ -164,17 +187,12 @@ const Index = () => {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="max-w-sm w-full text-center space-y-8"
         >
-          {/* Headline */}
           <h1 className="font-display text-4xl text-foreground leading-tight">
             Tu voz deja una huella
           </h1>
-
-          {/* Subheadline */}
           <p className="text-base text-muted-foreground">
             Cantá una sola vez y descubrí qué hace única a tu voz.
           </p>
-
-          {/* CTA */}
           <motion.button
             onClick={() => navigate("/vocal-dna-test")}
             whileTap={{ scale: 0.96 }}
@@ -183,14 +201,11 @@ const Index = () => {
           >
             Descubrir mi voz
           </motion.button>
-
-          {/* Microtext */}
           <p className="text-xs text-muted-foreground">
             Sin registro. Resultado en segundos.
           </p>
         </motion.div>
 
-        {/* Bottom section */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -218,18 +233,11 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col px-4 py-8 max-w-md mx-auto space-y-8">
       {/* Bloque 1: Saludo + Tensión */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="space-y-2"
-      >
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-2">
         <p className="text-base text-muted-foreground">
           {getGreeting()}, <span className="text-foreground font-medium">{name}</span>
         </p>
-        <p className="font-display text-lg text-foreground leading-snug">
-          {tension}
-        </p>
+        <p className="font-display text-lg text-foreground leading-snug">{tension}</p>
       </motion.div>
 
       {/* Bloque 2: CTA */}
@@ -246,51 +254,26 @@ const Index = () => {
       </motion.button>
 
       {/* Bloque 3: Dos cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.6 }}
-        className="grid grid-cols-2 gap-3"
-      >
-        {/* Mi Vocal DNA */}
-        <button
-          onClick={() => navigate("/fingerprint")}
-          className="glass-card p-4 text-left space-y-3 hover:border-primary/30 transition-all"
-        >
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }} className="grid grid-cols-2 gap-3">
+        <button onClick={() => navigate("/fingerprint")} className="glass-card p-4 text-left space-y-3 hover:border-primary/30 transition-all">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Mi Vocal DNA</p>
           {homeData?.hasFingerprint ? (
-            <div className="flex justify-center">
-              <VocalRadar values={homeData.radarValues} size="mini" />
-            </div>
+            <div className="flex justify-center"><VocalRadar values={homeData.radarValues} size="mini" /></div>
           ) : (
             <p className="text-sm text-primary">Descubrí tu huella</p>
           )}
         </button>
-
-        {/* Soy Leyenda */}
-        <button
-          onClick={() => navigate("/skill-tree")}
-          className="glass-card p-4 text-left space-y-3 hover:border-primary/30 transition-all"
-        >
+        <button onClick={() => navigate("/skill-tree")} className="glass-card p-4 text-left space-y-3 hover:border-primary/30 transition-all">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Soy Leyenda</p>
           <PhaseProgress xp={homeData?.xp ?? 0} compact />
         </button>
       </motion.div>
 
       {/* Bloque 4: Contexto bottom */}
-      {homeData && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="flex items-center justify-center gap-2"
-        >
-          {homeData.streak > 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <StreakFlame days={homeData.streak} />
-              <span>{homeData.streak} noches encendiendo tu voz</span>
-            </div>
-          )}
+      {homeData && homeData.streak > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 0.6 }} className="flex items-center justify-center gap-2">
+          <StreakFlame days={homeData.streak} />
+          <span className="text-sm text-muted-foreground">{homeData.streak} noches encendiendo tu voz</span>
         </motion.div>
       )}
     </div>
