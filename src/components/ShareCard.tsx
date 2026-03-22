@@ -61,8 +61,8 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
     }
 
     // Data polygon
-    ctx.fillStyle = "rgba(168, 85, 247, 0.2)";
-    ctx.strokeStyle = "rgba(168, 85, 247, 0.9)";
+    ctx.fillStyle = "rgba(212, 168, 83, 0.2)";
+    ctx.strokeStyle = "rgba(212, 168, 83, 0.9)";
     ctx.lineWidth = 3;
     ctx.beginPath();
     dimensions.forEach((d, i) => {
