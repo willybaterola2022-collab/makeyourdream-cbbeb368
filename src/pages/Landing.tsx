@@ -339,10 +339,10 @@ const Landing = () => {
 
       {/* ═══════ FINAL CTA ═══════ */}
       <section className="py-24 px-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-2xl mx-auto text-center glass-card p-8 md:p-10 border-primary/20 glow-stage">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">Tu voz merece ser <span className="neon-text">escuchada</span></h2>
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="max-w-2xl mx-auto text-center glass-card p-8 md:p-10 border-primary/20">
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">Tu voz merece ser <span className="text-primary">escuchada</span></h2>
           <p className="text-muted-foreground mb-8 text-sm md:text-base">Graba tu voz, recibe tu diagnóstico vocal gratuito y comienza tu transformación hoy.</p>
-          <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 50px -5px hsl(275 85% 60% / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/onboarding")} className="h-14 px-10 w-full sm:w-auto rounded-xl stage-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 mx-auto">
+          <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 50px -5px hsl(var(--primary) / 0.5)" }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/onboarding")} className="h-14 px-10 w-full sm:w-auto rounded-xl bg-primary text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 mx-auto">
             <Mic className="h-5 w-5" />
             Comenzar gratis
           </motion.button>
