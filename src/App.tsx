@@ -22,7 +22,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Coach = lazy(() => import("./pages/Coach"));
 const Exercises = lazy(() => import("./pages/Exercises"));
 const Challenges = lazy(() => import("./pages/Challenges"));
-const Portfolio = lazy(() => import("./pages/Portfolio"));
+
 const BreathTrainer = lazy(() => import("./pages/BreathTrainer"));
 const PitchTraining = lazy(() => import("./pages/PitchTraining"));
 const WarmUp = lazy(() => import("./pages/WarmUp"));
