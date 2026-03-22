@@ -76,7 +76,7 @@ function AnimatedRoutes() {
             <Route path="/coach" element={<PageTransition><Coach /></PageTransition>} />
             <Route path="/exercises" element={<PageTransition><Exercises /></PageTransition>} />
             <Route path="/challenges" element={<PageTransition><Challenges /></PageTransition>} />
-            <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
+            
             <Route path="/breath-trainer" element={<PageTransition><BreathTrainer /></PageTransition>} />
             <Route path="/pitch-training" element={<PageTransition><PitchTraining /></PageTransition>} />
             <Route path="/warmup" element={<PageTransition><WarmUp /></PageTransition>} />

@@ -111,7 +111,7 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
 
     // Watermark
     ctx.font = "bold 32px sans-serif";
-    ctx.fillStyle = "rgba(168, 85, 247, 0.5)";
+    ctx.fillStyle = "rgba(212, 168, 83, 0.5)";
     ctx.fillText("MakeYourDream", w / 2, 1250);
     ctx.font = "18px sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.3)";
