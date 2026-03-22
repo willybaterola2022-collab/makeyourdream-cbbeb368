@@ -13,7 +13,7 @@ const modes = [
     label: "CANTA LIBRE",
     sub: "Sin reglas, solo tu voz",
     icon: Mic,
-    gradient: "from-[hsl(275_85%_50%)] to-[hsl(285_80%_60%)]",
+    gradient: "from-primary/80 to-primary",
   },
   {
     id: "custom" as const,
