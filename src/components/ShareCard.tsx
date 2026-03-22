@@ -24,11 +24,11 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
     canvas.width = w;
     canvas.height = h;
 
-    // Background gradient
+    // Background gradient — Luxury Íntimo
     const bg = ctx.createLinearGradient(0, 0, w, h);
-    bg.addColorStop(0, "#0a0a0a");
-    bg.addColorStop(0.5, "#1a0a2e");
-    bg.addColorStop(1, "#0a1a2e");
+    bg.addColorStop(0, "#0a0a0f");
+    bg.addColorStop(0.5, "#1a1208");
+    bg.addColorStop(1, "#0a0a0f");
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
