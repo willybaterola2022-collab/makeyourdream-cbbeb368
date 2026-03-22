@@ -157,7 +157,7 @@ export default function SkillTree() {
               <Mic className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{node.title}</p>
+              <p className="text-sm font-medium text-foreground truncate">{node.name}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{node.description || "Disponible"}</p>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
