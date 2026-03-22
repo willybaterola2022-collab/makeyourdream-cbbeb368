@@ -99,7 +99,7 @@ export default function SkillTree() {
 
   const handleNodeClick = (node: typeof computedNodes[0]) => {
     if (node.computedStatus === "unlocked" || node.computedStatus === "completed") {
-      setSelectedNode(node);
+      setSelectedNode(node as any);
     }
   };
 
