@@ -105,7 +105,7 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
     // Range
     if (vocalRange.low) {
       ctx.font = "28px sans-serif";
-      ctx.fillStyle = "#06b6d4";
+      ctx.fillStyle = "#C47D4E";
       ctx.fillText(`Rango: ${vocalRange.low} → ${vocalRange.high}`, w / 2, 1020);
     }
 
