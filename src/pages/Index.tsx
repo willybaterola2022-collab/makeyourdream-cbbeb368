@@ -1,271 +1,298 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Mic, Fingerprint, Dumbbell, Zap, Heart, Sparkles, Eye, PenTool } from "lucide-react";
-import DreamBooth from "@/components/DreamBooth";
-import { StageButton } from "@/components/ui/StageButton";
+import { Mic } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { VocalRadar } from "@/components/VocalRadar";
+import { PhaseProgress, getLevelPhase } from "@/components/PhaseProgress";
+import { StreakFlame } from "@/components/StreakFlame";
 
-const LIVE_PHRASES = [
-  "Tu estudio está encendido",
-  "Descubre cómo suena tu voz",
-  "Haz una toma antes de pensarlo",
-  "Graba lo que no estás diciendo",
-  "Tu siguiente versión está a 20 segundos",
-];
-
-const MOODS = [
-  { label: "Soltar", icon: Heart, path: "/karaoke" },
-  { label: "Crear", icon: Sparkles, path: "/song-sketch" },
-  { label: "Entrenar", icon: Dumbbell, path: "/warmup" },
-  { label: "Mostrar", icon: Eye, path: "/portfolio" },
-] as const;
-
-const PADS = [
-  { label: "GRABAR", sub: "Hacer una toma", path: "/karaoke", icon: Mic, borderColor: "hsl(275 85% 60%/0.3)", glowColor: "hsl(275 85% 60%/0.2)" },
-  { label: "DESCUBRIR", sub: "Escuchar mi voz", path: "/fingerprint", icon: Fingerprint, borderColor: "hsl(185 90% 55%/0.3)", glowColor: "hsl(185 90% 55%/0.2)" },
-  { label: "ENTRENAR", sub: "Solo 2 minutos", path: "/warmup", icon: Dumbbell, borderColor: "hsl(25 90% 55%/0.3)", glowColor: "hsl(25 90% 55%/0.2)" },
-] as const;
-
-interface LifeSignal {
-  lastRecording: string | null;
+interface HomeData {
   streak: number;
+  sessionToday: boolean;
   challengeTitle: string | null;
+  lastRecording: string | null;
+  xp: number;
+  radarValues: number[];
+  hasFingerprint: boolean;
+  displayName: string | null;
+}
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 6) return "Buenas noches";
+  if (h < 12) return "Buenos días";
+  if (h < 20) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+function getTension(data: HomeData): string {
+  if (data.streak > 3 && !data.sessionToday) {
+    return `Tu racha de ${data.streak} noches está a punto de enfriarse.`;
+  }
+  if (data.challengeTitle) {
+    return `El reto de hoy: ${data.challengeTitle}.`;
+  }
+  if (data.lastRecording) {
+    return `Tu última toma fue ${data.lastRecording}. Tu voz te está esperando.`;
+  }
+  return "Tu voz te está esperando.";
 }
 
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [lifeSignal, setLifeSignal] = useState<LifeSignal | null>(null);
+  const [homeData, setHomeData] = useState<HomeData | null>(null);
+  const [voiceCount, setVoiceCount] = useState<number>(847);
 
+  // Fetch social proof count
   useEffect(() => {
-    const t = setInterval(() => setPhraseIdx((i) => (i + 1) % LIVE_PHRASES.length), 6000);
-    return () => clearInterval(t);
+    supabase
+      .from("analytics_events")
+      .select("id", { count: "exact", head: true })
+      .then(({ count }) => {
+        if (count && count > 0) setVoiceCount(count);
+      });
   }, []);
 
-  /* Fetch real life signal data — try edge functions first */
+  // Fetch authenticated home data
   useEffect(() => {
     if (!user) return;
     async function fetchData() {
-      let lastRecording: string | null = null;
-      let streak = 0;
+      let streak = 0, xp = 0, sessionToday = false;
       let challengeTitle: string | null = null;
+      let lastRecording: string | null = null;
+      let radarValues = [0, 0, 0, 0, 0, 0];
+      let hasFingerprint = false;
+      let displayName: string | null = null;
 
-      // Try gamification-engine for progress
       try {
         const { data } = await supabase.functions.invoke("gamification-engine", {
           body: { action: "get_progress", user_id: user!.id },
         });
-        if (data?.streak_days != null) streak = data.streak_days;
+        if (data) {
+          streak = data.streak_days ?? 0;
+          xp = data.xp ?? 0;
+        }
       } catch {
-        // Fallback
-        const { data: progressData } = await supabase
+        const { data: p } = await supabase
           .from("user_progress")
-          .select("streak_days")
+          .select("streak_days, xp")
           .eq("user_id", user!.id)
           .maybeSingle();
-        streak = progressData?.streak_days ?? 0;
+        streak = p?.streak_days ?? 0;
+        xp = p?.xp ?? 0;
       }
 
-      // Try daily-challenge for today's challenge
+      // Check session today
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const { count } = await supabase
+        .from("training_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .gte("created_at", todayStart.toISOString());
+      sessionToday = (count ?? 0) > 0;
+
+      // Daily challenge
       try {
         const { data } = await supabase.functions.invoke("daily-challenge", {
           body: { action: "get_today", user_id: user!.id },
         });
-        if (data?.challenge?.title) challengeTitle = data.challenge.title;
+        challengeTitle = data?.challenge?.title ?? null;
       } catch {
         const today = new Date().toISOString().split("T")[0];
-        const { data: challengeData } = await supabase
+        const { data: c } = await supabase
           .from("daily_challenges")
           .select("title")
           .eq("active_date", today)
           .limit(1)
           .maybeSingle();
-        challengeTitle = challengeData?.title ?? null;
+        challengeTitle = c?.title ?? null;
       }
 
-      // Last recording (always direct query — simple)
+      // Last recording
       const { data: recData } = await supabase
         .from("recordings")
         .select("created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(1);
-
-      const lastDate = recData?.[0]?.created_at;
-      if (lastDate) {
-        const diff = Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000);
+      if (recData?.[0]?.created_at) {
+        const diff = Math.floor((Date.now() - new Date(recData[0].created_at).getTime()) / 86400000);
         lastRecording = diff === 0 ? "hoy" : diff === 1 ? "ayer" : `hace ${diff} días`;
       }
 
-      setLifeSignal({ lastRecording, streak, challengeTitle });
+      // Fingerprint
+      const { data: fp } = await supabase
+        .from("vocal_fingerprints")
+        .select("dimensions")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (fp?.dimensions) {
+        hasFingerprint = true;
+        const d = fp.dimensions as any;
+        radarValues = [
+          d.pitch ?? 0, d.rhythm ?? 0, d.vibrato ?? 0,
+          d.sustain ?? 0, d.control ?? 0, d.range ?? 0,
+        ];
+      }
+
+      // Profile name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      displayName = profile?.display_name ?? null;
+
+      setHomeData({ streak, sessionToday, challengeTitle, lastRecording, xp, radarValues, hasFingerprint, displayName });
     }
     fetchData();
   }, [user]);
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      {/* ═══ PANTALLA 1 — ESCENA INMERSIVA ═══ */}
-      <section
-        className="min-h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden px-4"
-        style={{
-          background: `
-            radial-gradient(ellipse at 50% 20%, hsl(275 85% 15%/0.35) 0%, transparent 60%),
-            radial-gradient(ellipse at 30% 70%, hsl(185 90% 15%/0.15) 0%, transparent 50%),
-            radial-gradient(ellipse at 70% 80%, hsl(275 60% 10%/0.2) 0%, transparent 50%),
-            hsl(0 0% 4%)
-          `,
-        }}
-      >
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, transparent 50%, hsl(0 0% 4%) 100%)" }} />
-
-        {/* Live phrase */}
-        <div className="relative h-8 mb-6 z-10">
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={phraseIdx}
-              initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="text-xs md:text-sm tracking-[0.25em] uppercase text-muted-foreground/60 text-center"
-            >
-              {LIVE_PHRASES[phraseIdx]}
-            </motion.p>
-          </AnimatePresence>
-        </div>
-
-        {/* Dream Booth */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="z-10"
-        >
-          <DreamBooth onClick={() => navigate("/karaoke")} />
-        </motion.div>
-
-        {/* Mood Capsules — now functional, navigate to routes */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="flex gap-2 mt-6 z-10 overflow-x-auto max-w-full px-1 scrollbar-hide"
-        >
-          {MOODS.map((m) => (
-            <StageButton
-              key={m.label}
-              variant="capsule"
-              onClick={() => navigate(m.path)}
-              icon={<m.icon className="h-3 w-3" />}
-              className="text-[10px] shrink-0"
-            >
-              {m.label}
-            </StageButton>
-          ))}
-        </motion.div>
-
-        {/* CTA Monolith */}
+  // ══ NON-AUTH HOME ══
+  if (!user) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 bg-background">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 z-10 w-full max-w-xs"
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="max-w-sm w-full text-center space-y-8"
         >
-          <StageButton variant="monolith" pulse onClick={() => navigate("/karaoke")} icon={<Mic className="h-5 w-5" />} className="w-full">
-            Grabar ahora
-          </StageButton>
+          {/* Headline */}
+          <h1 className="font-display text-4xl text-foreground leading-tight">
+            Tu voz deja una huella
+          </h1>
+
+          {/* Subheadline */}
+          <p className="text-base text-muted-foreground">
+            Cantá una sola vez y descubrí qué hace única a tu voz.
+          </p>
+
+          {/* CTA */}
+          <motion.button
+            onClick={() => navigate("/vocal-dna-test")}
+            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.02 }}
+            className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-display text-lg tracking-wide shadow-[0_0_30px_-8px_hsl(var(--primary)/0.5)] transition-all hover:shadow-[0_0_40px_-8px_hsl(var(--primary)/0.6)]"
+          >
+            Descubrir mi voz
+          </motion.button>
+
+          {/* Microtext */}
+          <p className="text-xs text-muted-foreground">
+            Sin registro. Resultado en segundos.
+          </p>
         </motion.div>
 
-        {/* Scroll hint */}
-        <motion.div
-          className="absolute bottom-6 z-10"
-          animate={{ y: [0, 6, 0], opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <div className="w-5 h-8 rounded-full border border-muted-foreground/20 flex items-start justify-center pt-1.5">
-            <div className="w-1 h-1.5 rounded-full bg-muted-foreground/40" />
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ═══ PANTALLA 2 — LAUNCH PADS ═══ */}
-      <section className="py-12 md:py-16 px-4">
-        <div className="grid grid-cols-3 gap-3 md:gap-5 max-w-md mx-auto">
-          {PADS.map((pad, i) => (
-            <motion.button
-              key={pad.label}
-              onClick={() => navigate(pad.path)}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ delay: i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              whileTap={{ scale: 0.95, y: 2 }}
-              whileHover={{ scale: 1.02 }}
-              className="relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer overflow-hidden transition-all"
-              style={{
-                background: `radial-gradient(circle at 50% 40%, ${pad.glowColor}, hsl(0 0% 7%) 70%)`,
-                border: `1px solid ${pad.borderColor}`,
-                boxShadow: `inset 0 -4px 12px hsl(0 0% 0%/0.5), inset 0 1px 0 hsl(0 0% 100%/0.04), 0 0 25px -8px ${pad.glowColor}`,
-              }}
-            >
-              <pad.icon className="h-8 w-8 md:h-10 md:w-10 text-foreground/80" strokeWidth={1.5} />
-              <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-foreground/70">{pad.label}</span>
-              <motion.span
-                className="absolute bottom-3 left-[25%] right-[25%] h-[1.5px] rounded-full"
-                style={{ background: pad.borderColor }}
-                animate={{ scaleX: [0.5, 1, 0.5], opacity: [0.3, 0.7, 0.3] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              />
-            </motion.button>
-          ))}
-        </div>
-      </section>
-
-      {/* ═══ PANTALLA 3 — SEÑAL DE VIDA (real data) ═══ */}
-      <section className="py-8 px-4">
+        {/* Bottom section */}
         <motion.div
           initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8 }}
-          className="max-w-md mx-auto"
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="absolute bottom-12 text-center space-y-4"
         >
-          {user && lifeSignal ? (
-            <div className="glass-card p-5 space-y-3 border-primary/10">
-              {lifeSignal.lastRecording && (
-                <p className="text-xs text-muted-foreground">
-                  Tu última toma fue <span className="text-foreground font-medium">{lifeSignal.lastRecording}</span>
-                </p>
-              )}
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Zap className="h-3 w-3 text-primary" />
-                  Racha: <span className="text-foreground font-medium">{lifeSignal.streak} 🔥</span>
-                </span>
-                {lifeSignal.challengeTitle && (
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate("/challenges")}
-                    className="text-[10px] uppercase tracking-widest text-primary font-bold hover:underline"
-                  >
-                    Reto: {lifeSignal.challengeTitle}
-                  </motion.button>
-                )}
-              </div>
-            </div>
-          ) : !user ? (
-            <p className="text-center text-xs text-muted-foreground/50">
-              <button onClick={() => navigate("/login")} className="text-primary/60 hover:text-primary hover:underline transition-colors">
-                Inicia sesión
-              </button>{" "}
-              para que tu estudio te recuerde
-            </p>
-          ) : null}
+          <p className="text-sm text-muted-foreground">
+            Hoy ya dejaron su huella <span className="font-mono text-foreground">{voiceCount}</span> voces
+          </p>
+          <button
+            onClick={() => navigate("/karaoke")}
+            className="text-xs text-muted-foreground/60 hover:text-primary transition-colors"
+          >
+            ¿Preferís ir directo a una canción?
+          </button>
         </motion.div>
-      </section>
+      </div>
+    );
+  }
+
+  // ══ AUTH HOME ══
+  const name = homeData?.displayName ?? user.email?.split("@")[0] ?? "artista";
+  const tension = homeData ? getTension(homeData) : "Cargando...";
+
+  return (
+    <div className="min-h-screen flex flex-col px-4 py-8 max-w-md mx-auto space-y-8">
+      {/* Bloque 1: Saludo + Tensión */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="space-y-2"
+      >
+        <p className="text-base text-muted-foreground">
+          {getGreeting()}, <span className="text-foreground font-medium">{name}</span>
+        </p>
+        <p className="font-display text-lg text-foreground leading-snug">
+          {tension}
+        </p>
+      </motion.div>
+
+      {/* Bloque 2: CTA */}
+      <motion.button
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.6 }}
+        onClick={() => navigate("/karaoke")}
+        whileTap={{ scale: 0.96 }}
+        className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-display text-lg tracking-wide shadow-[0_0_30px_-8px_hsl(var(--primary)/0.5)] flex items-center justify-center gap-3"
+      >
+        <Mic className="w-5 h-5" />
+        Cantar ahora
+      </motion.button>
+
+      {/* Bloque 3: Dos cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+        className="grid grid-cols-2 gap-3"
+      >
+        {/* Mi Vocal DNA */}
+        <button
+          onClick={() => navigate("/fingerprint")}
+          className="glass-card p-4 text-left space-y-3 hover:border-primary/30 transition-all"
+        >
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Mi Vocal DNA</p>
+          {homeData?.hasFingerprint ? (
+            <div className="flex justify-center">
+              <VocalRadar values={homeData.radarValues} size="mini" />
+            </div>
+          ) : (
+            <p className="text-sm text-primary">Descubrí tu huella</p>
+          )}
+        </button>
+
+        {/* Soy Leyenda */}
+        <button
+          onClick={() => navigate("/skill-tree")}
+          className="glass-card p-4 text-left space-y-3 hover:border-primary/30 transition-all"
+        >
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Soy Leyenda</p>
+          <PhaseProgress xp={homeData?.xp ?? 0} compact />
+        </button>
+      </motion.div>
+
+      {/* Bloque 4: Contexto bottom */}
+      {homeData && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+          className="flex items-center justify-center gap-2"
+        >
+          {homeData.streak > 0 && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <StreakFlame days={homeData.streak} />
+              <span>{homeData.streak} noches encendiendo tu voz</span>
+            </div>
+          )}
+        </motion.div>
+      )}
     </div>
   );
 };

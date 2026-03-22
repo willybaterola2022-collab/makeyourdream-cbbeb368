@@ -280,7 +280,7 @@ export default function SingingFeedback({ scores, isActive, finished, onRetry, o
                 GUARDAR
               </StageButton>
             )}
-            <StageButton variant="accent" icon={<Share2 className="h-5 w-5" />} onClick={() => setShowShare(true)}>
+            <StageButton variant="glass" icon={<Share2 className="h-5 w-5" />} onClick={() => setShowShare(true)}>
               COMPARTIR
             </StageButton>
           </motion.div>

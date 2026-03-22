@@ -99,7 +99,7 @@ export default function EmotionMap() {
 
           <div className="mt-6">
             <StageButton
-              variant={isListening ? "danger" : "scan"}
+              variant={isListening ? "danger" : "glass"}
               icon={<Mic className="h-5 w-5" />}
               onClick={handleAnalyze}
             >
