@@ -17,6 +17,7 @@ import {
   BarChart3,
   Headphones,
 } from "lucide-react";
+import VintageMicrophone from "@/components/karaoke/VintageMicrophone";
 
 /* ─── Animated Equalizer ─── */
 const EqualizerBar = ({ index, total }: { index: number; total: number }) => {
