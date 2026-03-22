@@ -265,7 +265,7 @@ const Landing = () => {
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
             <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-3">Así de fácil</p>
             <h2 className="font-serif text-3xl md:text-5xl font-bold text-foreground">
-              3 pasos para <span className="neon-text">brillar</span>
+              3 pasos para <span className="text-primary">brillar</span>
             </h2>
           </motion.div>
 
