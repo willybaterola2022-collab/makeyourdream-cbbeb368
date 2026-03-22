@@ -27,7 +27,7 @@ const modes = [
     label: "ELIGE CANCIÓN",
     sub: "200+ canciones disponibles",
     icon: ListMusic,
-    gradient: "from-[hsl(275_70%_45%)] to-[hsl(185_80%_50%)]",
+    gradient: "from-primary/70 to-secondary/80",
   },
 ];
 
