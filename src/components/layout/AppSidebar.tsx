@@ -12,7 +12,7 @@ import {
   SidebarGroupContent,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Home, Mic, Fingerprint, BrainCircuit, Mountain, UserCircle, Music, Rss } from "lucide-react";
+import { Home, Mic, Mountain, UserCircle, Music, Rss, BrainCircuit } from "lucide-react";
 
 const SIDEBAR_ITEMS = [
   { label: "Principal", items: [
@@ -21,12 +21,11 @@ const SIDEBAR_ITEMS = [
     { title: "Feed", url: "/talent-feed", icon: Rss },
   ]},
   { label: "Tu Voz", items: [
-    { title: "Vocal DNA", url: "/fingerprint", icon: Fingerprint },
     { title: "Coach", url: "/coach", icon: BrainCircuit },
     { title: "Soy Leyenda", url: "/skill-tree", icon: Mountain },
   ]},
   { label: "Carrera", items: [
-    { title: "Portfolio", url: "/portfolio", icon: UserCircle },
+    { title: "Perfil", url: "/profile", icon: UserCircle },
   ]},
 ];
 
