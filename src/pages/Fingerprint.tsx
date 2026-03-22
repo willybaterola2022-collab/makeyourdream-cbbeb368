@@ -8,6 +8,7 @@ import ShareCard from "@/components/ShareCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/trackEvent";
 
 const ANALYSIS_DURATION = 15;
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -38,11 +39,70 @@ const Fingerprint = () => {
   const [globalScore, setGlobalScore] = useState(0);
   const [vocalRange, setVocalRange] = useState({ low: "", high: "" });
   const [similarArtist, setSimilarArtist] = useState("");
+  const [evolution, setEvolution] = useState<number[]>([]);
   const [showShare, setShowShare] = useState(false);
 
   const pitchSamples = useRef<number[]>([]);
   const volumeSamples = useRef<number[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+
+  // Load existing fingerprint on mount
+  useEffect(() => {
+    if (!user) return;
+    trackEvent(user.id, "module_visited", { module: "fingerprint" });
+
+    (async () => {
+      try {
+        const { data } = await supabase.functions.invoke("vocal-fingerprint", {
+          body: { action: "get_latest", user_id: user.id },
+        });
+        if (data?.fingerprint) {
+          const fp = data.fingerprint;
+          if (fp.dimensions) {
+            const newDims = Object.entries(fp.dimensions).map(([name, value]) => ({
+              name,
+              value: value as number,
+            }));
+            if (newDims.length > 0) setDimensions(newDims);
+          }
+          if (fp.global_score) setGlobalScore(fp.global_score);
+          if (fp.classification) {
+            const parts = fp.classification.split(" → ");
+            if (parts.length === 2) setVocalRange({ low: parts[0], high: parts[1] });
+          }
+          if (fp.similar_artists?.length > 0) setSimilarArtist(fp.similar_artists[0]);
+          if (data.evolution) setEvolution(data.evolution);
+          if (fp.global_score > 0) setPhase("result");
+        }
+      } catch {
+        // Fallback: direct query
+        const { data: fp } = await supabase
+          .from("vocal_fingerprints")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (fp) {
+          if (fp.dimensions) {
+            const d = fp.dimensions as any;
+            const newDims = Object.entries(d).map(([name, value]) => ({ name, value: value as number }));
+            if (newDims.length > 0) setDimensions(newDims);
+          }
+          if (fp.global_score) setGlobalScore(fp.global_score);
+          if (fp.classification) {
+            const parts = fp.classification.split(" → ");
+            if (parts.length === 2) setVocalRange({ low: parts[0], high: parts[1] });
+          }
+          if (fp.similar_artists) {
+            const artists = fp.similar_artists as any[];
+            if (artists.length > 0) setSimilarArtist(typeof artists[0] === "string" ? artists[0] : artists[0].name);
+          }
+          if (fp.global_score && fp.global_score > 0) setPhase("result");
+        }
+      }
+    })();
+  }, [user]);
 
   const startAnalysis = useCallback(async () => {
     const ok = await requestMic();
@@ -91,8 +151,7 @@ const Fingerprint = () => {
           const fp = data.fingerprint;
           if (fp.dimensions) {
             const newDims = Object.entries(fp.dimensions).map(([name, value]) => ({
-              name,
-              value: value as number,
+              name, value: value as number,
             }));
             if (newDims.length > 0) setDimensions(newDims);
           }
@@ -103,6 +162,7 @@ const Fingerprint = () => {
           if (fp.similar_artists?.length > 0) setSimilarArtist(fp.similar_artists[0]);
           if (fp.global_score) setGlobalScore(fp.global_score);
           toast.success("Fingerprint guardado");
+          trackEvent(user.id, "fingerprint_created");
           return;
         }
       } catch {}
@@ -111,7 +171,7 @@ const Fingerprint = () => {
     // Fallback: local analysis
     const localDims = computeLocalDimensions(pitches, volumes);
     const global = Math.round(localDims.reduce((a, b) => a + b.value, 0) / localDims.length);
-    const SIMILAR_ARTISTS = ["Adele", "Sam Smith", "Freddie Mercury", "Whitney Houston", "Ed Sheeran", "Billie Eilish", "Bruno Mars", "Sia", "John Legend", "Amy Winehouse"];
+    const SIMILAR_ARTISTS = ["Adele", "Sam Smith", "Freddie Mercury", "Whitney Houston", "Ed Sheeran", "Billie Eilish", "Bruno Mars", "Sia"];
     const artist = SIMILAR_ARTISTS[Math.floor(Math.random() * SIMILAR_ARTISTS.length)];
 
     let lowNote = "", highNote = "";
@@ -125,7 +185,6 @@ const Fingerprint = () => {
     setVocalRange({ low: lowNote, high: highNote });
     setSimilarArtist(artist);
 
-    // Save locally
     if (user) {
       try {
         const lowFreq = pitches.length > 0 ? Math.min(...pitches) : null;
@@ -139,12 +198,8 @@ const Fingerprint = () => {
           classification: `${lowNote} → ${highNote}`,
           similar_artists: [artist],
         }]);
-        await supabase.from("share_cards").insert([{
-          user_id: user.id,
-          card_type: "fingerprint",
-          card_data: { dimensions: localDims.map(d => ({ name: d.name, value: d.value })), globalScore: global, similarArtist: artist, vocalRange: { low: lowNote, high: highNote } } as any,
-        }]);
         toast.success("Fingerprint guardado");
+        trackEvent(user.id, "fingerprint_created");
       } catch (e) {
         console.error("Error saving fingerprint:", e);
       }
@@ -153,7 +208,6 @@ const Fingerprint = () => {
 
   function computeLocalDimensions(pitches: number[], volumes: number[]): Dimensions[] {
     const avgVol = volumes.length ? volumes.reduce((a, b) => a + b, 0) / volumes.length : 0;
-
     let pitchAccuracy = 75;
     if (pitches.length > 5) {
       const mean = pitches.reduce((a, b) => a + b, 0) / pitches.length;
@@ -161,7 +215,6 @@ const Fingerprint = () => {
       const cv = Math.sqrt(variance) / mean;
       pitchAccuracy = Math.min(98, Math.max(40, 95 - cv * 200));
     }
-
     let vibratoScore = 60;
     if (pitches.length > 10) {
       let oscillations = 0;
@@ -170,7 +223,6 @@ const Fingerprint = () => {
       }
       vibratoScore = Math.min(95, Math.max(30, 40 + (oscillations / pitches.length) * 120));
     }
-
     const sustainScore = Math.min(95, Math.max(40, 50 + avgVol * 0.6));
     let controlScore = 70;
     if (volumes.length > 5) {
@@ -178,7 +230,6 @@ const Fingerprint = () => {
       const volVar = volumes.reduce((a, b) => a + (b - volMean) ** 2, 0) / volumes.length;
       controlScore = Math.min(95, Math.max(35, 90 - Math.sqrt(volVar) * 2));
     }
-
     let rangeScore = 65;
     if (pitches.length > 0) {
       const minFreq = Math.min(...pitches);
@@ -186,9 +237,7 @@ const Fingerprint = () => {
       const semitones = 12 * Math.log2(maxFreq / minFreq);
       rangeScore = Math.min(98, Math.max(30, 40 + semitones * 3));
     }
-
     const timingScore = Math.min(95, Math.max(45, pitchAccuracy * 0.8 + 10));
-
     return [
       { name: "Afinación", value: Math.round(pitchAccuracy) },
       { name: "Timing", value: Math.round(timingScore) },
@@ -214,7 +263,7 @@ const Fingerprint = () => {
   return (
     <div className="p-4 md:p-8 space-y-6 animate-fade-in">
       <div>
-        <h1 className="font-serif text-3xl font-semibold text-foreground">Vocal Fingerprint 6D</h1>
+        <h1 className="font-display text-3xl font-semibold text-foreground">Vocal Fingerprint 6D</h1>
         <p className="text-muted-foreground text-sm mt-1">Tu identidad vocal única</p>
       </div>
 
@@ -222,7 +271,7 @@ const Fingerprint = () => {
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card p-5 flex items-center justify-between">
           <div>
             <p className="text-[11px] text-muted-foreground uppercase tracking-widest">Score Global</p>
-            <motion.p className="text-4xl font-serif font-bold neon-text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>{globalScore}</motion.p>
+            <motion.p className="text-4xl font-display font-bold text-primary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>{globalScore}</motion.p>
           </div>
           <div className="text-right">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Similar a</p>
@@ -230,6 +279,25 @@ const Fingerprint = () => {
             {vocalRange.low && <p className="text-xs text-muted-foreground mt-1">{vocalRange.low} → {vocalRange.high}</p>}
           </div>
         </motion.div>
+      )}
+
+      {/* Evolution */}
+      {evolution.length > 1 && phase === "result" && (
+        <div className="glass-card p-4">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Evolución</p>
+          <div className="flex items-end gap-1 h-12">
+            {evolution.map((score, i) => (
+              <motion.div
+                key={i}
+                initial={{ height: 0 }}
+                animate={{ height: `${(score / 100) * 100}%` }}
+                transition={{ delay: i * 0.1 }}
+                className="flex-1 rounded-t bg-primary/60"
+                title={`${score}`}
+              />
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="glass-card p-5 flex justify-center">
@@ -246,14 +314,14 @@ const Fingerprint = () => {
 
       {phase === "analyzing" && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-4">
-          <motion.div className="mx-auto w-20 h-20 rounded-full stage-gradient flex items-center justify-center" animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 0.8, repeat: Infinity }}>
-            <Mic className="h-8 w-8 text-primary-foreground" />
+          <motion.div className="mx-auto w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center" animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 0.8, repeat: Infinity }}>
+            <Mic className="h-8 w-8 text-primary" />
           </motion.div>
           <p className="text-2xl font-bold text-foreground">{timeLeft}s</p>
           <p className="text-sm text-muted-foreground">Cantá algo... estamos analizando tu voz</p>
           {currentNote && <p className="text-lg font-mono text-primary">{currentNote} — {Math.round(currentFrequency)}Hz</p>}
           <div className="mx-auto max-w-xs h-3 rounded-full bg-muted overflow-hidden">
-            <motion.div className="h-full rounded-full stage-gradient" animate={{ width: `${volume}%` }} transition={{ duration: 0.05 }} />
+            <motion.div className="h-full rounded-full bg-primary" animate={{ width: `${volume}%` }} transition={{ duration: 0.05 }} />
           </div>
         </motion.div>
       )}
@@ -276,7 +344,7 @@ const Fingerprint = () => {
             <motion.div key={d.name} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }} className="glass-card p-3 flex items-center gap-3">
               <span className="text-sm text-muted-foreground w-20 shrink-0">{d.name}</span>
               <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
-                <motion.div className="h-full rounded-full stage-gradient" initial={{ width: 0 }} animate={{ width: `${d.value}%` }} transition={{ duration: 0.8, delay: i * 0.1 }} />
+                <motion.div className="h-full rounded-full bg-primary" initial={{ width: 0 }} animate={{ width: `${d.value}%` }} transition={{ duration: 0.8, delay: i * 0.1 }} />
               </div>
               <span className="text-sm font-bold text-foreground w-8 text-right">{d.value}</span>
             </motion.div>

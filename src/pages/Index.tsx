@@ -2,24 +2,13 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Mic } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { VocalRadar } from "@/components/VocalRadar";
 import { PhaseProgress } from "@/components/PhaseProgress";
 import { StreakFlame } from "@/components/StreakFlame";
 import { trackEvent } from "@/lib/trackEvent";
-
-interface HomeData {
-  streak: number;
-  sessionToday: boolean;
-  challengeTitle: string | null;
-  lastRecording: string | null;
-  xp: number;
-  radarValues: number[];
-  hasFingerprint: boolean;
-  displayName: string | null;
-  unseenBadge: boolean;
-}
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -29,31 +18,32 @@ function getGreeting(): string {
   return "Buenas noches";
 }
 
-function getTension(data: HomeData): string {
+function getTension(progress: any, challenge: any, fingerprint: any): string {
+  if (!progress) return "Tu voz te está esperando.";
+
+  const today = new Date().toISOString().split("T")[0];
+  const practicoHoy = progress.last_active_date === today;
+
   // P1: Racha en riesgo
-  if (data.streak > 3 && !data.sessionToday) {
-    return `Tu racha de ${data.streak} noches está a punto de enfriarse.`;
+  if (progress.streak_days > 3 && !practicoHoy) {
+    return `Tu racha de ${progress.streak_days} noches está a punto de enfriarse.`;
   }
   // P2: Badge no visto
-  if (data.unseenBadge) {
+  const badges = (progress.badges as any[]) ?? [];
+  if (badges.some((b: any) => b.seen === false)) {
     return "Desbloqueaste algo nuevo. Abrilo.";
   }
   // P3: Reto del día
-  if (data.challengeTitle) {
-    return `El reto de hoy: ${data.challengeTitle}.`;
+  if (challenge?.challenge && !challenge.completed) {
+    return `El reto de hoy: ${challenge.challenge.description || challenge.challenge.title}`;
   }
-  // P4: Mejora vs ayer
-  if (data.lastRecording) {
-    return `Tu última toma fue ${data.lastRecording}. Tu voz te está esperando.`;
-  }
-  // P5: Fallback
+  // P4: Fallback
   return "Tu voz te está esperando.";
 }
 
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [homeData, setHomeData] = useState<HomeData | null>(null);
   const [voiceCount, setVoiceCount] = useState<number>(847);
 
   // Track app_opened
@@ -61,7 +51,7 @@ const Index = () => {
     if (user) trackEvent(user.id, "app_opened");
   }, [user]);
 
-  // Fetch social proof count
+  // Social proof count (fire & forget)
   useEffect(() => {
     supabase
       .from("analytics_events")
@@ -71,81 +61,43 @@ const Index = () => {
       });
   }, []);
 
-  // Fetch authenticated home data
-  useEffect(() => {
-    if (!user) return;
-    async function fetchData() {
-      let streak = 0, xp = 0, sessionToday = false;
-      let challengeTitle: string | null = null;
-      let lastRecording: string | null = null;
-      let radarValues = [0, 0, 0, 0, 0, 0];
-      let hasFingerprint = false;
-      let displayName: string | null = null;
-      let unseenBadge = false;
-
-      try {
-        const { data } = await supabase.functions.invoke("gamification-engine", {
-          body: { action: "get_progress", user_id: user!.id },
-        });
-        if (data) {
-          streak = data.streak_days ?? 0;
-          xp = data.xp ?? 0;
-          // Check unseen badges
-          const badges = data.badges as any[] ?? [];
-          unseenBadge = badges.some((b: any) => b.seen === false);
-        }
-      } catch {
+  // react-query: gamification progress
+  const { data: progressData } = useQuery({
+    queryKey: ["home-progress", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("gamification-engine", {
+        body: { action: "get_progress", user_id: user!.id },
+      });
+      if (error) {
+        // Fallback: direct query
         const { data: p } = await supabase
           .from("user_progress")
-          .select("streak_days, xp, badges")
+          .select("streak_days, xp, badges, last_active_date, level")
           .eq("user_id", user!.id)
           .maybeSingle();
-        streak = p?.streak_days ?? 0;
-        xp = p?.xp ?? 0;
-        const badges = (p?.badges as any[]) ?? [];
-        unseenBadge = badges.some((b: any) => b.seen === false);
+        return p;
       }
+      return data;
+    },
+    enabled: !!user,
+  });
 
-      // Check session today
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const { count } = await supabase
-        .from("training_sessions")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user!.id)
-        .gte("created_at", todayStart.toISOString());
-      sessionToday = (count ?? 0) > 0;
+  // react-query: daily challenge
+  const { data: challengeData } = useQuery({
+    queryKey: ["home-challenge", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.functions.invoke("daily-challenge", {
+        body: { action: "get_today", user_id: user!.id },
+      });
+      return data;
+    },
+    enabled: !!user,
+  });
 
-      // Daily challenge
-      try {
-        const { data } = await supabase.functions.invoke("daily-challenge", {
-          body: { action: "get_today", user_id: user!.id },
-        });
-        challengeTitle = data?.challenge?.title ?? null;
-      } catch {
-        const today = new Date().toISOString().split("T")[0];
-        const { data: c } = await supabase
-          .from("daily_challenges")
-          .select("title")
-          .eq("active_date", today)
-          .limit(1)
-          .maybeSingle();
-        challengeTitle = c?.title ?? null;
-      }
-
-      // Last recording
-      const { data: recData } = await supabase
-        .from("recordings")
-        .select("created_at")
-        .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      if (recData?.[0]?.created_at) {
-        const diff = Math.floor((Date.now() - new Date(recData[0].created_at).getTime()) / 86400000);
-        lastRecording = diff === 0 ? "hoy" : diff === 1 ? "ayer" : `hace ${diff} días`;
-      }
-
-      // Fingerprint
+  // react-query: vocal fingerprint
+  const { data: fingerprintData } = useQuery({
+    queryKey: ["home-fingerprint", user?.id],
+    queryFn: async () => {
       const { data: fp } = await supabase
         .from("vocal_fingerprints")
         .select("dimensions")
@@ -153,29 +105,31 @@ const Index = () => {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (fp?.dimensions) {
-        hasFingerprint = true;
-        const d = fp.dimensions as any;
-        radarValues = [d.pitch ?? 0, d.rhythm ?? 0, d.vibrato ?? 0, d.sustain ?? 0, d.control ?? 0, d.range ?? 0];
-      }
+      return fp;
+    },
+    enabled: !!user,
+  });
 
-      // Profile name
-      const { data: profile } = await supabase
+  // react-query: profile
+  const { data: profileData } = useQuery({
+    queryKey: ["home-profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
         .from("profiles")
         .select("display_name")
         .eq("user_id", user!.id)
         .maybeSingle();
-      displayName = profile?.display_name ?? null;
+      return data;
+    },
+    enabled: !!user,
+  });
 
-      setHomeData({ streak, sessionToday, challengeTitle, lastRecording, xp, radarValues, hasFingerprint, displayName, unseenBadge });
-
-      // Onboarding redirect: if no fingerprint, go to vocal DNA test
-      if (!hasFingerprint) {
-        navigate("/vocal-dna-test", { replace: true });
-      }
+  // Onboarding redirect
+  useEffect(() => {
+    if (user && fingerprintData !== undefined && !fingerprintData?.dimensions) {
+      navigate("/vocal-dna-test", { replace: true });
     }
-    fetchData();
-  }, [user, navigate]);
+  }, [user, fingerprintData, navigate]);
 
   // ══ NON-AUTH HOME ══
   if (!user) {
@@ -227,8 +181,19 @@ const Index = () => {
   }
 
   // ══ AUTH HOME ══
-  const name = homeData?.displayName ?? user.email?.split("@")[0] ?? "artista";
-  const tension = homeData ? getTension(homeData) : "Cargando...";
+  const progress = progressData;
+  const streak = progress?.streak_days ?? 0;
+  const xp = progress?.xp ?? 0;
+  const name = profileData?.display_name ?? user.email?.split("@")[0] ?? "artista";
+  const tension = getTension(progress, challengeData, fingerprintData);
+
+  const hasFingerprint = !!fingerprintData?.dimensions;
+  const radarValues = hasFingerprint
+    ? (() => {
+        const d = fingerprintData!.dimensions as any;
+        return [d.pitch ?? 0, d.rhythm ?? 0, d.vibrato ?? 0, d.sustain ?? 0, d.control ?? 0, d.range ?? 0];
+      })()
+    : [0, 0, 0, 0, 0, 0];
 
   return (
     <div className="min-h-screen flex flex-col px-4 py-8 max-w-md mx-auto space-y-8">
@@ -257,23 +222,23 @@ const Index = () => {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }} className="grid grid-cols-2 gap-3">
         <button onClick={() => navigate("/fingerprint")} className="glass-card p-4 text-left space-y-3 hover:border-primary/30 transition-all">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Mi Vocal DNA</p>
-          {homeData?.hasFingerprint ? (
-            <div className="flex justify-center"><VocalRadar values={homeData.radarValues} size="mini" /></div>
+          {hasFingerprint ? (
+            <div className="flex justify-center"><VocalRadar values={radarValues} size="mini" /></div>
           ) : (
             <p className="text-sm text-primary">Descubrí tu huella</p>
           )}
         </button>
         <button onClick={() => navigate("/skill-tree")} className="glass-card p-4 text-left space-y-3 hover:border-primary/30 transition-all">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Soy Leyenda</p>
-          <PhaseProgress xp={homeData?.xp ?? 0} compact />
+          <PhaseProgress xp={xp} compact />
         </button>
       </motion.div>
 
-      {/* Bloque 4: Contexto bottom */}
-      {homeData && homeData.streak > 0 && (
+      {/* Bloque 4: Streak */}
+      {streak > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 0.6 }} className="flex items-center justify-center gap-2">
-          <StreakFlame days={homeData.streak} />
-          <span className="text-sm text-muted-foreground">{homeData.streak} noches encendiendo tu voz</span>
+          <StreakFlame days={streak} />
+          <span className="text-sm text-muted-foreground">{streak} noches encendiendo tu voz</span>
         </motion.div>
       )}
     </div>

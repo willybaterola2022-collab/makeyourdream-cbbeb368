@@ -1,237 +1,252 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles, TrendingUp, Star, ChevronRight, Mic } from "lucide-react";
+import { Heart, Mic, Play, Pause, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { TalentRadar } from "@/components/skilltree/TalentRadar";
+import { trackEvent } from "@/lib/trackEvent";
+import { toast } from "sonner";
 
-interface TalentProfile {
+interface FeedPost {
+  id: string;
   user_id: string;
-  talent_score: number;
-  display_name: string;
-  avatar_url: string | null;
-  vocal_level: string | null;
-  classification: string | null;
-  dimensions: any;
-  bio: string | null;
-  featured: boolean;
+  recording_id: string | null;
+  caption: string | null;
+  song_title: string | null;
+  score: number | null;
+  likes_count: number;
+  created_at: string;
+  profiles?: { display_name: string | null; avatar_url: string | null } | null;
 }
 
-const DIMENSION_FILTERS = ["Todos", "Pitch", "Rango", "Potencia", "Control", "Expresión", "Creatividad"];
+function timeAgo(dateStr: string): string {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return "ahora";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
+
+function PostCard({
+  post,
+  onLike,
+}: {
+  post: FeedPost;
+  onLike: (id: string) => void;
+}) {
+  const [playing, setPlaying] = useState(false);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const name = post.profiles?.display_name || "Artista";
+  const initials = name.slice(0, 2).toUpperCase();
+
+  const togglePlay = useCallback(async () => {
+    if (!post.recording_id) return;
+    if (audio) {
+      if (playing) {
+        audio.pause();
+        setPlaying(false);
+      } else {
+        audio.play();
+        setPlaying(true);
+      }
+      return;
+    }
+    // Fetch recording URL
+    const { data: rec } = await supabase
+      .from("recordings")
+      .select("file_url")
+      .eq("id", post.recording_id)
+      .maybeSingle();
+    if (rec?.file_url) {
+      const a = new Audio(rec.file_url);
+      a.onended = () => setPlaying(false);
+      a.play();
+      setAudio(a);
+      setPlaying(true);
+    }
+  }, [post.recording_id, audio, playing]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass-card p-4 space-y-3"
+    >
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+          {post.profiles?.avatar_url ? (
+            <img src={post.profiles.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+          ) : (
+            <span className="text-sm font-bold text-primary">{initials}</span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-foreground truncate">{name}</p>
+          <p className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</p>
+        </div>
+        {post.score != null && (
+          <span className="text-lg font-mono font-bold text-primary">{post.score}</span>
+        )}
+      </div>
+
+      {/* Song title */}
+      {post.song_title && (
+        <p className="text-xs text-muted-foreground">🎵 {post.song_title}</p>
+      )}
+
+      {/* Caption */}
+      {post.caption && (
+        <p className="text-sm text-foreground">{post.caption}</p>
+      )}
+
+      {/* Audio player + actions */}
+      <div className="flex items-center gap-3">
+        {post.recording_id && (
+          <button
+            onClick={togglePlay}
+            className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+          >
+            {playing ? (
+              <Pause className="h-4 w-4 text-primary" />
+            ) : (
+              <Play className="h-4 w-4 text-primary" />
+            )}
+          </button>
+        )}
+        <div className="flex-1" />
+        <button
+          onClick={() => onLike(post.id)}
+          className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+        >
+          <Heart className="h-4 w-4" />
+          <span className="text-xs font-bold">{post.likes_count}</span>
+        </button>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function TalentFeed() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [talents, setTalents] = useState<TalentProfile[]>([]);
+  const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("Todos");
-  const [selectedTalent, setSelectedTalent] = useState<TalentProfile | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    async function fetchTalents() {
-      try {
-        const { data } = await supabase.functions.invoke("talent-scout", {
-          body: { action: "get_talent_feed" },
-        });
-        if (data?.talents) setTalents(data.talents);
-      } catch (e) {
-        console.error("Error fetching talent feed:", e);
-      }
-      setLoading(false);
+  const loadFeed = useCallback(async (pageNum = 1) => {
+    setLoading(true);
+    try {
+      const { data } = await supabase.functions.invoke("social-feed", {
+        body: { action: "feed", page: pageNum, limit: 20 },
+      });
+      const newPosts = data?.posts || [];
+      setPosts((prev) => (pageNum === 1 ? newPosts : [...prev, ...newPosts]));
+      setPage(pageNum);
+      setHasMore(newPosts.length >= 20);
+    } catch {
+      // Fallback: direct query
+      const from = (pageNum - 1) * 20;
+      const { data: directPosts } = await supabase
+        .from("social_feed")
+        .select("*, profiles!social_feed_user_id_fkey(display_name, avatar_url)")
+        .order("created_at", { ascending: false })
+        .range(from, from + 19);
+      const newPosts = directPosts || [];
+      setPosts((prev) => (pageNum === 1 ? newPosts : [...prev, ...newPosts]));
+      setPage(pageNum);
+      setHasMore(newPosts.length >= 20);
     }
-    fetchTalents();
+    setLoading(false);
   }, []);
 
-  const filtered = filter === "Todos"
-    ? talents
-    : talents.filter((t) => {
-        const dims = t.dimensions;
-        if (!dims) return false;
-        const key = filter.toLowerCase();
-        return (dims[key] || 0) >= 75;
-      }).sort((a, b) => {
-        const key = filter.toLowerCase();
-        return ((b.dimensions?.[key] || 0) - (a.dimensions?.[key] || 0));
-      });
+  useEffect(() => {
+    loadFeed();
+    if (user) trackEvent(user.id, "module_visited", { module: "feed" });
+  }, [loadFeed, user]);
 
-  const radarDims = (t: TalentProfile) => {
-    const d = t.dimensions || {};
-    return [
-      { label: "Pitch", value: d.pitch || 50, percentile: 20 },
-      { label: "Rango", value: d.rango || 45, percentile: 30 },
-      { label: "Potencia", value: d.potencia || 50, percentile: 25 },
-      { label: "Control", value: d.control || 50, percentile: 25 },
-      { label: "Expresión", value: d.expresion || 40, percentile: 35 },
-      { label: "Creatividad", value: d.creatividad || 35, percentile: 40 },
-    ];
-  };
+  // Realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel("social-feed-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "social_feed" }, (payload) => {
+        setPosts((prev) => [payload.new as FeedPost, ...prev]);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const handleLike = useCallback(async (postId: string) => {
+    // Optimistic update
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, likes_count: p.likes_count + 1 } : p))
+    );
+    await supabase.functions.invoke("social-feed", {
+      body: { action: "like", post_id: postId },
+    });
+  }, []);
+
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const el = e.currentTarget;
+      if (el.scrollHeight - el.scrollTop - el.clientHeight < 200 && !loading && hasMore) {
+        loadFeed(page + 1);
+      }
+    },
+    [loading, hasMore, page, loadFeed]
+  );
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: "#0A0A0F" }}>
+    <div className="min-h-screen pb-24" onScroll={handleScroll}>
       {/* Header */}
       <div className="px-4 pt-6 pb-4">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="h-5 w-5 text-[#FFA502]" />
-            <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Talent Feed
-            </h1>
-          </div>
-          <p className="text-sm text-[#A0A0B0]">
-            Descubre las voces más prometedoras de la comunidad
+          <h1 className="font-display text-2xl text-foreground">Feed</h1>
+          <p className="text-sm text-muted-foreground">
+            Escuchá las voces de la comunidad
           </p>
         </motion.div>
-
-        {/* Filter pills */}
-        <div className="flex gap-2 mt-4 overflow-x-auto scrollbar-hide pb-1">
-          {DIMENSION_FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
-                filter === f
-                  ? "bg-gradient-to-r from-[#FF3CAC] to-[#784BA0] text-white"
-                  : "bg-white/5 border border-white/10 text-white/50 hover:text-white/70"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Talent Cards */}
+      {/* Posts */}
       <div className="px-4 space-y-3">
-        {loading ? (
+        {loading && posts.length === 0 ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 rounded-2xl bg-white/5 animate-pulse" />
+              <div key={i} className="h-32 rounded-2xl bg-muted/20 animate-pulse" />
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : posts.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex flex-col items-center justify-center py-16 text-center"
           >
-            <Mic className="h-12 w-12 text-white/10 mb-4" />
-            <p className="text-sm text-white/40 mb-2">Aún no hay talentos en el feed</p>
-            <p className="text-xs text-white/20 mb-4">
-              Completa tu análisis vocal para aparecer aquí
+            <Mic className="h-12 w-12 text-muted-foreground/20 mb-4" />
+            <p className="text-sm text-muted-foreground mb-2">El feed está vacío</p>
+            <p className="text-xs text-muted-foreground/60 mb-4">
+              Graba algo en Karaoke y sé el primero en publicar
             </p>
             <button
-              onClick={() => navigate("/fingerprint")}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#FF3CAC] to-[#784BA0] text-white text-xs font-bold"
+              onClick={() => navigate("/karaoke")}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold"
             >
-              Analizar mi voz
+              Ir a cantar
             </button>
           </motion.div>
         ) : (
-          filtered.map((talent, i) => (
-            <motion.div
-              key={talent.user_id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
-              <button
-                onClick={() => setSelectedTalent(selectedTalent?.user_id === talent.user_id ? null : talent)}
-                className="w-full text-left p-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-                    style={{
-                      background: talent.featured
-                        ? "linear-gradient(135deg, #FFA502, #FFD700)"
-                        : "linear-gradient(135deg, #FF3CAC, #784BA0)",
-                    }}
-                  >
-                    {talent.avatar_url ? (
-                      <img src={talent.avatar_url} alt="" className="w-full h-full rounded-xl object-cover" />
-                    ) : (
-                      <span className="text-lg font-bold text-white">
-                        {talent.display_name?.charAt(0)?.toUpperCase() || "?"}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white truncate">{talent.display_name}</span>
-                      {talent.featured && <Star className="h-3 w-3 text-[#FFA502] shrink-0" fill="#FFA502" />}
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {talent.classification && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#784BA0]/20 text-[#784BA0] font-bold uppercase">
-                          {talent.classification}
-                        </span>
-                      )}
-                      <span className="text-[10px] text-[#A0A0B0]">{talent.vocal_level}</span>
-                    </div>
-                  </div>
-
-                  {/* Score */}
-                  <div className="flex flex-col items-center shrink-0">
-                    <span
-                      className="text-lg font-bold"
-                      style={{
-                        color: talent.talent_score >= 80 ? "#FFA502" : talent.talent_score >= 60 ? "#FF3CAC" : "#A0A0B0",
-                        fontFamily: "'JetBrains Mono', monospace",
-                      }}
-                    >
-                      {talent.talent_score}
-                    </span>
-                    <span className="text-[8px] text-[#A0A0B0] uppercase tracking-wider">DNA</span>
-                  </div>
-
-                  <ChevronRight className={`h-4 w-4 text-white/20 shrink-0 transition-transform ${selectedTalent?.user_id === talent.user_id ? "rotate-90" : ""}`} />
-                </div>
-              </button>
-
-              {/* Expanded radar */}
-              <AnimatePresence>
-                {selectedTalent?.user_id === talent.user_id && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="p-4 rounded-b-2xl border border-t-0 border-white/[0.06] bg-[#1E1E2E]">
-                      <TalentRadar dimensions={radarDims(talent)} vocalDNA={talent.talent_score} />
-                      {talent.bio && (
-                        <p className="text-xs text-[#A0A0B0] mt-3 text-center italic">"{talent.bio}"</p>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+          posts.map((post) => (
+            <PostCard key={post.id} post={post} onLike={handleLike} />
           ))
         )}
-      </div>
 
-      {/* Discover CTA for logged-in users */}
-      {user && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="fixed bottom-20 left-4 right-4 z-40"
-        >
-          <button
-            onClick={() => navigate("/fingerprint")}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#FF3CAC] via-[#784BA0] to-[#2B86C5] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#FF3CAC]/20"
-          >
-            <TrendingUp className="h-4 w-4" />
-            Analizar mi voz y aparecer aquí
-          </button>
-        </motion.div>
-      )}
+        {loading && posts.length > 0 && (
+          <div className="flex justify-center py-4">
+            <div className="w-6 h-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { GitCompareArrows, Play, Pause, TrendingUp, Calendar, LogIn } from "lucide-react";
+import { GitCompareArrows, Play, Pause, TrendingUp, TrendingDown, Calendar, LogIn } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StageButton } from "@/components/ui/StageButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/trackEvent";
 
 interface Recording {
   id: string;
@@ -18,11 +19,20 @@ interface Recording {
   metadata: any;
 }
 
+interface ComparisonResult {
+  before: { date: string; song: string; pitch: number; timing: number; expression: number; overall: number };
+  after: { date: string; song: string; pitch: number; timing: number; expression: number; overall: number };
+  deltas: { pitch: number; timing: number; expression: number; overall: number };
+  days_between: number;
+  summary: string;
+}
+
 const Comparator = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [loading, setLoading] = useState(true);
+  const [comparison, setComparison] = useState<ComparisonResult | null>(null);
   const [beforeIdx, setBeforeIdx] = useState(0);
   const [afterIdx, setAfterIdx] = useState(-1);
   const [playingBefore, setPlayingBefore] = useState(false);
@@ -32,20 +42,45 @@ const Comparator = () => {
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
-    supabase
-      .from("recordings")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .then(({ data }) => {
-        const recs = data || [];
-        setRecordings(recs);
-        if (recs.length >= 2) {
-          setBeforeIdx(0);
-          setAfterIdx(recs.length - 1);
+    trackEvent(user.id, "module_visited", { module: "comparator" });
+
+    // Try edge function suggest_pair first
+    (async () => {
+      try {
+        const { data: suggestion } = await supabase.functions.invoke("compare-recordings", {
+          body: { action: "suggest_pair", user_id: user.id },
+        });
+        if (suggestion?.suggestion) {
+          // Load the comparison
+          const { data: comp } = await supabase.functions.invoke("compare-recordings", {
+            body: {
+              action: "compare",
+              user_id: user.id,
+              recording_a_id: suggestion.suggestion.before?.recording_id,
+              recording_b_id: suggestion.suggestion.after?.recording_id,
+            },
+          });
+          if (comp?.comparison) {
+            setComparison(comp.comparison);
+            trackEvent(user.id, "comparison_made");
+          }
         }
-        setLoading(false);
-      });
+      } catch {}
+
+      // Also load recordings for manual selection
+      const { data } = await supabase
+        .from("recordings")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+      const recs = data || [];
+      setRecordings(recs);
+      if (recs.length >= 2) {
+        setBeforeIdx(0);
+        setAfterIdx(recs.length - 1);
+      }
+      setLoading(false);
+    })();
   }, [user]);
 
   const togglePlay = (which: "before" | "after") => {
@@ -70,18 +105,6 @@ const Comparator = () => {
     }
   };
 
-  // Extract scores from metadata
-  const getScores = (rec: Recording) => {
-    const meta = rec.metadata as any;
-    if (meta?.scores) return meta.scores;
-    return null;
-  };
-
-  const beforeRec = recordings[beforeIdx];
-  const afterRec = afterIdx >= 0 ? recordings[afterIdx] : null;
-  const beforeScores = beforeRec ? getScores(beforeRec) : null;
-  const afterScores = afterRec ? getScores(afterRec) : null;
-
   const formatDate = (iso: string) => {
     const d = new Date(iso);
     return d.toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" });
@@ -91,7 +114,7 @@ const Comparator = () => {
     return (
       <div className="p-4 md:p-8 flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <GitCompareArrows className="h-16 w-16 text-primary/40" />
-        <h2 className="font-serif text-2xl font-bold text-foreground text-center">Before / After</h2>
+        <h2 className="font-display text-2xl font-bold text-foreground text-center">Before / After</h2>
         <p className="text-muted-foreground text-center max-w-sm">
           Inicia sesión para comparar tus grabaciones y ver tu evolución vocal.
         </p>
@@ -105,7 +128,7 @@ const Comparator = () => {
   if (loading) {
     return (
       <div className="p-4 md:p-8 flex items-center justify-center min-h-[40vh]">
-        <div className="text-muted-foreground">Cargando grabaciones...</div>
+        <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
       </div>
     );
   }
@@ -114,7 +137,7 @@ const Comparator = () => {
     return (
       <div className="p-4 md:p-8 flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <GitCompareArrows className="h-16 w-16 text-primary/40" />
-        <h2 className="font-serif text-2xl font-bold text-foreground text-center">Before / After</h2>
+        <h2 className="font-display text-2xl font-bold text-foreground text-center">Before / After</h2>
         <p className="text-muted-foreground text-center max-w-sm">
           Necesitás al menos 2 grabaciones para comparar. ¡Ve a cantar primero!
         </p>
@@ -125,18 +148,33 @@ const Comparator = () => {
     );
   }
 
-  // Calculate deltas
-  const metrics = beforeScores && afterScores
-    ? [
-        { name: "Afinación", before: beforeScores.pitch || 0, after: afterScores.pitch || 0 },
-        { name: "Timing", before: beforeScores.timing || 0, after: afterScores.timing || 0 },
-        { name: "Expresión", before: beforeScores.expression || 0, after: afterScores.expression || 0 },
-      ]
-    : null;
+  // Use comparison from edge function if available, otherwise fallback to metadata
+  const getMetrics = () => {
+    if (comparison) {
+      return [
+        { name: "Afinación", before: comparison.before.pitch, after: comparison.after.pitch, delta: comparison.deltas.pitch },
+        { name: "Timing", before: comparison.before.timing, after: comparison.after.timing, delta: comparison.deltas.timing },
+        { name: "Expresión", before: comparison.before.expression, after: comparison.after.expression, delta: comparison.deltas.expression },
+      ];
+    }
+    const beforeRec = recordings[beforeIdx];
+    const afterRec = afterIdx >= 0 ? recordings[afterIdx] : null;
+    const bScores = (beforeRec?.metadata as any)?.scores;
+    const aScores = (afterRec?.metadata as any)?.scores;
+    if (bScores && aScores) {
+      return [
+        { name: "Afinación", before: bScores.pitch || 0, after: aScores.pitch || 0, delta: (aScores.pitch || 0) - (bScores.pitch || 0) },
+        { name: "Timing", before: bScores.timing || 0, after: aScores.timing || 0, delta: (aScores.timing || 0) - (bScores.timing || 0) },
+        { name: "Expresión", before: bScores.expression || 0, after: aScores.expression || 0, delta: (aScores.expression || 0) - (bScores.expression || 0) },
+      ];
+    }
+    return null;
+  };
 
-  const totalDelta = metrics
-    ? Math.round(metrics.reduce((a, m) => a + (m.after - m.before), 0) / metrics.length)
-    : null;
+  const metrics = getMetrics();
+  const totalDelta = metrics ? Math.round(metrics.reduce((a, m) => a + m.delta, 0) / metrics.length) : null;
+  const beforeRec = recordings[beforeIdx];
+  const afterRec = afterIdx >= 0 ? recordings[afterIdx] : null;
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-fade-in">
@@ -145,10 +183,20 @@ const Comparator = () => {
           <GitCompareArrows className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="font-serif text-2xl md:text-3xl font-bold text-foreground">Before / After</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">Before / After</h1>
           <p className="text-sm text-muted-foreground">Compara tu evolución vocal</p>
         </div>
       </div>
+
+      {/* AI Summary */}
+      {comparison?.summary && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4 border-primary/20">
+          <p className="text-sm text-foreground leading-relaxed">{comparison.summary}</p>
+          {comparison.days_between > 0 && (
+            <p className="text-xs text-muted-foreground mt-2">📅 {comparison.days_between} días entre grabaciones</p>
+          )}
+        </motion.div>
+      )}
 
       {/* Recording selector */}
       <div className="flex flex-wrap gap-2">
@@ -193,22 +241,6 @@ const Comparator = () => {
             >
               {playingBefore ? "PAUSAR" : "REPRODUCIR"}
             </StageButton>
-            {beforeScores && (
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                <div className="text-center">
-                  <p className="text-[9px] text-muted-foreground uppercase">Pitch</p>
-                  <p className="text-sm font-bold text-muted-foreground">{beforeScores.pitch}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[9px] text-muted-foreground uppercase">Timing</p>
-                  <p className="text-sm font-bold text-muted-foreground">{beforeScores.timing}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[9px] text-muted-foreground uppercase">Expresión</p>
-                  <p className="text-sm font-bold text-muted-foreground">{beforeScores.expression}</p>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -231,22 +263,6 @@ const Comparator = () => {
                 {playingAfter ? "PAUSAR" : "REPRODUCIR"}
               </StageButton>
             )}
-            {afterScores && (
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                <div className="text-center">
-                  <p className="text-[9px] text-muted-foreground uppercase">Pitch</p>
-                  <p className="text-sm font-bold text-primary">{afterScores.pitch}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[9px] text-muted-foreground uppercase">Timing</p>
-                  <p className="text-sm font-bold text-primary">{afterScores.timing}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[9px] text-muted-foreground uppercase">Expresión</p>
-                  <p className="text-sm font-bold text-primary">{afterScores.expression}</p>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -255,12 +271,14 @@ const Comparator = () => {
       {totalDelta !== null && (
         <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="flex justify-center">
           <div className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border ${
-            totalDelta >= 0
-              ? "bg-primary/10 border-primary/20"
-              : "bg-destructive/10 border-destructive/20"
+            totalDelta >= 0 ? "bg-primary/10 border-primary/20" : "bg-destructive/10 border-destructive/20"
           }`}>
-            <TrendingUp className={`h-5 w-5 ${totalDelta >= 0 ? "text-primary" : "text-destructive"}`} />
-            <span className={`font-serif text-lg font-bold ${totalDelta >= 0 ? "text-primary" : "text-destructive"}`}>
+            {totalDelta >= 0 ? (
+              <TrendingUp className="h-5 w-5 text-primary" />
+            ) : (
+              <TrendingDown className="h-5 w-5 text-destructive" />
+            )}
+            <span className={`font-display text-lg font-bold ${totalDelta >= 0 ? "text-primary" : "text-destructive"}`}>
               Mejora: {totalDelta >= 0 ? "+" : ""}{totalDelta}% promedio
             </span>
           </div>
@@ -275,37 +293,34 @@ const Comparator = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {metrics.map((m) => {
-                const delta = m.after - m.before;
-                return (
-                  <div key={m.name} className="space-y-1.5">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-foreground font-medium">{m.name}</span>
-                      <span className={`font-bold ${delta >= 0 ? "text-emerald-400" : "text-destructive"}`}>
-                        {delta >= 0 ? "+" : ""}{delta}%
-                      </span>
-                    </div>
-                    <div className="relative h-3 rounded-full bg-muted overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${m.before}%` }}
-                        transition={{ duration: 0.8 }}
-                        className="absolute h-full rounded-full bg-muted-foreground/30"
-                      />
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${m.after}%` }}
-                        transition={{ duration: 1, delay: 0.3 }}
-                        className="absolute h-full rounded-full bg-primary"
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-muted-foreground">
-                      <span>Antes: {m.before}%</span>
-                      <span>Después: {m.after}%</span>
-                    </div>
+              {metrics.map((m) => (
+                <div key={m.name} className="space-y-1.5">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-foreground font-medium">{m.name}</span>
+                    <span className={`font-bold ${m.delta >= 0 ? "text-primary" : "text-destructive"}`}>
+                      {m.delta >= 0 ? "+" : ""}{m.delta}%
+                    </span>
                   </div>
-                );
-              })}
+                  <div className="relative h-3 rounded-full bg-muted overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${m.before}%` }}
+                      transition={{ duration: 0.8 }}
+                      className="absolute h-full rounded-full bg-muted-foreground/30"
+                    />
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${m.after}%` }}
+                      transition={{ duration: 1, delay: 0.3 }}
+                      className="absolute h-full rounded-full bg-primary"
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                    <span>Antes: {m.before}%</span>
+                    <span>Después: {m.after}%</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Swords, Trophy } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { StageButton } from "@/components/ui/StageButton";
@@ -9,35 +8,68 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/trackEvent";
 
 export default function Duelos() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [duels, setDuels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
-    supabase
-      .from("duels")
-      .select("*")
-      .or(`challenger_id.eq.${user.id},opponent_id.eq.${user.id}`)
-      .order("created_at", { ascending: false })
-      .limit(10)
-      .then(({ data }) => { setDuels(data ?? []); setLoading(false); });
+    trackEvent(user.id, "module_visited", { module: "duelos" });
+    loadMyDuels();
   }, [user]);
 
-  const createDuel = async () => {
-    if (!user) { navigate("/login"); return; }
-    const { data, error } = await supabase.from("duels").insert([{
-      challenger_id: user.id,
-      song_title: "Freestyle Battle",
-      status: "pending",
-    }]).select().single();
-    if (data) {
-      setDuels((prev) => [data, ...prev]);
-      toast.success("¡Duelo creado! Esperando rival...");
+  async function loadMyDuels() {
+    if (!user) return;
+    try {
+      const { data } = await supabase.functions.invoke("duel-matchmaking", {
+        body: { action: "get_my_duels", user_id: user.id },
+      });
+      if (data?.duels) setDuels(data.duels);
+    } catch {
+      // Fallback: direct query
+      const { data } = await supabase
+        .from("duels")
+        .select("*")
+        .or(`challenger_id.eq.${user.id},opponent_id.eq.${user.id}`)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      setDuels(data ?? []);
     }
+    setLoading(false);
+  }
+
+  const findMatch = async () => {
+    if (!user) { navigate("/login"); return; }
+    setSearching(true);
+    try {
+      const { data } = await supabase.functions.invoke("duel-matchmaking", {
+        body: { action: "find_match", user_id: user.id },
+      });
+      if (data?.matched) {
+        toast.success("¡Oponente encontrado!");
+        loadMyDuels();
+      } else if (data?.waiting) {
+        toast.info("Buscando oponente...");
+        loadMyDuels();
+      }
+    } catch {
+      // Fallback: create duel directly
+      const { data: duel } = await supabase.from("duels").insert([{
+        challenger_id: user.id,
+        song_title: "Freestyle Battle",
+        status: "pending",
+      }]).select().single();
+      if (duel) {
+        setDuels((prev) => [duel, ...prev]);
+        toast.success("¡Duelo creado! Esperando rival...");
+      }
+    }
+    setSearching(false);
   };
 
   const activeDuels = duels.filter(d => d.status !== "completed");
@@ -54,18 +86,16 @@ export default function Duelos() {
             transition={{ duration: 2, repeat: Infinity }}>
             ⚔️
           </motion.div>
-          <Badge className="mt-2 stage-gradient text-primary-foreground text-sm px-4 py-1">
+          <Badge className="mt-2 bg-primary text-primary-foreground text-sm px-4 py-1">
             {activeDuels.length} duelos activos
           </Badge>
         </motion.div>
       }
     >
-      {/* Create duel */}
-      <StageButton variant="primary" icon={<Swords className="h-5 w-5" />} onClick={createDuel} pulse className="w-full">
-        BUSCAR RIVAL
+      <StageButton variant="primary" icon={<Swords className="h-5 w-5" />} onClick={findMatch} pulse className="w-full" disabled={searching}>
+        {searching ? "BUSCANDO..." : "BUSCAR RIVAL"}
       </StageButton>
 
-      {/* Active Duels */}
       {activeDuels.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">🔥 Duelos activos</span>
@@ -84,11 +114,10 @@ export default function Duelos() {
         </div>
       )}
 
-      {/* Completed */}
       {completedDuels.length > 0 && (
         <div className="space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Historial</span>
-          {completedDuels.map((duel, i) => (
+          {completedDuels.map((duel) => (
             <div key={duel.id} className="glass-card p-3 flex items-center justify-between opacity-60">
               <span className="text-sm text-foreground">{duel.song_title}</span>
               <span className="text-xs font-bold">{duel.winner_id === user?.id ? "🏆 Victoria" : "Derrota"}</span>
