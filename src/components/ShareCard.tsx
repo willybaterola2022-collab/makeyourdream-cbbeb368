@@ -99,7 +99,7 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
 
     // Similar artist
     ctx.font = "bold 36px sans-serif";
-    ctx.fillStyle = "#a855f7";
+    ctx.fillStyle = "#D4A853";
     ctx.fillText(`🎤 Similar a ${similarArtist}`, w / 2, 960);
 
     // Range
