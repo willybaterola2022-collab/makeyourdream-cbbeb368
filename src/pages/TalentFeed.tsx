@@ -146,14 +146,14 @@ export default function TalentFeed() {
       setPage(pageNum);
       setHasMore(newPosts.length >= 20);
     } catch {
-      // Fallback: direct query
+      // Fallback: direct query (no join since FK may not exist)
       const from = (pageNum - 1) * 20;
       const { data: directPosts } = await supabase
         .from("social_feed")
-        .select("*, profiles!social_feed_user_id_fkey(display_name, avatar_url)")
+        .select("*")
         .order("created_at", { ascending: false })
         .range(from, from + 19);
-      const newPosts = directPosts || [];
+      const newPosts = (directPosts || []) as unknown as FeedPost[];
       setPosts((prev) => (pageNum === 1 ? newPosts : [...prev, ...newPosts]));
       setPage(pageNum);
       setHasMore(newPosts.length >= 20);
