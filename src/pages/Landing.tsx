@@ -145,7 +145,7 @@ const Landing = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mb-8"
+            className="mb-4"
           >
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
@@ -162,6 +162,24 @@ const Landing = () => {
             <AnimatedEqualizer />
           </motion.div>
 
+          {/* Hero Microphone */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="relative z-10 pointer-events-none"
+          >
+            <div className="scale-[0.6] md:scale-75 -my-16 md:-my-10">
+              <VintageMicrophone
+                isActive={false}
+                volume={0}
+                onClick={() => {}}
+                state="idle"
+                size="hero"
+              />
+            </div>
+          </motion.div>
+
           {/* Main headline */}
           <motion.div style={{ y: textY }} className="relative z-10">
             <motion.h1
@@ -172,7 +190,7 @@ const Landing = () => {
             >
               Tu voz merece el
               <br />
-              <span className="neon-text">escenario mundial</span>
+              <span className="text-primary">escenario mundial</span>
             </motion.h1>
 
             <motion.p
@@ -193,12 +211,12 @@ const Landing = () => {
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10"
           >
             <motion.button
-              animate={{ boxShadow: ["0 0 20px -5px hsl(275 85% 60% / 0.3)", "0 0 40px -5px hsl(275 85% 60% / 0.6)", "0 0 20px -5px hsl(275 85% 60% / 0.3)"] }}
+              animate={{ boxShadow: ["0 0 20px -5px hsl(var(--primary) / 0.3)", "0 0 40px -5px hsl(var(--primary) / 0.6)", "0 0 20px -5px hsl(var(--primary) / 0.3)"] }}
               transition={{ duration: 3, repeat: Infinity }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/onboarding")}
-              className="h-14 px-8 w-full sm:w-auto rounded-xl stage-gradient text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
+              className="h-14 px-8 w-full sm:w-auto rounded-xl bg-primary text-primary-foreground font-semibold text-lg flex items-center justify-center gap-3 hover:opacity-90 transition-opacity"
             >
               <Mic className="h-5 w-5" />
               Descubre tu voz — 30s
