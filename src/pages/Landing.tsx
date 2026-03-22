@@ -279,7 +279,7 @@ const Landing = () => {
                 transition={{ delay: i * 0.15 }}
                 className="text-center"
               >
-                <div className="h-16 w-16 rounded-2xl stage-gradient flex items-center justify-center mx-auto mb-4">
+                <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">
                   <item.icon className="h-7 w-7 text-primary-foreground" />
                 </div>
                 <p className="text-[11px] text-primary uppercase tracking-[0.3em] mb-1">{item.step}</p>
