@@ -67,21 +67,21 @@ export default function SkillTree() {
 
   // Compute node statuses
   const computedNodes = SKILL_TREE_DATA.map((node) => {
-    if (node.status === "coming-soon") return { ...node, computedStatus: "locked" as const };
     const moduleKey = node.route.replace("/", "");
     const userSessions = sessionCounts[moduleKey] || 0;
 
     let computedStatus: "completed" | "unlocked" | "locked";
-    if (userXP >= node.requiredXP && userSessions >= node.requiredSessions) {
+    if (node.status === "coming-soon") {
+      computedStatus = "locked";
+    } else if (userXP >= node.requiredXP && userSessions >= node.requiredSessions) {
       computedStatus = "completed";
-    } else if (userXP >= node.requiredXP) {
+    } else if (userXP >= node.requiredXP || node.requiredXP === 0) {
       computedStatus = "unlocked";
     } else {
       computedStatus = "locked";
     }
-    if (node.requiredXP === 0 && computedStatus === "locked") computedStatus = "unlocked";
 
-    return { ...node, computedStatus, mockSessions: { current: userSessions, total: node.requiredSessions } };
+    return { ...node, computedStatus, currentSessions: userSessions };
   });
 
   // Get 3 active nodes + 2 locked
@@ -93,8 +93,7 @@ export default function SkillTree() {
   if (activeNodes.length < 3) {
     const remaining = computedNodes.filter(n => n.computedStatus === "locked" && !lockedNodes.includes(n));
     while (activeNodes.length < 3 && remaining.length > 0) {
-      const node = remaining.shift()!;
-      activeNodes.push({ ...node, computedStatus: "unlocked" });
+      activeNodes.push(remaining.shift()!);
     }
   }
 
