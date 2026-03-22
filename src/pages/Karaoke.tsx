@@ -84,7 +84,7 @@ const Karaoke = () => {
               onClick={() => setGenre(g)}
               className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
                 genre === g
-                  ? "stage-gradient text-primary-foreground shadow-[0_0_16px_-4px_hsl(275_85%_60%/0.4)]"
+                  ? "bg-primary text-primary-foreground shadow-[0_0_16px_-4px_hsl(var(--primary)/0.4)]"
                   : "glass-card text-muted-foreground hover:text-foreground"
               }`}
             >
