@@ -8,13 +8,12 @@ const TABS = [
   { label: "Karaoke", url: "/karaoke", icon: Mic },
   { label: "Feed", url: "/talent-feed", icon: Rss },
   { label: "Leyenda", url: "/skill-tree", icon: Mountain },
-  { label: "Perfil", url: "/fingerprint", icon: User },
+  { label: "Perfil", url: "/profile", icon: User },
 ];
 
 export function BottomNav() {
   const location = useLocation();
 
-  // Hide on non-auth landing (Home handles its own full-screen layout)
   const hideOnRoutes = ["/login", "/landing", "/onboarding", "/reset-password", "/vocal-dna-test"];
   if (hideOnRoutes.includes(location.pathname)) return null;
 

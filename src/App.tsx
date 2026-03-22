@@ -18,6 +18,7 @@ const VocalDnaTest = lazy(() => import("./pages/VocalDnaTest"));
 const Index = lazy(() => import("./pages/Index"));
 const Karaoke = lazy(() => import("./pages/Karaoke"));
 const Fingerprint = lazy(() => import("./pages/Fingerprint"));
+const Profile = lazy(() => import("./pages/Profile"));
 const Coach = lazy(() => import("./pages/Coach"));
 const Exercises = lazy(() => import("./pages/Exercises"));
 const Challenges = lazy(() => import("./pages/Challenges"));
@@ -35,7 +36,14 @@ const SkillTree = lazy(() => import("./pages/SkillTree"));
 const TalentFeed = lazy(() => import("./pages/TalentFeed"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 function AmberSpinner() {
   return (
@@ -64,6 +72,7 @@ function AnimatedRoutes() {
             <Route path="/" element={<PageTransition><Index /></PageTransition>} />
             <Route path="/karaoke" element={<PageTransition><Karaoke /></PageTransition>} />
             <Route path="/fingerprint" element={<PageTransition><Fingerprint /></PageTransition>} />
+            <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
             <Route path="/coach" element={<PageTransition><Coach /></PageTransition>} />
             <Route path="/exercises" element={<PageTransition><Exercises /></PageTransition>} />
             <Route path="/challenges" element={<PageTransition><Challenges /></PageTransition>} />
