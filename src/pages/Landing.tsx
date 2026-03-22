@@ -353,7 +353,7 @@ const Landing = () => {
       <footer className="border-t border-border/40 py-8 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="h-7 w-7 rounded-lg stage-gradient flex items-center justify-center"><Music className="h-4 w-4 text-primary-foreground" /></div>
+            <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center"><Music className="h-4 w-4 text-primary-foreground" /></div>
             <span className="font-serif text-lg font-semibold text-foreground">MakeYourDream</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs text-muted-foreground">
