@@ -129,10 +129,10 @@ export default function SkillTree() {
               animate={{ opacity: 0.5 }}
               className="glass-card p-3 flex items-center gap-3"
             >
-              <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                 <Check className="h-4 w-4 text-primary" />
               </div>
-              <span className="text-sm text-muted-foreground">{node.title}</span>
+              <span className="text-sm text-muted-foreground">{node.name}</span>
             </motion.div>
           ))}
           {/* Dotted path */}
