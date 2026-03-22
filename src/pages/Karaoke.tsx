@@ -20,7 +20,7 @@ const modes = [
     label: "TU LETRA",
     sub: "Pegá tu letra y cantá",
     icon: FileText,
-    gradient: "from-[hsl(185_90%_40%)] to-[hsl(195_85%_50%)]",
+    gradient: "from-secondary/80 to-secondary",
   },
   {
     id: "preset" as const,
