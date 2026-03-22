@@ -122,7 +122,7 @@ const Karaoke = () => {
             onClick={() => setMode(m.id)}
             className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
               mode === m.id
-                ? "stage-gradient text-primary-foreground"
+                ? "bg-primary text-primary-foreground"
                 : "glass-card text-muted-foreground hover:text-foreground"
             }`}
           >
