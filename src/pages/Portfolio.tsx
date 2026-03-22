@@ -127,7 +127,7 @@ const Portfolio = () => {
         ) : (
           <div className="glass-card p-6 text-center">
             <p className="text-sm text-muted-foreground mb-3">Aún no tienes grabaciones</p>
-            <StageButton variant="accent" icon={<Mic className="h-4 w-4" />} onClick={() => navigate("/karaoke")}>
+            <StageButton variant="primary" icon={<Mic className="h-4 w-4" />} onClick={() => navigate("/karaoke")}>
               Grabar ahora
             </StageButton>
           </div>

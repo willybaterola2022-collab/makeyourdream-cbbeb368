@@ -265,7 +265,7 @@ const Fingerprint = () => {
         {phase === "result" && (
           <>
             <StageButton variant="glass" icon={<RotateCcw className="h-5 w-5" />} onClick={reset}>REPETIR</StageButton>
-            <StageButton variant="accent" icon={<Share2 className="h-5 w-5" />} onClick={() => setShowShare(true)}>COMPARTIR</StageButton>
+            <StageButton variant="glass" icon={<Share2 className="h-5 w-5" />} onClick={() => setShowShare(true)}>COMPARTIR</StageButton>
           </>
         )}
       </div>
