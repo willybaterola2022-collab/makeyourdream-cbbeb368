@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,8 @@ import { AuthModal } from "@/components/AuthModal";
 import { toast } from "sonner";
 import { analyzeVocalDna, VocalDnaResult } from "@/lib/vocalDnaAnalysis";
 import { trackEvent } from "@/lib/trackEvent";
+import VintageMicrophone from "@/components/karaoke/VintageMicrophone";
+import { useMicrophone } from "@/hooks/useMicrophone";
 
 type Phase = "intro" | "recording" | "result";
 
@@ -20,6 +21,8 @@ export default function VocalDnaTest() {
   const [result, setResult] = useState<VocalDnaResult | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const { isListening, volume, requestMic, stopMic } = useMicrophone(2048);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -40,6 +43,10 @@ export default function VocalDnaTest() {
       analyser.fftSize = 2048;
       source.connect(analyser);
       analyserRef.current = analyser;
+      
+      // Also start useMicrophone for volume reactivity
+      requestMic();
+      
       setPhase("recording");
 
       const bufLen = analyser.frequencyBinCount;
@@ -48,7 +55,6 @@ export default function VocalDnaTest() {
         animRef.current = requestAnimationFrame(draw);
         analyser.getFloatTimeDomainData(dataArray);
 
-        // Autocorrelation pitch detection
         let maxCorr = 0, bestLag = 0;
         for (let lag = 20; lag < bufLen / 2; lag++) {
           let corr = 0;
@@ -60,12 +66,10 @@ export default function VocalDnaTest() {
           if (pitch > 60 && pitch < 2000) pitchesRef.current.push(pitch);
         }
 
-        // RMS energy
         let sum = 0;
         for (let i = 0; i < bufLen; i++) sum += dataArray[i] ** 2;
         energiesRef.current.push(Math.sqrt(sum / bufLen));
 
-        // Draw waveform
         const canvas = canvasRef.current;
         if (!canvas) return;
         const c = canvas.getContext("2d")!;
@@ -101,12 +105,13 @@ export default function VocalDnaTest() {
     cancelAnimationFrame(animRef.current);
     streamRef.current?.getTracks().forEach((t) => t.stop());
     audioContextRef.current?.close();
+    stopMic();
 
     const dnaResult = analyzeVocalDna(pitchesRef.current, energiesRef.current);
     setResult(dnaResult);
     setPhase("result");
     trackEvent(user?.id, "fingerprint_created");
-  }, [user]);
+  }, [user, stopMic]);
 
   const handleSave = async () => {
     if (!user) { setAuthOpen(true); return; }
@@ -117,17 +122,13 @@ export default function VocalDnaTest() {
         body: {
           user_id: user.id,
           dimensions: {
-            pitch: result.radarValues[0],
-            rhythm: result.radarValues[1],
-            vibrato: result.radarValues[2],
-            sustain: result.radarValues[3],
-            control: result.radarValues[4],
-            range: result.radarValues[5],
+            pitch: result.radarValues[0], rhythm: result.radarValues[1],
+            vibrato: result.radarValues[2], sustain: result.radarValues[3],
+            control: result.radarValues[4], range: result.radarValues[5],
           },
           classification: result.classification,
           similar_artists: [result.celebrityMatch],
-          vocal_range_low: 0,
-          vocal_range_high: 0,
+          vocal_range_low: 0, vocal_range_high: 0,
         },
       });
       toast.success("Tu huella vocal está guardada.");
@@ -139,34 +140,61 @@ export default function VocalDnaTest() {
     }
   };
 
+  const handleShare = async () => {
+    if (!user) { setAuthOpen(true); return; }
+    if (!result) return;
+    try {
+      const { data } = await supabase.functions.invoke("generate-share-card", {
+        body: { user_id: user.id },
+      });
+      const shareText = data?.share_text || `🎤 Mi Vocal DNA: ${result.classification} — ${result.celebrityMatch.name} (${result.celebrityMatch.percent}%) | MakeYourDream`;
+      if (navigator.share) {
+        await navigator.share({ title: "Mi Vocal DNA", text: shareText, url: window.location.origin });
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        toast.success("¡Copiado al portapapeles!");
+      }
+      trackEvent(user.id, "share_created", { card_type: "fingerprint" });
+    } catch {
+      toast.error("No se pudo compartir.");
+    }
+  };
+
   const handleAuthSuccess = () => { handleSave(); };
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-6">
       <AnimatePresence mode="wait">
         {phase === "intro" && (
-          <motion.div key="intro" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="text-center space-y-8 max-w-sm">
+          <motion.div key="intro" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="text-center space-y-4 max-w-sm">
             <h1 className="font-display text-3xl text-foreground">Dejá tu huella</h1>
             <p className="text-base text-muted-foreground">Cantá 30 segundos. Solo eso.</p>
-            <motion.button onClick={startRecording} whileTap={{ scale: 0.9 }} className="w-24 h-24 rounded-full bg-primary flex items-center justify-center mx-auto shadow-[0_0_40px_-8px_hsl(var(--primary)/0.6)]">
-              <Mic className="w-10 h-10 text-primary-foreground" />
-            </motion.button>
+            <VintageMicrophone
+              isActive={false}
+              volume={0}
+              onClick={startRecording}
+              state="idle"
+              size="section"
+            />
           </motion.div>
         )}
 
         {phase === "recording" && (
-          <motion.div key="recording" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center space-y-8 w-full max-w-sm">
-            <div className="flex items-center justify-end gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs text-muted-foreground">Escuchando...</span>
-            </div>
-            <canvas ref={canvasRef} width={320} height={120} className="w-full h-[120px]" />
-            <div className="relative w-24 h-24 mx-auto">
+          <motion.div key="recording" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center space-y-6 w-full max-w-sm">
+            <VintageMicrophone
+              isActive={true}
+              volume={volume}
+              onClick={finishRecording}
+              state="recording"
+              size="section"
+            />
+            <canvas ref={canvasRef} width={320} height={80} className="w-full h-[80px] opacity-60" />
+            <div className="relative w-20 h-20 mx-auto">
               <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                 <circle cx="50" cy="50" r="44" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
                 <circle cx="50" cy="50" r="44" fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" strokeDasharray={276.46} strokeDashoffset={276.46 * (countdown / 30)} className="transition-all duration-1000" />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center font-mono text-2xl text-foreground">{countdown}</span>
+              <span className="absolute inset-0 flex items-center justify-center font-mono text-xl text-foreground">{countdown}</span>
             </div>
           </motion.div>
         )}
@@ -190,7 +218,10 @@ export default function VocalDnaTest() {
               </p>
             </div>
             <div className="space-y-3">
-              <button className="w-full py-3 rounded-xl border border-primary/40 text-primary font-display text-sm hover:bg-primary/5 transition-colors">
+              <button
+                onClick={handleShare}
+                className="w-full py-3 rounded-xl border border-primary/40 text-primary font-display text-sm hover:bg-primary/5 transition-colors"
+              >
                 Compartir mi huella vocal
               </button>
               <button onClick={handleSave} disabled={saving} className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-display text-base shadow-[0_0_30px_-8px_hsl(var(--primary)/0.5)] disabled:opacity-50">
