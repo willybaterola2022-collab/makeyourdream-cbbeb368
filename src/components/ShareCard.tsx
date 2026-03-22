@@ -76,7 +76,7 @@ export default function ShareCard({ dimensions, globalScore, similarArtist, voca
     // Dots and labels
     dimensions.forEach((d, i) => {
       const p = getPoint(i, d.value);
-      ctx.fillStyle = "rgba(168, 85, 247, 1)";
+      ctx.fillStyle = "rgba(212, 168, 83, 1)";
       ctx.beginPath();
       ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
       ctx.fill();
