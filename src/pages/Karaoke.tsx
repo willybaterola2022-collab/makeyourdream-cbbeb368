@@ -101,7 +101,7 @@ const Karaoke = () => {
               whileTap={{ scale: 0.95 }}
               onClick={() => setBpm(b)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                bpm === b ? "stage-gradient text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                bpm === b ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {b === 0 ? "∅ BPM" : `${b}`}
