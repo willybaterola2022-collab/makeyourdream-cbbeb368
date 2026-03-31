@@ -18,6 +18,7 @@ interface Props {
 }
 
 export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
+  const { user } = useAuth();
   const [lyrics, setLyrics] = useState("");
   const [lines, setLines] = useState<string[]>([]);
   const [activeLine, setActiveLine] = useState(0);
