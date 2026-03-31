@@ -6,6 +6,10 @@ import { usePitchDetection } from "@/hooks/usePitchDetection";
 import { useAudioEngine } from "@/hooks/useAudioEngine";
 import { useBackingTrack } from "@/hooks/useBackingTrack";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/trackEvent";
+import { toast } from "sonner";
 import VintageMicrophone from "./VintageMicrophone";
 import SingingFeedback from "./SingingFeedback";
 
