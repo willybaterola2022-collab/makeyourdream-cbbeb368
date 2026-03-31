@@ -180,6 +180,7 @@ const PRESET_SONGS: Song[] = [
 
 
 export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
+  const { user } = useAuth();
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
