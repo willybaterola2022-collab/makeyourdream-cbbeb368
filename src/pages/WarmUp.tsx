@@ -6,6 +6,8 @@ import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroThermometer } from "@/components/studio/HeroThermometer";
 import MicroTutorial from "@/components/MicroTutorial";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { useAuth } from "@/contexts/AuthContext";
+import { trackEvent } from "@/lib/trackEvent";
 import { toast } from "sonner";
 
 interface Exercise {
@@ -42,8 +44,11 @@ const routines: Record<number, Exercise[]> = {
 };
 
 const WarmUp = () => {
+  const { user } = useAuth();
   const { playNote, playSuccess } = useAudioEngine();
   const { saveSession } = useTrainingSession();
+
+  useEffect(() => { trackEvent(user?.id, "page_view", { page: "warmup" }); }, []);
   const [duration, setDuration] = useState(5);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [timer, setTimer] = useState(0);

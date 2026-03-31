@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Play, Calendar, TrendingUp, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/contexts/AuthContext";
+import { trackEvent } from "@/lib/trackEvent";
 
 interface JournalEntry {
   date: string;
@@ -32,6 +34,10 @@ const STATS = [
 ];
 
 export default function VoiceJournal() {
+  const { user } = useAuth();
+
+  useEffect(() => { trackEvent(user?.id, "page_view", { page: "voice-journal" }); }, []);
+
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3">

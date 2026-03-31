@@ -1,13 +1,13 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Mic, Rss, Mountain, User } from "lucide-react";
+import { Home, Mic, Heart, Trophy, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { label: "Home", url: "/", icon: Home },
   { label: "Karaoke", url: "/karaoke", icon: Mic },
-  { label: "Feed", url: "/talent-feed", icon: Rss },
-  { label: "Leyenda", url: "/skill-tree", icon: Mountain },
+  { label: "Feed", url: "/talent-feed", icon: Heart, center: true },
+  { label: "Leyenda", url: "/skill-tree", icon: Trophy },
   { label: "Perfil", url: "/profile", icon: User },
 ];
 
@@ -34,10 +34,16 @@ export function BottomNav() {
                 to={tab.url}
                 className="relative flex flex-col items-center justify-center py-2 px-3 min-w-[56px]"
               >
-                <motion.div whileTap={{ scale: 0.85 }}>
+                <motion.div
+                  whileTap={{ scale: 0.85 }}
+                  className={cn(
+                    tab.center && "shadow-[0_0_12px_hsl(var(--primary)/0.4)] rounded-full p-1.5 -mt-3 bg-background/80"
+                  )}
+                >
                   <tab.icon
                     className={cn(
-                      "h-5 w-5 transition-all duration-300",
+                      "transition-all duration-300",
+                      tab.center ? "h-6 w-6" : "h-5 w-5",
                       isActive ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.5)]" : "text-muted-foreground/50"
                     )}
                   />

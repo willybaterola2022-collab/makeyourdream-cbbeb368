@@ -6,6 +6,10 @@ import { usePitchDetection } from "@/hooks/usePitchDetection";
 import { useAudioEngine } from "@/hooks/useAudioEngine";
 import { useBackingTrack } from "@/hooks/useBackingTrack";
 import { SaveAuthGate } from "@/components/SaveAuthGate";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/trackEvent";
+import { toast } from "sonner";
 import VintageMicrophone from "./VintageMicrophone";
 import SingingFeedback from "./SingingFeedback";
 
@@ -176,6 +180,7 @@ const PRESET_SONGS: Song[] = [
 
 
 export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
+  const { user } = useAuth();
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -265,6 +270,27 @@ export default function PresetSongsMode({ genre, pitchRange, bpm }: Props) {
       backingTrack.stop();
       const global = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
       if (global >= 60) setTimeout(() => playSuccess(), 300);
+
+      if (user?.id && selectedSong) {
+        supabase.functions.invoke("save-training-session", {
+          body: {
+            user_id: user.id,
+            module: "karaoke",
+            song_title: selectedSong.title,
+            scores: {
+              pitch: Math.round(scores.pitch),
+              timing: Math.round(scores.timing),
+              expression: Math.round(scores.expression),
+            },
+          },
+        }).then(({ data }) => {
+          if (data?.success) {
+            toast.success(`${data.grade} — +${data.xp_earned} XP`);
+            data.badges_earned?.forEach((b: string) => toast.success(`Nuevo badge: ${b}!`));
+          }
+          trackEvent(user.id, "recording_completed", { grade: data?.grade, module: "karaoke", song: selectedSong.title });
+        }).catch(() => {});
+      }
     }
   }, [finished]);
 

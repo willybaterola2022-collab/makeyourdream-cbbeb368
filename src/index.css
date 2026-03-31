@@ -6,19 +6,19 @@
   :root {
     /* ══ LUXURY ÍNTIMO — Paleta definitiva ══ */
     --background: 240 20% 4%; /* #0A0A0F */
-    --foreground: 0 0% 100%;
+    --foreground: 40 33% 93%; /* #F5EFE0 ivory */
 
     --card: 240 12% 8%; /* #141419 */
-    --card-foreground: 0 0% 100%;
+    --card-foreground: 40 33% 93%;
 
     --popover: 240 12% 8%;
-    --popover-foreground: 0 0% 100%;
+    --popover-foreground: 40 33% 93%;
 
     --primary: 40 55% 58%; /* #D4A853 ámbar */
     --primary-foreground: 0 0% 4%;
 
     --secondary: 22 52% 54%; /* #C47D4E cobre */
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 40 33% 93%;
 
     --muted: 240 12% 12%; /* #1E1E26 */
     --muted-foreground: 240 6% 56%; /* #8A8A96 */
@@ -27,7 +27,7 @@
     --accent-foreground: 0 0% 4%;
 
     --destructive: 0 45% 57%; /* #C75C5C */
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 40 33% 93%;
 
     --success: 130 40% 64%; /* #7EC882 */
 
@@ -134,6 +134,22 @@
   .font-mono-stats {
     font-family: 'JetBrains Mono', monospace;
   }
+}
+
+/* Luxury Íntimo utility classes */
+.stage-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+}
+
+.neon-text {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--foreground)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-stage {
+  box-shadow: 0 0 30px hsl(var(--primary) / 0.3);
 }
 
 /* Safe area for PWA */

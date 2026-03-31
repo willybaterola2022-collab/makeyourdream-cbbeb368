@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mic, Play, Square, Plus, Volume2, Trash2, Pause } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
@@ -7,6 +7,8 @@ import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroMixer } from "@/components/studio/HeroMixer";
 import { StageButton } from "@/components/ui/StageButton";
 import { useMicrophone } from "@/hooks/useMicrophone";
+import { useAuth } from "@/contexts/AuthContext";
+import { trackEvent } from "@/lib/trackEvent";
 
 interface Layer {
   id: string;
@@ -27,7 +29,10 @@ const LAYER_TYPES = [
 ];
 
 export default function LoopStation() {
+  const { user } = useAuth();
   const { isListening, requestMic, stream } = useMicrophone();
+
+  useEffect(() => { trackEvent(user?.id, "page_view", { page: "loop-station" }); }, []);
   const [layers, setLayers] = useState<Layer[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
