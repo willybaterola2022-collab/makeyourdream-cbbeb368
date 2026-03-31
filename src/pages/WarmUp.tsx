@@ -6,6 +6,8 @@ import { StudioRoom } from "@/components/studio/StudioRoom";
 import { HeroThermometer } from "@/components/studio/HeroThermometer";
 import MicroTutorial from "@/components/MicroTutorial";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { useAuth } from "@/contexts/AuthContext";
+import { trackEvent } from "@/lib/trackEvent";
 import { toast } from "sonner";
 
 interface Exercise {

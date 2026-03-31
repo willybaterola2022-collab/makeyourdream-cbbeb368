@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { PenLine, Wand2, Mic, Timer, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { trackEvent } from "@/lib/trackEvent";
 import { toast } from "sonner";
 
 const STRUCTURES = ["Verso - Coro - Verso - Puente - Coro", "Verso - Pre-Coro - Coro - Verso - Coro - Outro", "Intro - Verso - Coro - Verso - Coro - Bridge - Coro"];

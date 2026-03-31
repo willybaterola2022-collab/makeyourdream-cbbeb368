@@ -7,6 +7,8 @@ import { HeroPiano } from "@/components/studio/HeroPiano";
 import { StageButton } from "@/components/ui/StageButton";
 import MicroTutorial from "@/components/MicroTutorial";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { useAuth } from "@/contexts/AuthContext";
+import { trackEvent } from "@/lib/trackEvent";
 import { toast } from "sonner";
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];

@@ -19,7 +19,10 @@ const exercises = [
 type Phase = "inhale" | "hold" | "exhale" | "pause";
 
 const BreathTrainer = () => {
+  const { user } = useAuth();
   const { playSweep, playTone, stopTone } = useAudioEngine();
+
+  useEffect(() => { trackEvent(user?.id, "page_view", { page: "breath-trainer" }); }, []);
   const { saveSession } = useTrainingSession();
   const [selected, setSelected] = useState(exercises[0]);
   const [running, setRunning] = useState(false);

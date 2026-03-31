@@ -1,9 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mic, Play, Pause, Trash2, GripVertical, Wand2, Download, Square } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useSupabaseRecorder } from "@/hooks/useSupabaseRecorder";
+import { useAuth } from "@/contexts/AuthContext";
+import { trackEvent } from "@/lib/trackEvent";
 import { toast } from "sonner";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 
