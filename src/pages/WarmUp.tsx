@@ -44,8 +44,11 @@ const routines: Record<number, Exercise[]> = {
 };
 
 const WarmUp = () => {
+  const { user } = useAuth();
   const { playNote, playSuccess } = useAudioEngine();
   const { saveSession } = useTrainingSession();
+
+  useEffect(() => { trackEvent(user?.id, "page_view", { page: "warmup" }); }, []);
   const [duration, setDuration] = useState(5);
   const [activeIdx, setActiveIdx] = useState(-1);
   const [timer, setTimer] = useState(0);

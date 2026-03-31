@@ -25,6 +25,10 @@ Aprendí a bailar entre las lágrimas
 Y encontré la luz en mi melancolía`;
 
 export default function LyricsWriter() {
+  const { user } = useAuth();
+
+  useEffect(() => { trackEvent(user?.id, "page_view", { page: "lyrics-writer" }); }, []);
+
   const [theme, setTheme] = useState("");
   const [structure, setStructure] = useState(STRUCTURES[0]);
   const [lyrics, setLyrics] = useState("");

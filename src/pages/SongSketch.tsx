@@ -21,8 +21,11 @@ const SECTION_COLORS: Record<string, { bg: string; text: string }> = {
 const SECTIONS = ["intro", "verso", "coro", "puente", "outro"];
 
 export default function SongSketch() {
+  const { user } = useAuth();
   const { isListening, volume, requestMic, stopMic, stream } = useMicrophone();
   const { isRecording, audioBlob, audioUrl, duration, startRecording, stopRecording, clearRecording, saveRecording } = useSupabaseRecorder("song-sketch");
+
+  useEffect(() => { trackEvent(user?.id, "page_view", { page: "song-sketch" }); }, []);
   const [blocks, setBlocks] = useState<SketchBlock[]>([]);
   const [isCapturing, setIsCapturing] = useState(false);
   const [selectedSection, setSelectedSection] = useState("verso");

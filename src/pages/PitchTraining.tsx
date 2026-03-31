@@ -32,8 +32,11 @@ const INSTRUMENT_OPTIONS: { id: InstrumentType; label: string; emoji: string }[]
 ];
 
 const PitchTraining = () => {
+  const { user } = useAuth();
   const { playNote, playInstrument } = useAudioEngine();
   const { saveSession } = useTrainingSession();
+
+  useEffect(() => { trackEvent(user?.id, "page_view", { page: "pitch-training" }); }, []);
   const savedRef = useRef(false);
   const [mode, setMode] = useState<"notes" | "intervals">("notes");
   const [instrument, setInstrument] = useState<InstrumentType>("piano");
