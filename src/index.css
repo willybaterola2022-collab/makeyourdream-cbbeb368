@@ -136,6 +136,22 @@
   }
 }
 
+/* Luxury Íntimo utility classes */
+.stage-gradient {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+}
+
+.neon-text {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--foreground)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-stage {
+  box-shadow: 0 0 30px hsl(var(--primary) / 0.3);
+}
+
 /* Safe area for PWA */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .pb-safe {

@@ -12,20 +12,41 @@ import {
   SidebarGroupContent,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Home, Mic, Mountain, UserCircle, Music, Rss, BrainCircuit } from "lucide-react";
+import {
+  Home, Mic, Heart, Trophy, Music,
+  Dumbbell, Flame, Wind,
+  PenTool, Repeat, FileText,
+  Swords, GitCompare,
+  User, Fingerprint, GraduationCap, BookOpen,
+} from "lucide-react";
 
 const SIDEBAR_ITEMS = [
-  { label: "Principal", items: [
+  { label: "Principales", items: [
     { title: "Home", url: "/", icon: Home },
     { title: "Karaoke", url: "/karaoke", icon: Mic },
-    { title: "Feed", url: "/talent-feed", icon: Rss },
+    { title: "Feed", url: "/talent-feed", icon: Heart },
+    { title: "Leyenda", url: "/skill-tree", icon: Trophy },
   ]},
-  { label: "Tu Voz", items: [
-    { title: "Coach", url: "/coach", icon: BrainCircuit },
-    { title: "Soy Leyenda", url: "/skill-tree", icon: Mountain },
+  { label: "Entrenar", items: [
+    { title: "Ejercicios", url: "/exercises", icon: Dumbbell },
+    { title: "Warm Up", url: "/warmup", icon: Flame },
+    { title: "Pitch Training", url: "/pitch-training", icon: Music },
+    { title: "Breath Trainer", url: "/breath-trainer", icon: Wind },
   ]},
-  { label: "Carrera", items: [
-    { title: "Perfil", url: "/profile", icon: UserCircle },
+  { label: "Crear", items: [
+    { title: "Song Sketch", url: "/song-sketch", icon: PenTool },
+    { title: "Loop Station", url: "/loop-station", icon: Repeat },
+    { title: "Lyrics Writer", url: "/lyrics-writer", icon: FileText },
+  ]},
+  { label: "Social", items: [
+    { title: "Duelos", url: "/duelos", icon: Swords },
+    { title: "Comparador", url: "/comparator", icon: GitCompare },
+  ]},
+  { label: "Mi Perfil", items: [
+    { title: "Perfil", url: "/profile", icon: User },
+    { title: "Fingerprint", url: "/fingerprint", icon: Fingerprint },
+    { title: "Coach", url: "/coach", icon: GraduationCap },
+    { title: "Voice Journal", url: "/voice-journal", icon: BookOpen },
   ]},
 ];
 
@@ -53,7 +74,7 @@ export function AppSidebar() {
         {SIDEBAR_ITEMS.map((group) => (
           <SidebarGroup key={group.label}>
             {!collapsed && (
-              <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/30 px-2">
+              <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-primary/40 px-2">
                 {group.label}
               </SidebarGroupLabel>
             )}
