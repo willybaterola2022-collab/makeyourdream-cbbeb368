@@ -105,13 +105,35 @@ export default function CustomLyricsMode({ genre, pitchRange, bpm }: Props) {
     return () => clearInterval(interval);
   }, [started, volume, pitch]);
 
-  const handleStop = () => {
+  const handleStop = async () => {
     clearInterval(timerRef.current);
     stopRecording();
     setStarted(false);
     setFinished(true);
     const global = Math.round(scores.pitch * 0.5 + scores.timing * 0.3 + scores.expression * 0.2);
     if (global >= 60) setTimeout(() => playSuccess(), 300);
+
+    if (user?.id) {
+      try {
+        const { data } = await supabase.functions.invoke("save-training-session", {
+          body: {
+            user_id: user.id,
+            module: "karaoke",
+            song_title: "Letra propia",
+            scores: {
+              pitch: Math.round(scores.pitch),
+              timing: Math.round(scores.timing),
+              expression: Math.round(scores.expression),
+            },
+          },
+        });
+        if (data?.success) {
+          toast.success(`${data.grade} — +${data.xp_earned} XP`);
+          data.badges_earned?.forEach((b: string) => toast.success(`Nuevo badge: ${b}!`));
+        }
+        trackEvent(user.id, "recording_completed", { grade: data?.grade, module: "karaoke", song: "Letra propia" });
+      } catch {}
+    }
   };
 
   const handleReset = () => {

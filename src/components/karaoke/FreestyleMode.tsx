@@ -158,7 +158,7 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
           const { data, error } = await supabase.functions.invoke("vocal-analysis", {
             body: {
               user_id: user.id,
-              pitch_samples: s.rawPitchSamples.slice(-200), // last 200 samples
+              pitch_samples: s.rawPitchSamples.slice(-200),
               onset_times_ms: s.onsetTimesMs.slice(-200),
               expected_beat_ms: bpm > 0 ? Array.from({ length: 200 }, (_, i) => i * (60000 / bpm)) : [],
               expression_score: scores.expression,
@@ -174,9 +174,29 @@ export default function FreestyleMode({ genre, pitchRange, bpm }: Props) {
             });
           }
         } catch {
-          // Fallback: save locally
           saveFallback(global);
         }
+
+        // Save training session for XP + badges
+        try {
+          const { data: sessionData } = await supabase.functions.invoke("save-training-session", {
+            body: {
+              user_id: user.id,
+              module: "karaoke",
+              song_title: `Freestyle ${genre}`,
+              scores: {
+                pitch: Math.round(scores.pitch),
+                timing: Math.round(scores.timing),
+                expression: Math.round(scores.expression),
+              },
+            },
+          });
+          if (sessionData?.success) {
+            toast.success(`${sessionData.grade} — +${sessionData.xp_earned} XP`);
+            sessionData.badges_earned?.forEach((b: string) => toast.success(`Nuevo badge: ${b}!`));
+          }
+          trackEvent(user.id, "recording_completed", { grade: sessionData?.grade, module: "karaoke", song: `Freestyle ${genre}` });
+        } catch {}
       }
       return;
     }
