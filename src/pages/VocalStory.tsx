@@ -5,13 +5,14 @@ import { StudioRoom } from "@/components/studio/StudioRoom";
 import { StageButton } from "@/components/ui/StageButton";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/trackEvent";
 import { toast } from "sonner";
 
 const MOODS = [
   { id: "sunset", label: "Atardecer", gradient: "from-orange-500/20 to-pink-500/20" },
   { id: "night", label: "Nocturno", gradient: "from-indigo-500/20 to-purple-500/20" },
-  { id: "ocean", label: "Océano", gradient: "from-cyan-500/20 to-blue-500/20" },
+  { id: "ocean", label: "Oceano", gradient: "from-cyan-500/20 to-blue-500/20" },
   { id: "fire", label: "Fuego", gradient: "from-red-500/20 to-amber-500/20" },
 ];
 
@@ -21,6 +22,7 @@ const VocalStory = () => {
   const [phase, setPhase] = useState<"mood" | "record" | "preview">("mood");
   const [mood, setMood] = useState(MOODS[0]);
   const [timeLeft, setTimeLeft] = useState(30);
+  const [publishing, setPublishing] = useState(false);
 
   useEffect(() => { trackEvent(user?.id, "page_view", { page: "vocal-story" }); }, []);
 
@@ -36,6 +38,28 @@ const VocalStory = () => {
   }, [phase, isListening]);
 
   const startRecording = () => { setTimeLeft(30); requestMic(); setPhase("record"); };
+
+  const publishStory = async () => {
+    if (!user) return;
+    setPublishing(true);
+    try {
+      await supabase.functions.invoke("social-feed", {
+        body: {
+          action: "publish",
+          user_id: user.id,
+          caption: `Vocal Story — ${mood.label}`,
+          song_title: `Story: ${mood.label}`,
+          score: 0,
+        },
+      });
+      toast.success("Story publicada en el feed");
+      setPhase("mood");
+      setTimeLeft(30);
+    } catch {
+      toast.error("Error al publicar");
+    }
+    setPublishing(false);
+  };
 
   return (
     <StudioRoom roomId="emotion" heroContent={<div className="text-center"><Camera className="w-12 h-12 text-primary mx-auto" /><h1 className="text-xl font-display mt-2">Vocal Story</h1><p className="text-sm text-muted-foreground">30 segundos de audio con mood visual</p></div>}>
@@ -74,7 +98,9 @@ const VocalStory = () => {
             </div>
             <div className="flex gap-3 justify-center">
               <StageButton variant="glass" onClick={() => { setPhase("mood"); setTimeLeft(30); }}>Otra vez</StageButton>
-              <StageButton onClick={() => toast.success("Story publicada")}><Send className="w-4 h-4 mr-2" /> Publicar</StageButton>
+              <StageButton onClick={publishStory} disabled={publishing}>
+                <Send className="w-4 h-4 mr-2" /> {publishing ? "Publicando..." : "Publicar"}
+              </StageButton>
             </div>
           </motion.div>
         )}

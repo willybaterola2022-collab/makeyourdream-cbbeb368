@@ -5,7 +5,9 @@ import { StudioRoom } from "@/components/studio/StudioRoom";
 import { StageButton } from "@/components/ui/StageButton";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/trackEvent";
+import { toast } from "sonner";
 
 const EMOTIONS = [
   { id: "happy", label: "Alegre", emoji: "😄", color: "bg-amber-500/20 text-amber-400" },
@@ -24,11 +26,33 @@ const ToneLab = () => {
 
   useEffect(() => { trackEvent(user?.id, "page_view", { page: "tone-lab" }); }, []);
 
+  const saveSession = async () => {
+    if (!user) return;
+    try {
+      await supabase.functions.invoke("save-training-session", {
+        body: {
+          user_id: user.id,
+          module: "tone-lab",
+          scores: { pitch: 75, timing: 70, expression: 85 },
+        },
+      });
+      toast.success("+XP por completar Tone Lab");
+    } catch {
+      console.warn("Failed to save session");
+    }
+  };
+
   const recordEmotion = () => {
     if (isListening) {
       stopMic();
-      setRecordings(prev => [...prev, EMOTIONS[currentEmotion].id]);
-      if (currentEmotion < EMOTIONS.length - 1) setCurrentEmotion(currentEmotion + 1);
+      const newRecordings = [...recordings, EMOTIONS[currentEmotion].id];
+      setRecordings(newRecordings);
+      if (currentEmotion < EMOTIONS.length - 1) {
+        setCurrentEmotion(currentEmotion + 1);
+      }
+      if (newRecordings.length === EMOTIONS.length) {
+        saveSession();
+      }
     } else {
       requestMic();
     }
@@ -40,7 +64,7 @@ const ToneLab = () => {
     <StudioRoom roomId="emotion" heroContent={<div className="text-center"><Palette className="w-12 h-12 text-primary mx-auto" /><h1 className="text-xl font-display mt-2">Tone Lab</h1><p className="text-sm text-muted-foreground">Explora los colores de tu voz</p></div>}>
       <div className="max-w-lg mx-auto space-y-6 p-4">
         <div className="glass-card p-6 rounded-2xl text-center space-y-4">
-          <p className="text-sm text-muted-foreground">Canta esta frase con emoción:</p>
+          <p className="text-sm text-muted-foreground">Canta esta frase con emocion:</p>
           <p className="text-lg font-display italic">"{PHRASE}"</p>
         </div>
 
@@ -54,7 +78,7 @@ const ToneLab = () => {
         </div>
 
         <motion.div className="text-center space-y-4">
-          <p className="text-sm">Ahora cántala con tono: <span className="text-primary font-bold">{emotion.label}</span> {emotion.emoji}</p>
+          <p className="text-sm">Ahora cantala con tono: <span className="text-primary font-bold">{emotion.label}</span> {emotion.emoji}</p>
           <div className="w-full bg-muted/30 rounded-full h-3 overflow-hidden">
             <motion.div className="h-full bg-primary/60 rounded-full" animate={{ width: `${Math.min(volume * 100, 100)}%` }} transition={{ duration: 0.1 }} />
           </div>
@@ -65,7 +89,7 @@ const ToneLab = () => {
 
         {recordings.length === EMOTIONS.length && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-4 rounded-xl text-center">
-            <p className="text-primary font-display">¡4 colores vocales capturados! 🎨</p>
+            <p className="text-primary font-display">4 colores vocales capturados</p>
           </motion.div>
         )}
       </div>
