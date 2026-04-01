@@ -32,13 +32,11 @@ const Achievements = () => {
   const locked = ALL_BADGES.filter(b => !userBadges.includes(b.id));
 
   return (
-    <StudioRoom config={{ hero: "trophy", title: "Galería de Logros", subtitle: `${unlocked.length} de ${ALL_BADGES.length} desbloqueados` }}>
+    <StudioRoom roomId="challenges" heroContent={<div className="text-center"><Award className="w-12 h-12 text-primary mx-auto" /><h1 className="text-xl font-display mt-2">Galería de Logros</h1><p className="text-sm text-muted-foreground">{unlocked.length} de {ALL_BADGES.length} desbloqueados</p></div>}>
       <div className="max-w-lg mx-auto space-y-8 p-4">
         {unlocked.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-primary flex items-center gap-2">
-              <Sparkles className="w-4 h-4" /> Desbloqueados ({unlocked.length})
-            </h3>
+            <h3 className="text-sm font-medium text-primary flex items-center gap-2"><Sparkles className="w-4 h-4" /> Desbloqueados ({unlocked.length})</h3>
             <div className="grid grid-cols-3 gap-3">
               {unlocked.map((b, i) => (
                 <motion.div key={b.id} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
@@ -50,11 +48,8 @@ const Achievements = () => {
             </div>
           </div>
         )}
-
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Lock className="w-4 h-4" /> Por desbloquear ({locked.length})
-          </h3>
+          <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2"><Lock className="w-4 h-4" /> Por desbloquear ({locked.length})</h3>
           <div className="grid grid-cols-3 gap-3">
             {locked.map(b => (
               <div key={b.id} className="glass-card p-4 rounded-2xl text-center space-y-2 opacity-30">

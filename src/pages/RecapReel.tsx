@@ -13,15 +13,12 @@ const RecapReel = () => {
   const { user } = useAuth();
   const { data: progress } = useUserProgress();
   const [sessionCount, setSessionCount] = useState(0);
-  const [recordingCount, setRecordingCount] = useState(0);
 
   useEffect(() => {
     trackEvent(user?.id, "page_view", { page: "recap" });
     if (!user?.id) return;
     supabase.from("training_sessions").select("*", { count: "exact", head: true }).eq("user_id", user.id)
       .then(({ count }) => setSessionCount(count || 0));
-    supabase.from("recordings").select("*", { count: "exact", head: true }).eq("user_id", user.id)
-      .then(({ count }) => setRecordingCount(count || 0));
   }, [user?.id]);
 
   const level = progress?.level || 1;
@@ -40,13 +37,13 @@ const RecapReel = () => {
 
   const stats = [
     { icon: TrendingUp, label: "XP total", value: progress?.xp || 0 },
-    { icon: Flame, label: "Racha actual", value: `${progress?.streak_days || 0} días` },
+    { icon: Flame, label: "Racha", value: `${progress?.streak_days || 0}d` },
     { icon: Music, label: "Sesiones", value: sessionCount },
     { icon: Award, label: "Badges", value: badges.length },
   ];
 
   return (
-    <StudioRoom config={{ hero: "trophy", title: "Tu Recap", subtitle: "Resumen de tu viaje vocal" }}>
+    <StudioRoom roomId="challenges" heroContent={<div className="text-center"><Film className="w-12 h-12 text-primary mx-auto" /><h1 className="text-xl font-display mt-2">Tu Recap</h1></div>}>
       <div className="max-w-lg mx-auto space-y-8 p-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 rounded-2xl text-center space-y-3">
           <p className="text-4xl">{phase.emoji}</p>
@@ -67,16 +64,12 @@ const RecapReel = () => {
 
         {badges.length > 0 && (
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Badges desbloqueados</h3>
-            <div className="flex flex-wrap gap-2">
-              {badges.map(b => (
-                <span key={b} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs">{b}</span>
-              ))}
-            </div>
+            <h3 className="text-sm font-medium text-muted-foreground">Badges</h3>
+            <div className="flex flex-wrap gap-2">{badges.map(b => <span key={b} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs">{b}</span>)}</div>
           </div>
         )}
 
-        <StageButton onClick={shareRecap} className="w-full"><Share2 className="w-4 h-4 mr-2" /> Compartir mi recap</StageButton>
+        <StageButton onClick={shareRecap}><Share2 className="w-4 h-4 mr-2" /> Compartir mi recap</StageButton>
       </div>
     </StudioRoom>
   );

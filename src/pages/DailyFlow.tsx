@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Wind, Music, Mic, CheckCircle2, Play, RotateCcw } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { Sun, Wind, Music, Mic, CheckCircle2, RotateCcw } from "lucide-react";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { StageButton } from "@/components/ui/StageButton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,23 +44,14 @@ const DailyFlow = () => {
     timerRef.current = setInterval(() => {
       t--;
       setTimeLeft(t);
-      if (t <= 0) {
-        clearInterval(timerRef.current);
-        advanceStep();
-      }
+      if (t <= 0) { clearInterval(timerRef.current); advanceStep(); }
     }, 1000);
   };
 
   const advanceStep = () => {
     const next = currentStep + 1;
-    if (next >= STEPS.length) {
-      setPhase("done");
-      saveSession();
-    } else {
-      setCurrentStep(next);
-      setTimeLeft(STEPS[next].duration);
-      startTimer(STEPS[next].duration);
-    }
+    if (next >= STEPS.length) { setPhase("done"); saveSession(); }
+    else { setCurrentStep(next); setTimeLeft(STEPS[next].duration); startTimer(STEPS[next].duration); }
   };
 
   const saveSession = async () => {
@@ -82,17 +73,13 @@ const DailyFlow = () => {
   const progress = (elapsed / totalDuration) * 100;
 
   return (
-    <StudioRoom config={{ hero: "thermometer", title: "Rutina Diaria", subtitle: "5 minutos para despertar tu voz" }}>
+    <StudioRoom roomId="warmup" heroContent={<div className="text-center"><Sun className="w-12 h-12 text-primary mx-auto" /><h1 className="text-xl font-display mt-2">Rutina Diaria</h1><p className="text-sm text-muted-foreground">5 minutos para despertar tu voz</p></div>}>
       <div className="max-w-lg mx-auto space-y-6 p-4">
         {phase === "intro" && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-6">
-            <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-              <Sun className="w-12 h-12 text-primary" />
-            </div>
-            <h2 className="text-2xl font-display">Buenos días, artista</h2>
-            <p className="text-muted-foreground">3 pasos · {Math.round(totalDuration / 60)} minutos · tu voz lo agradecerá</p>
+            <p className="text-muted-foreground">3 pasos · {Math.round(totalDuration / 60)} min</p>
             <div className="space-y-3">
-              {STEPS.map((s, i) => (
+              {STEPS.map((s) => (
                 <div key={s.id} className="flex items-center gap-3 glass-card p-3 rounded-xl">
                   <s.icon className={`w-5 h-5 ${s.color}`} />
                   <span className="text-sm flex-1">{s.label}</span>
@@ -100,40 +87,31 @@ const DailyFlow = () => {
                 </div>
               ))}
             </div>
-            <StageButton onClick={startFlow} className="w-full">Empezar rutina</StageButton>
+            <StageButton onClick={startFlow}>Empezar rutina</StageButton>
           </motion.div>
         )}
 
         {phase === "active" && (
-          <motion.div key={currentStep} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="text-center space-y-6">
+          <motion.div key={currentStep} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} className="text-center space-y-6">
             <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
               <motion.div className="h-full bg-primary" animate={{ width: `${progress}%` }} />
             </div>
             <p className="text-xs text-muted-foreground uppercase tracking-widest">Paso {currentStep + 1} de {STEPS.length}</p>
-            <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-              <step.icon className={`w-10 h-10 ${step.color}`} />
-            </div>
+            <step.icon className={`w-16 h-16 mx-auto ${step.color}`} />
             <h2 className="text-xl font-display">{step.label}</h2>
             <p className="text-muted-foreground">{step.id === "phrase" ? dailyPhrase : step.instruction}</p>
             <div className="text-5xl font-mono text-primary tabular-nums">{timeLeft}s</div>
-            <motion.div className="w-32 h-32 mx-auto rounded-full border-4 border-primary/20 relative" style={{ background: `conic-gradient(hsl(var(--primary)) ${(1 - timeLeft / step.duration) * 360}deg, transparent 0deg)` }}>
-              <div className="absolute inset-1 rounded-full bg-background" />
-            </motion.div>
           </motion.div>
         )}
 
         {phase === "done" && (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-6">
-            <div className="w-24 h-24 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
-              <CheckCircle2 className="w-12 h-12 text-primary" />
-            </div>
+            <CheckCircle2 className="w-16 h-16 mx-auto text-primary" />
             <h2 className="text-2xl font-display">¡Rutina completada!</h2>
             <p className="text-muted-foreground">Tu voz está lista para el día</p>
-            <div className="flex gap-3 justify-center">
-              <StageButton variant="outline" onClick={() => { setPhase("intro"); setCurrentStep(0); }}>
-                <RotateCcw className="w-4 h-4 mr-2" /> Repetir
-              </StageButton>
-            </div>
+            <StageButton variant="glass" onClick={() => { setPhase("intro"); setCurrentStep(0); }}>
+              <RotateCcw className="w-4 h-4 mr-2" /> Repetir
+            </StageButton>
           </motion.div>
         )}
       </div>

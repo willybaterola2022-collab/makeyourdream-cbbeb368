@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mic, MicOff, Save, RotateCcw } from "lucide-react";
 import { StudioRoom } from "@/components/studio/StudioRoom";
@@ -15,8 +15,7 @@ const NOTE_FREQS = [65.41,73.42,82.41,87.31,98.00,110.00,123.47,130.81,146.83,16
 
 function freqToNoteIndex(freq: number): number {
   if (freq < 60) return -1;
-  let closest = 0;
-  let minDist = Infinity;
+  let closest = 0, minDist = Infinity;
   for (let i = 0; i < NOTE_FREQS.length; i++) {
     const dist = Math.abs(freq - NOTE_FREQS[i]);
     if (dist < minDist) { minDist = dist; closest = i; }
@@ -50,15 +49,14 @@ const RangeExplorer = () => {
         body: { user_id: user.id, vocal_range_low: NOTE_FREQS[lowestHit], vocal_range_high: NOTE_FREQS[highestHit] },
       });
       toast.success("Rango guardado en tu huella vocal");
-      trackEvent(user.id, "range_saved", { low: NOTES[lowestHit], high: NOTES[highestHit] });
     } catch { toast.error("Error al guardar"); }
     setSaving(false);
   };
 
   return (
-    <StudioRoom config={{ hero: "piano", title: "Explorador de Rango", subtitle: "Canta de grave a agudo" }}>
+    <StudioRoom roomId="pitch" heroContent={<div className="text-center"><h1 className="text-xl font-display">Explorador de Rango</h1><p className="text-sm text-muted-foreground">Canta de grave a agudo</p></div>}>
       <div className="max-w-lg mx-auto space-y-6 p-4">
-        <div className="text-center space-y-2">
+        <div className="text-center">
           {hitNotes.size > 0 ? (
             <p className="text-sm text-muted-foreground">{NOTES[lowestHit]} → {NOTES[highestHit]} · {hitNotes.size} notas</p>
           ) : (
@@ -66,29 +64,28 @@ const RangeExplorer = () => {
           )}
         </div>
 
-        {/* Piano visual */}
         <div className="flex flex-col gap-0.5">
-          {NOTES.map((note, i) => {
+          {[...NOTES].reverse().map((note, ri) => {
+            const i = NOTES.length - 1 - ri;
             const hit = hitNotes.has(i);
             const isCurrentNote = pitch?.frequency && freqToNoteIndex(pitch.frequency) === i;
             return (
-              <motion.div key={note} className={`h-6 rounded-sm flex items-center px-2 text-xs transition-all ${hit ? "bg-primary/80 text-primary-foreground shadow-[0_0_8px_hsl(var(--primary)/0.3)]" : "bg-muted/20 text-muted-foreground/40"} ${isCurrentNote ? "ring-2 ring-primary scale-x-105" : ""}`}
-                animate={isCurrentNote ? { scale: [1, 1.02, 1] } : {}}>
+              <motion.div key={note} className={`h-6 rounded-sm flex items-center px-2 text-xs transition-all ${hit ? "bg-primary/80 text-primary-foreground shadow-[0_0_8px_hsl(var(--primary)/0.3)]" : "bg-muted/20 text-muted-foreground/40"} ${isCurrentNote ? "ring-2 ring-primary" : ""}`}>
                 <span className="w-8 font-mono text-[10px]">{note}</span>
                 {hit && <div className="flex-1 h-2 bg-primary/40 rounded-full ml-2" />}
               </motion.div>
             );
-          }).reverse()}
+          })}
         </div>
 
         <div className="flex gap-3 justify-center">
-          <StageButton onClick={isListening ? stopMic : requestMic} variant={isListening ? "destructive" : "default"}>
+          <StageButton onClick={isListening ? stopMic : requestMic} variant={isListening ? "danger" : "primary"}>
             {isListening ? <><MicOff className="w-4 h-4 mr-2" /> Parar</> : <><Mic className="w-4 h-4 mr-2" /> Empezar</>}
           </StageButton>
           {hitNotes.size > 0 && (
             <>
-              <StageButton variant="outline" onClick={() => setHitNotes(new Set())}><RotateCcw className="w-4 h-4" /></StageButton>
-              <StageButton variant="outline" onClick={saveRange} disabled={saving}><Save className="w-4 h-4 mr-1" /> Guardar</StageButton>
+              <StageButton variant="glass" onClick={() => setHitNotes(new Set())}><RotateCcw className="w-4 h-4" /></StageButton>
+              <StageButton variant="glass" onClick={saveRange} disabled={saving}><Save className="w-4 h-4 mr-1" /> Guardar</StageButton>
             </>
           )}
         </div>
