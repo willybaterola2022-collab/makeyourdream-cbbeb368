@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Sliders, Mic, MicOff, Volume2 } from "lucide-react";
+import { Sliders, Mic, MicOff, Volume2, Save } from "lucide-react";
 import { StudioRoom } from "@/components/studio/StudioRoom";
 import { StageButton } from "@/components/ui/StageButton";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/trackEvent";
+import { toast } from "sonner";
 
 const EFFECTS = [
   { id: "clean", label: "Clean", emoji: "🎙️" },
@@ -18,6 +20,7 @@ const VoiceEffects = () => {
   const { user } = useAuth();
   const [activeEffect, setActiveEffect] = useState("clean");
   const [isActive, setIsActive] = useState(false);
+  const [effectsUsed, setEffectsUsed] = useState<Set<string>>(new Set());
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -32,7 +35,6 @@ const VoiceEffects = () => {
       audioCtxRef.current = ctx;
       const source = ctx.createMediaStreamSource(stream);
       sourceRef.current = source;
-
       const gain = ctx.createGain();
       gain.gain.value = 0.8;
 
@@ -59,16 +61,36 @@ const VoiceEffects = () => {
         source.connect(gain).connect(ctx.destination);
       }
       setIsActive(true);
+      setEffectsUsed(prev => new Set(prev).add(activeEffect));
     } catch { /* mic denied */ }
   };
 
-  const stopAudio = () => {
+  const stopAudio = async () => {
     streamRef.current?.getTracks().forEach(t => t.stop());
     audioCtxRef.current?.close();
     setIsActive(false);
+
+    // Save session when user has tried 3+ effects
+    if (user && effectsUsed.size >= 3) {
+      try {
+        await supabase.functions.invoke("save-training-session", {
+          body: {
+            user_id: user.id,
+            module: "voice-effects",
+            scores: { pitch: 70, timing: 70, expression: 80 },
+          },
+        });
+        toast.success("+XP por explorar efectos vocales");
+      } catch {
+        console.warn("Failed to save session");
+      }
+    }
   };
 
-  useEffect(() => () => { stopAudio(); }, []);
+  useEffect(() => () => {
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    audioCtxRef.current?.close();
+  }, []);
 
   return (
     <StudioRoom roomId="vocalfx" heroContent={<div className="text-center"><Sliders className="w-12 h-12 text-primary mx-auto" /><h1 className="text-xl font-display mt-2">Voice Effects</h1><p className="text-sm text-muted-foreground">Transforma tu voz en tiempo real</p></div>}>
@@ -86,6 +108,7 @@ const VoiceEffects = () => {
         <div className="glass-card p-8 rounded-2xl text-center space-y-4">
           <p className="text-sm text-muted-foreground">Efecto activo: <span className="text-primary font-bold">{EFFECTS.find(e => e.id === activeEffect)?.label}</span></p>
           {isActive && <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center"><Volume2 className="w-8 h-8 text-primary" /></motion.div>}
+          <p className="text-xs text-muted-foreground">{effectsUsed.size}/{EFFECTS.length} efectos probados</p>
         </div>
 
         <StageButton onClick={isActive ? stopAudio : startAudio} variant={isActive ? "danger" : "primary"}>
