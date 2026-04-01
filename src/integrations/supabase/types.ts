@@ -218,6 +218,81 @@ export type Database = {
         }
         Relationships: []
       }
+      karaoke_tracks: {
+        Row: {
+          artist: string
+          backing_track_url: string | null
+          bpm: number | null
+          created_at: string | null
+          difficulty: string | null
+          genre: string | null
+          id: string
+          key: string | null
+          lyrics_url: string | null
+          play_count: number | null
+          title: string
+        }
+        Insert: {
+          artist: string
+          backing_track_url?: string | null
+          bpm?: number | null
+          created_at?: string | null
+          difficulty?: string | null
+          genre?: string | null
+          id?: string
+          key?: string | null
+          lyrics_url?: string | null
+          play_count?: number | null
+          title: string
+        }
+        Update: {
+          artist?: string
+          backing_track_url?: string | null
+          bpm?: number | null
+          created_at?: string | null
+          difficulty?: string | null
+          genre?: string | null
+          id?: string
+          key?: string | null
+          lyrics_url?: string | null
+          play_count?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          read?: boolean | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -340,6 +415,74 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      seasonal_events: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          rewards: Json | null
+          start_date: string
+          status: string | null
+          theme: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          rewards?: Json | null
+          start_date: string
+          status?: string | null
+          theme?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          rewards?: Json | null
+          start_date?: string
+          status?: string | null
+          theme?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      seasonal_progress: {
+        Row: {
+          created_at: string | null
+          id: string
+          rank: number | null
+          season_id: string
+          user_id: string
+          xp_earned: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          rank?: number | null
+          season_id: string
+          user_id: string
+          xp_earned?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          rank?: number | null
+          season_id?: string
+          user_id?: string
+          xp_earned?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasonal_progress_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasonal_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       share_cards: {
         Row: {
@@ -708,6 +851,30 @@ export type Database = {
           user_id?: string
           week_start?: string
           xp_earned?: number
+        }
+        Relationships: []
+      }
+      weekly_reports: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          user_id?: string
+          week_start?: string
         }
         Relationships: []
       }
