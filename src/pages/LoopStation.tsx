@@ -104,11 +104,17 @@ export default function LoopStation() {
     setIsPlaying(true);
   }, [layers]);
 
-  const stopAll = useCallback(() => {
+  const stopAll = useCallback(async () => {
     audioRefs.current.forEach((audio) => { audio.pause(); audio.currentTime = 0; });
     audioRefs.current.clear();
     setIsPlaying(false);
-  }, []);
+    // Save session when stopping playback with recorded layers
+    const recordedLayers = layers.filter(l => l.audioUrl);
+    if (recordedLayers.length >= 2) {
+      const session = await saveSession({ module: "loop-station", overall_score: Math.min(100, recordedLayers.length * 25), song_title: `Loop ${recordedLayers.length} capas` });
+      if (session) toast.success(`+XP 🎶 ${recordedLayers.length} capas`);
+    }
+  }, [layers, saveSession]);
 
   return (
     <StudioRoom
