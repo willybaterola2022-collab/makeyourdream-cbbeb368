@@ -8,6 +8,7 @@ import { HeroMixer } from "@/components/studio/HeroMixer";
 import { StageButton } from "@/components/ui/StageButton";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTrainingSession } from "@/hooks/useTrainingSession";
 import { trackEvent } from "@/lib/trackEvent";
 
 interface Layer {
@@ -31,6 +32,7 @@ const LAYER_TYPES = [
 export default function LoopStation() {
   const { user } = useAuth();
   const { isListening, requestMic, stream } = useMicrophone();
+  const { saveSession } = useTrainingSession();
 
   useEffect(() => { trackEvent(user?.id, "page_view", { page: "loop-station" }); }, []);
   const [layers, setLayers] = useState<Layer[]>([]);
@@ -102,11 +104,17 @@ export default function LoopStation() {
     setIsPlaying(true);
   }, [layers]);
 
-  const stopAll = useCallback(() => {
+  const stopAll = useCallback(async () => {
     audioRefs.current.forEach((audio) => { audio.pause(); audio.currentTime = 0; });
     audioRefs.current.clear();
     setIsPlaying(false);
-  }, []);
+    // Save session when stopping playback with recorded layers
+    const recordedLayers = layers.filter(l => l.audioUrl);
+    if (recordedLayers.length >= 2) {
+      const session = await saveSession({ module: "loop-station", overall_score: Math.min(100, recordedLayers.length * 25), song_title: `Loop ${recordedLayers.length} capas` });
+      if (session) toast.success(`+XP 🎶 ${recordedLayers.length} capas`);
+    }
+  }, [layers, saveSession]);
 
   return (
     <StudioRoom

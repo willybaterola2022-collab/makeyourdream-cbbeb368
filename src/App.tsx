@@ -44,6 +44,7 @@ const Evolution = lazy(() => import("./pages/Evolution"));
 const PracticeRoom = lazy(() => import("./pages/PracticeRoom"));
 const CoverStudio = lazy(() => import("./pages/CoverStudio"));
 const RecapReel = lazy(() => import("./pages/RecapReel"));
+const EarTraining = lazy(() => import("./pages/EarTraining"));
 
 // Sprint B
 const VocalHoroscope = lazy(() => import("./pages/VocalHoroscope"));
@@ -116,6 +117,7 @@ function AnimatedRoutes() {
             <Route path="/practice-room" element={<PageTransition><PracticeRoom /></PageTransition>} />
             <Route path="/cover-studio" element={<PageTransition><CoverStudio /></PageTransition>} />
             <Route path="/recap" element={<PageTransition><RecapReel /></PageTransition>} />
+            <Route path="/ear-training" element={<PageTransition><EarTraining /></PageTransition>} />
 
             {/* Sprint B */}
             <Route path="/vocal-horoscope" element={<PageTransition><VocalHoroscope /></PageTransition>} />
