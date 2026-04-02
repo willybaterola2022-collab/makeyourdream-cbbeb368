@@ -8,6 +8,7 @@ import { HeroMixer } from "@/components/studio/HeroMixer";
 import { StageButton } from "@/components/ui/StageButton";
 import { useMicrophone } from "@/hooks/useMicrophone";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTrainingSession } from "@/hooks/useTrainingSession";
 import { trackEvent } from "@/lib/trackEvent";
 
 interface Layer {
