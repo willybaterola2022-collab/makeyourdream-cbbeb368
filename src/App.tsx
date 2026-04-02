@@ -62,6 +62,10 @@ const CollabDuets = lazy(() => import("./pages/CollabDuets"));
 const LeaderboardSeasons = lazy(() => import("./pages/LeaderboardSeasons"));
 const VocalMatches = lazy(() => import("./pages/VocalMatches"));
 
+// Sprint 7-8
+const NotificationCenter = lazy(() => import("./pages/NotificationCenter"));
+const AICoachChat = lazy(() => import("./pages/AICoachChat"));
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 5 * 60 * 1000, retry: 1 } },
 });
