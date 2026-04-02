@@ -1,18 +1,20 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, Mic, Heart, Trophy, User } from "lucide-react";
+import { Home, Mic, Heart, Trophy, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 
 const TABS = [
   { label: "Home", url: "/", icon: Home },
   { label: "Karaoke", url: "/karaoke", icon: Mic },
   { label: "Feed", url: "/talent-feed", icon: Heart, center: true },
   { label: "Leyenda", url: "/skill-tree", icon: Trophy },
-  { label: "Perfil", url: "/profile", icon: User },
+  { label: "Alertas", url: "/notifications", icon: Bell },
 ];
 
 export function BottomNav() {
   const location = useLocation();
+  const unread = useUnreadNotifications();
 
   const hideOnRoutes = ["/login", "/landing", "/onboarding", "/reset-password", "/vocal-dna-test"];
   if (hideOnRoutes.includes(location.pathname)) return null;
@@ -37,7 +39,8 @@ export function BottomNav() {
                 <motion.div
                   whileTap={{ scale: 0.85 }}
                   className={cn(
-                    tab.center && "shadow-[0_0_12px_hsl(var(--primary)/0.4)] rounded-full p-1.5 -mt-3 bg-background/80"
+                    tab.center && "shadow-[0_0_12px_hsl(var(--primary)/0.4)] rounded-full p-1.5 -mt-3 bg-background/80",
+                    "relative"
                   )}
                 >
                   <tab.icon
@@ -47,6 +50,11 @@ export function BottomNav() {
                       isActive ? "text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.5)]" : "text-muted-foreground/50"
                     )}
                   />
+                  {tab.url === "/notifications" && unread > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[8px] font-bold min-w-[14px] h-[14px] rounded-full flex items-center justify-center px-0.5">
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  )}
                 </motion.div>
                 <span
                   className={cn(

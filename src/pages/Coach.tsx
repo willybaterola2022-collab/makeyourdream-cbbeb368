@@ -178,8 +178,14 @@ const Coach = () => {
             <span>{recommendedExercise?.duration_minutes || recommendedExercise?.duration || 5} min</span>
           </div>
         </div>
-        <StageButton variant="primary" icon={<Play className="h-5 w-5" />} onClick={() => navigate("/exercises")} className="w-full">
+      <StageButton variant="primary" icon={<Play className="h-5 w-5" />} onClick={() => navigate("/exercises")} className="w-full">
           INICIAR EJERCICIO
+        </StageButton>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+        <StageButton variant="glass" icon={<BrainCircuit className="h-5 w-5" />} onClick={() => navigate("/ai-coach")} className="w-full">
+          CHATEAR CON EL COACH
         </StageButton>
       </motion.div>
     </div>
