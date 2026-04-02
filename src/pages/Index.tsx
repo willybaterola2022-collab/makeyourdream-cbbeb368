@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VocalRadar } from "@/components/VocalRadar";
 import { PhaseProgress } from "@/components/PhaseProgress";
 import { StreakFlame } from "@/components/StreakFlame";
+import { StoriesCarousel } from "@/components/StoriesCarousel";
 import { trackEvent } from "@/lib/trackEvent";
 import VintageMicrophone from "@/components/karaoke/VintageMicrophone";
 
