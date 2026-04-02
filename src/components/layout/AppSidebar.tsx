@@ -59,7 +59,9 @@ const SIDEBAR_ITEMS = [
     { title: "Fingerprint", url: "/fingerprint", icon: Fingerprint },
     { title: "Evolución", url: "/evolution", icon: TrendingUp },
     { title: "Coach", url: "/coach", icon: GraduationCap },
+    { title: "AI Coach Chat", url: "/ai-coach", icon: MessageCircle },
     { title: "Voice Journal", url: "/voice-journal", icon: BookOpen },
+    { title: "Notificaciones", url: "/notifications", icon: Crown },
   ]},
 ];
 

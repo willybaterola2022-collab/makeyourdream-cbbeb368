@@ -138,6 +138,10 @@ function AnimatedRoutes() {
             <Route path="/duets" element={<PageTransition><CollabDuets /></PageTransition>} />
             <Route path="/seasons" element={<PageTransition><LeaderboardSeasons /></PageTransition>} />
             <Route path="/matches" element={<PageTransition><VocalMatches /></PageTransition>} />
+
+            {/* Sprint 7-8 */}
+            <Route path="/notifications" element={<PageTransition><NotificationCenter /></PageTransition>} />
+            <Route path="/ai-coach" element={<PageTransition><AICoachChat /></PageTransition>} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
