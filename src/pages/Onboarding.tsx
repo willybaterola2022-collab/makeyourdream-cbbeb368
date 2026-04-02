@@ -16,7 +16,7 @@ type Step = "welcome" | "record" | "analyzing" | "result" | "signup";
 
 const stepVariants = {
   initial: { opacity: 0, x: 60, scale: 0.96 },
-  animate: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+  animate: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
   exit: { opacity: 0, x: -60, scale: 0.96, transition: { duration: 0.3 } },
 };
 
