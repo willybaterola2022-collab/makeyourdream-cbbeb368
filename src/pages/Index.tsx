@@ -206,6 +206,12 @@ const Index = () => {
         </button>
       </motion.div>
 
+      {/* Stories carousel */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }}>
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Vocal Stories</p>
+        <StoriesCarousel />
+      </motion.div>
+
       {/* Streak */}
       {streak > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 0.6 }} className="flex items-center justify-center gap-2">
