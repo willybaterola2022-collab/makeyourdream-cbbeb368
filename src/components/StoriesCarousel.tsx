@@ -51,7 +51,7 @@ export function StoriesCarousel() {
 
         // Enrich with display names
         if (posts.length > 0) {
-          const userIds = [...new Set(posts.map((p: any) => p.user_id))];
+          const userIds = [...new Set(posts.map((p: any) => p.user_id))] as string[];
           const { data: profiles } = await supabase
             .from("profiles")
             .select("user_id, display_name")
