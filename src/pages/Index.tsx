@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VocalRadar } from "@/components/VocalRadar";
 import { PhaseProgress } from "@/components/PhaseProgress";
 import { StreakFlame } from "@/components/StreakFlame";
+import { StoriesCarousel } from "@/components/StoriesCarousel";
 import { trackEvent } from "@/lib/trackEvent";
 import VintageMicrophone from "@/components/karaoke/VintageMicrophone";
 
@@ -203,6 +204,12 @@ const Index = () => {
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Soy Leyenda</p>
           <PhaseProgress xp={xp} compact />
         </button>
+      </motion.div>
+
+      {/* Stories carousel */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }}>
+        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Vocal Stories</p>
+        <StoriesCarousel />
       </motion.div>
 
       {/* Streak */}
