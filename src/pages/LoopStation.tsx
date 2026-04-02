@@ -32,6 +32,7 @@ const LAYER_TYPES = [
 export default function LoopStation() {
   const { user } = useAuth();
   const { isListening, requestMic, stream } = useMicrophone();
+  const { saveSession } = useTrainingSession();
 
   useEffect(() => { trackEvent(user?.id, "page_view", { page: "loop-station" }); }, []);
   const [layers, setLayers] = useState<Layer[]>([]);
