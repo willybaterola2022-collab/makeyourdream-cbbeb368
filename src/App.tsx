@@ -44,6 +44,7 @@ const Evolution = lazy(() => import("./pages/Evolution"));
 const PracticeRoom = lazy(() => import("./pages/PracticeRoom"));
 const CoverStudio = lazy(() => import("./pages/CoverStudio"));
 const RecapReel = lazy(() => import("./pages/RecapReel"));
+const EarTraining = lazy(() => import("./pages/EarTraining"));
 
 // Sprint B
 const VocalHoroscope = lazy(() => import("./pages/VocalHoroscope"));
